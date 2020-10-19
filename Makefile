@@ -38,3 +38,6 @@ build: chaos-daemon
 # Build chaos-daemon binary
 chaos-daemon:
 	$(CGOENV) go build -ldflags '$(LDFLAGS)' -o bin/chaos-daemon ./cmd/chaos-daemon/main.go
+
+proto:
+	protoc -I pkg/chaosdaemon/pb pkg/chaosdaemon/pb/*.proto --go_out=plugins=grpc:pkg/chaosdaemon/pb --go_out=./pkg/chaosdaemon/pb
