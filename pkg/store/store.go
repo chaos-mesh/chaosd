@@ -11,20 +11,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chaosdaemon
-
-import (
-	"context"
-
-	"github.com/golang/protobuf/ptypes/empty"
-
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/chaosdaemon/pb"
-)
-
-func (s *daemonServer) ExecStressors(context.Context, *pb.ExecStressRequest) (*pb.ExecStressResponse, error) {
-	return nil, nil
-}
-
-func (s *daemonServer) CancelStressors(context.Context, *pb.CancelStressRequest) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
-}
+package store

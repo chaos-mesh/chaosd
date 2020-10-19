@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chaosdaemon
+package server
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/chaosdaemon/pb"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
 	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
 )
 

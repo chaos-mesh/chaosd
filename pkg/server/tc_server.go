@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chaosdaemon
+package server
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/chaosdaemon/pb"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
 
 	"github.com/golang/protobuf/ptypes/empty"
 )

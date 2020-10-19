@@ -1,4 +1,4 @@
-// Copyright 2019 Chaos Mesh Authors.
+// Copyright 2020 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,18 +11,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chaosdaemon
+package server
 
-const (
-	// StatusOK represents OK status code
-	StatusOK = 200
-	// StatusOtherError represents Error status code
-	StatusOtherError = 1
+import (
+	"context"
+
+	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
 )
 
-// Response is the body part of HTTP Response
-type Response struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+func applyTc(ctx context.Context, pid uint32, args ...string) error {
+	// Mock point to return error in unit test
+	if err := mock.On("TcApplyError"); err != nil {
+		if e, ok := err.(error); ok {
+			return e
+		}
+		if ignore, ok := err.(bool); ok && ignore {
+			return nil
+		}
+	}
+
+	panic("unimplemented")
 }

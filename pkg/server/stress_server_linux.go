@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chaosdaemon
+package server
 
 import (
 	"bufio"
@@ -31,7 +31,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/process"
 
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/chaosdaemon/pb"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
 )
 
 var (

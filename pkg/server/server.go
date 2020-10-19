@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chaosdaemon
+package server
 
 import (
 	"context"
@@ -26,11 +26,30 @@ import (
 	"google.golang.org/grpc/reflection"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/chaosdaemon/pb"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
 	"github.com/chaos-mesh/chaos-daemon/pkg/utils"
 )
 
 var log = ctrl.Log.WithName("chaos-daemon-server")
+
+type Platform string
+
+const (
+	LocalPlatform      Platform = "local"
+	KubernetesPlatform          = "kubernetes"
+)
+
+var supportPlatforms = []Platform{LocalPlatform, KubernetesPlatform}
+
+func validPlatform(platform string) bool {
+	for _, p := range supportPlatforms {
+		if string(p) == platform {
+			return true
+		}
+	}
+
+	return false
+}
 
 //go:generate protoc -I pb pb/chaosdaemon.proto --go_out=plugins=grpc:pb
 
@@ -41,6 +60,8 @@ type Config struct {
 	Host      string
 	Runtime   string
 	Profiling bool
+
+	Platform string
 }
 
 // Get the http address
@@ -56,9 +77,11 @@ func (c *Config) GrpcAddr() string {
 // Server represents a grpc server for tc daemon
 type daemonServer struct {
 	crClient ContainerRuntimeInfoClient
+
+	platform string
 }
 
-func newDaemonServer(containerRuntime string) (*daemonServer, error) {
+func newDaemonServer(containerRuntime string, platform string) (*daemonServer, error) {
 	crClient, err := CreateContainerRuntimeInfoClient(containerRuntime)
 	if err != nil {
 		return nil, err
@@ -66,11 +89,16 @@ func newDaemonServer(containerRuntime string) (*daemonServer, error) {
 
 	return &daemonServer{
 		crClient: crClient,
+		platform: platform,
 	}, nil
 }
 
-func newGRPCServer(containerRuntime string, reg prometheus.Registerer) (*grpc.Server, error) {
-	ds, err := newDaemonServer(containerRuntime)
+func newGRPCServer(containerRuntime string, platform string, reg prometheus.Registerer) (*grpc.Server, error) {
+	if !validPlatform(platform) {
+		return nil, fmt.Errorf("platform %s is not supported", platform)
+	}
+
+	ds, err := newDaemonServer(containerRuntime, platform)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +145,7 @@ func StartServer(conf *Config, reg RegisterGatherer) error {
 		return err
 	}
 
-	grpcServer, err := newGRPCServer(conf.Runtime, reg)
+	grpcServer, err := newGRPCServer(conf.Runtime, conf.Platform, reg)
 	if err != nil {
 		log.Error(err, "failed to create grpc server")
 		return err

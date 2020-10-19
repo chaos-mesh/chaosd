@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chaosdaemon
+package server
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/chaosdaemon/pb"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
 )
 
 // ContainerKill kills container according to container id in the req
