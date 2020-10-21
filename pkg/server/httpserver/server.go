@@ -1,4 +1,4 @@
-// Copyright 2019 Chaos Mesh Authors.
+// Copyright 2020 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,18 +11,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package httpserver
 
-const (
-	// StatusOK represents OK status code
-	StatusOK = 200
-	// StatusOtherError represents Error status code
-	StatusOtherError = 1
+import (
+	"github.com/chaos-mesh/chaos-daemon/pkg/config"
+	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
 )
 
-// Response is the body part of HTTP Response
-type Response struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+type httpServer struct {
+	conf  config.Config
+	chaos *chaosd.Server
+}
+
+func NewServer(conf config.Config, chaos *chaosd.Server) *httpServer {
+	return &httpServer{
+		conf:  conf,
+		chaos: chaos,
+	}
 }

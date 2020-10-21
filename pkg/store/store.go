@@ -12,3 +12,17 @@
 // limitations under the License.
 
 package store
+
+import (
+	"go.uber.org/fx"
+
+	"github.com/chaos-mesh/chaos-daemon/pkg/store/dbstore"
+	"github.com/chaos-mesh/chaos-daemon/pkg/store/experiment"
+)
+
+var Module = fx.Options(
+	fx.Provide(
+		dbstore.NewDBStore,
+		experiment.NewStore,
+	),
+)

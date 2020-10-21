@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2019 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,21 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package chaosdaemon
 
-import (
-	"go.uber.org/fx"
-
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/httpserver"
+const (
+	// StatusOK represents OK status code
+	StatusOK = 200
+	// StatusOtherError represents Error status code
+	StatusOtherError = 1
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		grpcserver.NewServer,
-		httpserver.NewServer,
-	),
-	fx.Invoke(grpcserver.Register),
-)
+// Response is the body part of HTTP Response
+type Response struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}

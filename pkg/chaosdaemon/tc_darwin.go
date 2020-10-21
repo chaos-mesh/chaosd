@@ -11,21 +11,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package chaosdaemon
 
 import (
-	"go.uber.org/fx"
+	"context"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/httpserver"
+	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		grpcserver.NewServer,
-		httpserver.NewServer,
-	),
-	fx.Invoke(grpcserver.Register),
-)
+func applyTc(ctx context.Context, pid uint32, args ...string) error {
+	// Mock point to return error in unit test
+	if err := mock.On("TcApplyError"); err != nil {
+		if e, ok := err.(error); ok {
+			return e
+		}
+		if ignore, ok := err.(bool); ok && ignore {
+			return nil
+		}
+	}
+
+	panic("unimplemented")
+}

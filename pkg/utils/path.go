@@ -11,21 +11,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package utils
 
 import (
-	"go.uber.org/fx"
+	"os"
+	"os/exec"
+	"path/filepath"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/httpserver"
+	"go.uber.org/zap"
+
+	"github.com/pingcap/log"
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		grpcserver.NewServer,
-		httpserver.NewServer,
-	),
-	fx.Invoke(grpcserver.Register),
-)
+// GetProgramPath returns the path of the program
+func GetProgramPath() string {
+	dir, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		log.Fatal("can get the process path", zap.Error(err))
+	}
+	if p, err := os.Readlink(dir); err == nil {
+		dir = p
+	}
+	proPath, err := filepath.Abs(filepath.Dir(dir))
+	if err != nil {
+		log.Fatal("can get the full process path", zap.Error(err))
+	}
+	return proPath
+}

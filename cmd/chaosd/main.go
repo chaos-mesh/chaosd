@@ -23,7 +23,14 @@ import (
 	"github.com/pingcap/log"
 	"github.com/pkg/errors"
 
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+
+	"github.com/chaos-mesh/chaos-daemon/pkg/chaosd"
+	"github.com/chaos-mesh/chaos-daemon/pkg/chaosd/grpcserver"
+	"github.com/chaos-mesh/chaos-daemon/pkg/chaosd/httpserver"
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
+	"github.com/chaos-mesh/chaos-daemon/pkg/server"
+	"github.com/chaos-mesh/chaos-daemon/pkg/store"
 	"github.com/chaos-mesh/chaos-daemon/pkg/version"
 )
 
@@ -58,6 +65,8 @@ func main() {
 				return cfg
 			},
 		),
+		store.Module,
+		server.Module,
 	)
 	app.Run()
 }

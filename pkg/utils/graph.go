@@ -13,9 +13,10 @@
 
 package utils
 
-import ctrl "sigs.k8s.io/controller-runtime"
-
-var log = ctrl.Log.WithName("util")
+import (
+	"github.com/pingcap/log"
+	"go.uber.org/zap"
+)
 
 // Edge represents an edge in graph
 type Edge struct {
@@ -68,6 +69,6 @@ func (g *Graph) Flatten(source uint32) []uint32 {
 		current = current.Next
 	}
 
-	log.Info("get flatTree", "source", source, "flatTree", flatTree)
+	log.Info("get flatTree", zap.Uint32("source", source), zap.Uint32s("flatTree", flatTree))
 	return flatTree
 }

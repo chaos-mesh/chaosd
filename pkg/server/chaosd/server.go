@@ -11,24 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package chaosd
 
 import (
-	"context"
-
-	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
+	"github.com/chaos-mesh/chaos-daemon/pkg/config"
+	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 )
 
-func applyTc(ctx context.Context, pid uint32, args ...string) error {
-	// Mock point to return error in unit test
-	if err := mock.On("TcApplyError"); err != nil {
-		if e, ok := err.(error); ok {
-			return e
-		}
-		if ignore, ok := err.(bool); ok && ignore {
-			return nil
-		}
-	}
+type Server struct {
+	exp  core.ExperimentStore
+	conf config.Config
+}
 
-	panic("unimplemented")
+func NewServer(exp core.ExperimentStore) *Server {
+	return &Server{exp: exp}
 }
