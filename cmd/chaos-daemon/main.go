@@ -15,11 +15,11 @@ package main
 
 import (
 	"flag"
+	"github.com/chaos-mesh/chaos-daemon/pkg/chaosdaemon"
 	"os"
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/server"
 	"github.com/chaos-mesh/chaos-daemon/pkg/version"
 
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,7 +28,7 @@ import (
 
 var (
 	log  = ctrl.Log.WithName("chaos-daemon")
-	conf = &server.Config{Host: "0.0.0.0"}
+	conf = &chaosdaemon.Config{Host: "0.0.0.0"}
 
 	printVersion bool
 )
@@ -59,7 +59,7 @@ func main() {
 		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
 	)
 
-	if err := server.StartServer(conf, reg); err != nil {
+	if err := chaosdaemon.StartServer(conf, reg); err != nil {
 		log.Error(err, "failed to start chaos-daemon server")
 		os.Exit(1)
 	}

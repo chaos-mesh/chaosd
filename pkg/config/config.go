@@ -14,6 +14,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 	flag "github.com/spf13/pflag"
 )
@@ -57,6 +58,11 @@ func (c *Config) Parse(arguments []string) error {
 	}
 
 	return c.Validate()
+}
+
+// Get the grpc address
+func (c *Config) Address() string {
+	return fmt.Sprintf("%s:%d", c.ListenHost, c.ListenPort)
 }
 
 // Validate is used to validate if some configurations are right.

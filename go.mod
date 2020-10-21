@@ -24,6 +24,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
+	github.com/jinzhu/gorm v1.9.16
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
@@ -45,9 +46,8 @@ require (
 	github.com/vishvananda/netns v0.0.0-20171111001504-be1fbeda1936 // indirect
 	go.uber.org/fx v1.13.1
 	go.uber.org/zap v1.15.0
-	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
-	golang.org/x/net v0.0.0-20200320220750-118fecf932d8
+	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect

@@ -19,8 +19,6 @@ service ChaosDaemon {
 
   rpc ExecStressors (ExecStressRequest) returns (ExecStressResponse) {}
   rpc CancelStressors (CancelStressRequest) returns (google.protobuf.Empty) {}
-
-  rpc Shutdown (ShutdownRequest) returns (ShutdownResponse) {}
 }
 
 message TcHandle {
@@ -181,13 +179,4 @@ message Tc {
   Netem netem = 2;
   Tbf tbf = 3;
   string ipset = 4;
-}
-
-message ShutdownRequest {
-  bool reboot = 1;
-  string shutdown_delay = 2;
-}
-
-message ShutdownResponse {
-  string id = 1;
 }

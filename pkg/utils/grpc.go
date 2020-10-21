@@ -18,9 +18,13 @@ import (
 	"fmt"
 	"time"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+
+	"github.com/pingcap/log"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -34,7 +38,7 @@ var RPCTimeout = DefaultRPCTimeout
 // CreateGrpcConnection create a grpc connection with given port
 func CreateGrpcConnection(ctx context.Context, c client.Client, pod *v1.Pod, port int) (*grpc.ClientConn, error) {
 	nodeName := pod.Spec.NodeName
-	log.Info("Creating client to chaos-daemon", "node", nodeName)
+	log.Info("Creating client to chaos-daemon", zap.String("node", nodeName))
 
 	var node v1.Node
 	err := c.Get(ctx, types.NamespacedName{
