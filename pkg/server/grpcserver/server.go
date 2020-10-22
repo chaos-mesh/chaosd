@@ -15,15 +15,17 @@ package grpcserver
 
 import (
 	"context"
-	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/pingcap/log"
-	"go.uber.org/zap"
-	"google.golang.org/grpc/reflection"
 	"net"
 
-	"google.golang.org/grpc"
+	"go.uber.org/zap"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
+	"github.com/golang/protobuf/ptypes/empty"
 	grpcm "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/pingcap/log"
+	"github.com/pkg/errors"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
@@ -44,6 +46,10 @@ func NewServer(conf config.Config, chaos *chaosd.Server) *grpcServer {
 }
 
 func Register(s *grpcServer) {
+	if s.conf.Platform != config.KubernetesPlatform {
+		return
+	}
+
 	opts := []grpc.ServerOption{
 		grpcm.WithUnaryServerChain(
 			utils.TimeoutServerInterceptor,
@@ -71,37 +77,71 @@ func Register(s *grpcServer) {
 }
 
 func (s *grpcServer) SetTcs(ctx context.Context, in *pb.TcsRequest) (*empty.Empty, error) {
-	return nil, nil
+	log.Info("handle tc request", zap.Any("request", in))
+	if err := s.chaos.SetContainerTcRules(ctx, in); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &empty.Empty{}, nil
 }
 
 func (s *grpcServer) FlushIPSets(ctx context.Context, in *pb.IPSetsRequest) (*empty.Empty, error) {
-	return nil, nil
+	log.Info("flush ipset", zap.Any("request", in))
+	if err := s.chaos.FlushContainerIPSets(ctx, in); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &empty.Empty{}, nil
 }
 
 func (s *grpcServer) SetIptablesChains(ctx context.Context, in *pb.IptablesChainsRequest) (*empty.Empty, error) {
-	return nil, nil
+	log.Info("set iptables chains", zap.Any("request", in))
+	if err := s.chaos.SetContainerIptablesChains(ctx, in); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &empty.Empty{}, nil
 }
 
 func (s *grpcServer) SetTimeOffset(ctx context.Context, in *pb.TimeRequest) (*empty.Empty, error) {
-	return nil, nil
+	log.Info("shift time", zap.Any("request", in))
+	if err := s.chaos.SetContainerTime(ctx, in); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &empty.Empty{}, nil
 }
 
 func (s *grpcServer) RecoverTimeOffset(ctx context.Context, in *pb.TimeRequest) (*empty.Empty, error) {
-	return nil, nil
+	log.Info("recover time", zap.Any("request", in))
+	if err := s.chaos.RecoverContainerTime(ctx, in); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &empty.Empty{}, nil
 }
 
 func (s *grpcServer) ContainerKill(ctx context.Context, in *pb.ContainerRequest) (*empty.Empty, error) {
-	return nil, nil
+	log.Info("kill container", zap.Any("request", in))
+
+	if err := s.chaos.ContainerKill(ctx, in); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &empty.Empty{}, nil
 }
 
 func (s *grpcServer) ContainerGetPid(ctx context.Context, in *pb.ContainerRequest) (*pb.ContainerResponse, error) {
-	return nil, nil
+	log.Info("get container pid", zap.Any("request", in))
+
+	return s.chaos.ContainerGetPid(ctx, in)
 }
 
 func (s *grpcServer) ExecStressors(ctx context.Context, in *pb.ExecStressRequest) (*pb.ExecStressResponse, error) {
-	return nil, nil
+	log.Info("execute stress", zap.Any("request", in))
+
+	return s.chaos.ExecContainerStress(ctx, in)
 }
 
 func (s *grpcServer) CancelStressors(ctx context.Context, in *pb.CancelStressRequest) (*empty.Empty, error) {
-	return nil, nil
+	log.Info("cancel stress", zap.Any("request", in))
+
+	if err := s.chaos.CancelContainerStress(ctx, in); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return &empty.Empty{}, nil
 }

@@ -25,20 +25,13 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/chaosd/grpcserver"
-	"github.com/chaos-mesh/chaos-daemon/pkg/chaosd/httpserver"
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
+	"github.com/chaos-mesh/chaos-daemon/pkg/container"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server"
 	"github.com/chaos-mesh/chaos-daemon/pkg/store"
 	"github.com/chaos-mesh/chaos-daemon/pkg/version"
 )
 
-// daemonServer
-// dbstore
-// grpcserver
-// httpserver
-// config
 func main() {
 	// Flushing any buffered log entries
 	defer log.Sync() //nolint:errcheck
@@ -64,6 +57,7 @@ func main() {
 			func() *config.Config {
 				return cfg
 			},
+			container.NewCRIClient,
 		),
 		store.Module,
 		server.Module,

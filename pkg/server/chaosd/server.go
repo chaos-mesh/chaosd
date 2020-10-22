@@ -15,14 +15,19 @@ package chaosd
 
 import (
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
+	"github.com/chaos-mesh/chaos-daemon/pkg/container"
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 )
 
 type Server struct {
-	exp  core.ExperimentStore
-	conf config.Config
+	exp    core.ExperimentStore
+	conf   config.Config
+	criCli container.CRIClient
 }
 
-func NewServer(exp core.ExperimentStore) *Server {
-	return &Server{exp: exp}
+func NewServer(exp core.ExperimentStore, cli container.CRIClient) *Server {
+	return &Server{
+		exp:    exp,
+		criCli: cli,
+	}
 }

@@ -27,5 +27,6 @@ var Module = fx.Options(
 		grpcserver.NewServer,
 		httpserver.NewServer,
 	),
+
 	fx.Invoke(grpcserver.Register),
 )
