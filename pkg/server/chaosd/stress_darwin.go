@@ -11,22 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package chaosd
 
 import (
-	"go.uber.org/fx"
+	"context"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/httpserver"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		grpcserver.NewServer,
-		httpserver.NewServer,
-	),
+func (s *Server) ExecContainerStress(context.Context, *pb.ExecStressRequest) (*pb.ExecStressResponse, error) {
+	return nil, nil
+}
 
-	fx.Invoke(grpcserver.Register),
-)
+func (s *Server) CancelContainerStress(context.Context, *pb.CancelStressRequest) error {
+	return nil
+}

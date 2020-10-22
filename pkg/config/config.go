@@ -71,14 +71,18 @@ func (c *Config) Validate() error {
 		return errors.Errorf("platform %s is not supported", c.Platform)
 	}
 
+	if !checkRuntime(c.Runtime) {
+		return errors.Errorf("container runtime %s is not supported", c.Runtime)
+	}
+
 	return nil
 }
 
 type Platform string
 
 const (
-	LocalPlatform      Platform = "local"
-	KubernetesPlatform          = "kubernetes"
+	LocalPlatform      = "local"
+	KubernetesPlatform = "kubernetes"
 )
 
 var supportPlatforms = []Platform{LocalPlatform, KubernetesPlatform}
@@ -87,6 +91,18 @@ var supportPlatforms = []Platform{LocalPlatform, KubernetesPlatform}
 func checkPlatform(platform string) bool {
 	for _, p := range supportPlatforms {
 		if string(p) == platform {
+			return true
+		}
+	}
+
+	return false
+}
+
+var supportRuntimes = []string{"docker", "runtime"}
+
+func checkRuntime(runtime string) bool {
+	for _, r := range supportRuntimes {
+		if r == runtime {
 			return true
 		}
 	}
