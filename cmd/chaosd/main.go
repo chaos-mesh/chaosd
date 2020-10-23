@@ -25,6 +25,7 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 
+	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
 	"github.com/chaos-mesh/chaos-daemon/pkg/container"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server"
@@ -58,6 +59,7 @@ func main() {
 				return cfg
 			},
 			container.NewCRIClient,
+			bpm.NewBackgroundProcessManager,
 		),
 		store.Module,
 		server.Module,
