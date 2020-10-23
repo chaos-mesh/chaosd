@@ -16,6 +16,12 @@ package chaosd
 import (
 	"context"
 
+	"go.uber.org/zap"
+
+	"github.com/pingcap/log"
+	"github.com/pkg/errors"
+
+	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
 	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
 )
 
@@ -23,23 +29,23 @@ func applyTc(ctx context.Context, pid uint32, args ...string) error {
 	// Mock point to return error in unit test
 	if err := mock.On("TcApplyError"); err != nil {
 		if e, ok := err.(error); ok {
-			return e
+			return errors.WithStack(e)
 		}
 		if ignore, ok := err.(bool); ok && ignore {
 			return nil
 		}
 	}
 
-	nsPath := GetNsPath(pid, netNS)
+	nsPath := GetNsPath(pid, bpm.NetNS)
 
-	cmd := defaultProcessBuilder("tc", args...).SetNetNS(nsPath).Build(ctx)
-	log.Info("tc command", "command", cmd.String(), "args", args)
+	cmd := bpm.DefaultProcessBuilder("tc", args...).SetNetNS(nsPath).SetContext(ctx).Build()
+	log.Info("tc command", zap.String("command", cmd.String()), zap.Strings("args", args))
 
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		log.Error(err, "tc command error", "command", cmd.String(), "output", string(out))
-		return err
+		log.Error("tc command error", zap.String("command", cmd.String()), zap.String("output", string(out)))
+		return errors.WithStack(err)
 	}
 
 	return nil

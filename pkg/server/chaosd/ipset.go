@@ -23,6 +23,7 @@ import (
 	"github.com/pingcap/log"
 	"github.com/pkg/errors"
 
+	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
 )
 
@@ -39,7 +40,7 @@ func (s *Server) FlushContainerIPSets(ctx context.Context, req *pb.IPSetsRequest
 		return errors.WithStack(err)
 	}
 
-	nsPath := GetNsPath(pid, netNS)
+	nsPath := GetNsPath(pid, bpm.NetNS)
 
 	for _, ipset := range req.Ipsets {
 		err := flushIPSet(ctx, nsPath, ipset)
@@ -81,7 +82,10 @@ func createIPSet(ctx context.Context, nsPath string, name string) error {
 		name = name[:31]
 	}
 
-	cmd := defaultProcessBuilder("ipset", "create", name, "hash:net").SetNetNS(nsPath).Build(ctx)
+	cmd := bpm.DefaultProcessBuilder("ipset", "create", name, "hash:net").
+		SetNetNS(nsPath).
+		SetContext(ctx).
+		Build()
 
 	log.Info("create ipset", zap.String("command", cmd.String()))
 
@@ -94,7 +98,10 @@ func createIPSet(ctx context.Context, nsPath string, name string) error {
 			return err
 		}
 
-		cmd := defaultProcessBuilder("ipset", "flush", name).SetNetNS(nsPath).Build(ctx)
+		cmd := bpm.DefaultProcessBuilder("ipset", "flush", name).
+			SetNetNS(nsPath).
+			SetContext(ctx).
+			Build()
 
 		log.Info("flush ipset", zap.String("command", cmd.String()))
 
@@ -111,7 +118,7 @@ func createIPSet(ctx context.Context, nsPath string, name string) error {
 
 func addCIDRsToIPSet(ctx context.Context, nsPath string, name string, cidrs []string) error {
 	for _, cidr := range cidrs {
-		cmd := defaultProcessBuilder("ipset", "add", name, cidr).SetNetNS(nsPath).Build(ctx)
+		cmd := bpm.DefaultProcessBuilder("ipset", "add", name, cidr).SetNetNS(nsPath).SetContext(ctx).Build()
 
 		log.Info("add CIDR to ipset", zap.String("command", cmd.String()))
 
@@ -130,7 +137,7 @@ func addCIDRsToIPSet(ctx context.Context, nsPath string, name string, cidrs []st
 }
 
 func renameIPSet(ctx context.Context, nsPath string, oldName string, newName string) error {
-	cmd := defaultProcessBuilder("ipset", "rename", oldName, newName).SetNetNS(nsPath).Build(ctx)
+	cmd := bpm.DefaultProcessBuilder("ipset", "rename", oldName, newName).SetNetNS(nsPath).SetContext(ctx).Build()
 
 	log.Info("rename ipset", zap.String("command", cmd.String()))
 
@@ -144,7 +151,7 @@ func renameIPSet(ctx context.Context, nsPath string, oldName string, newName str
 		}
 
 		// swap the old ipset and the new ipset if the new ipset already exist.
-		cmd := defaultProcessBuilder("ipset", "swap", oldName, newName).SetNetNS(nsPath).Build(ctx)
+		cmd := bpm.DefaultProcessBuilder("ipset", "swap", oldName, newName).SetNetNS(nsPath).SetContext(ctx).Build()
 
 		log.Info("swap ipset", zap.String("command", cmd.String()))
 

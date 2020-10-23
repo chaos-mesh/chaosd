@@ -15,10 +15,11 @@ package chaosd
 
 import (
 	"context"
-	"github.com/pkg/errors"
+
 	"go.uber.org/zap"
 
 	"github.com/pingcap/log"
+	"github.com/pkg/errors"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
 	"github.com/chaos-mesh/chaos-daemon/pkg/time"

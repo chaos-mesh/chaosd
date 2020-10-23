@@ -16,7 +16,7 @@ package time
 import (
 	"errors"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
+	"github.com/chaos-mesh/chaos-mesh/pkg/mock"
 )
 
 // ModifyTime modifies time of target process

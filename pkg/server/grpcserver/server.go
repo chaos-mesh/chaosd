@@ -145,3 +145,8 @@ func (s *grpcServer) CancelStressors(ctx context.Context, in *pb.CancelStressReq
 	}
 	return &empty.Empty{}, nil
 }
+
+func (s *grpcServer) ApplyIoChaos(ctx context.Context, in *pb.ApplyIoChaosRequest) (*pb.ApplyIoChaosResponse, error) {
+	log.Info("apply iochaos", zap.Any("request", in))
+	return s.chaos.ApplyIoChaos(ctx, in)
+}

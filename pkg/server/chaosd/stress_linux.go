@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -33,6 +32,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/process"
 
+	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
 	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
 )
 
@@ -47,12 +47,12 @@ func (s *Server) ExecContainerStress(
 	ctx context.Context,
 	req *pb.ExecStressRequest,
 ) (*pb.ExecStressResponse, error) {
-	pid, err := s.crClient.GetPidFromContainerID(ctx, req.Target)
+	pid, err := s.criCli.GetPidFromContainerID(ctx, req.Target)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	path := pidPath(int(pid))
-	id, err := s.crClient.FormatContainerID(ctx, req.Target)
+	id, err := s.criCli.FormatContainerID(ctx, req.Target)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -68,13 +68,13 @@ func (s *Server) ExecContainerStress(
 		return nil, errors.WithStack(err)
 	}
 
-	cmd := defaultProcessBuilder("stress-ng", strings.Fields(req.Stressors)...).
+	cmd := bpm.DefaultProcessBuilder("stress-ng", strings.Fields(req.Stressors)...).
 		EnablePause().
 		EnableSuicide().
-		SetPidNS(GetNsPath(pid, pidNS)).
-		Build(context.Background())
+		SetPidNS(GetNsPath(pid, bpm.PidNS)).
+		Build()
 
-	if err := cmd.Start(); err != nil {
+	if err = s.backgroundProcessManager.StartProcess(cmd); err != nil {
 		return nil, errors.WithStack(err)
 	}
 	log.Info("Start process successfully")
@@ -111,16 +111,6 @@ func (s *Server) ExecContainerStress(
 		}
 		log.Info("the process hasn't resumed, step into the following loop", zap.String("comm", comm))
 	}
-	go func() {
-		if err, ok := cmd.Wait().(*exec.ExitError); ok {
-			status := err.Sys().(syscall.WaitStatus)
-			if status.Signaled() && status.Signal() == syscall.SIGTERM {
-				log.Info("stressors cancelled", zap.Any("request", req))
-			} else {
-				log.Error(err, "stressors exited accidentally", zap.String("request", req))
-			}
-		}
-	}()
 
 	return &pb.ExecStressResponse{
 		Instance:  strconv.Itoa(cmd.Process.Pid),
@@ -139,46 +129,7 @@ func (s *Server) CancelContainerStress(
 		return errors.WithStack(err)
 	}
 
-	p, err := os.FindProcess(pid)
-	if err != nil {
-		log.Error("unreachable path. `os.FindProcess` will never return an error on unix",
-			zap.Uint32("pid", pid), zap.Error(err))
-		return errors.WithStack(err)
-	}
-
-	procState, err := process.NewProcess(int32(pid))
-	if err != nil {
-		// return successfully as the process has exited
-		return nil
-	}
-	ct, err := procState.CreateTime()
-	if err != nil {
-		log.Error("failed to read create time", zap.Uint32("pid", pid), zap.Error(err))
-		// return successfully as the process has exited
-		return nil
-	}
-	if req.StartTime != ct {
-		log.Info("process has already been killed",
-			zap.Uint32("pid", pid), zap.Time("startTime", ct), zap.Time("expectedStartTime", req.StartTime))
-		// return successfully as the process has exited
-		return nil
-	}
-
-	ppid, err := procState.Ppid()
-	if err != nil {
-		log.Error("failed to read parent id", zap.Uint32("pid", pid), zap.Error(err))
-		// return successfully as the process has exited
-		return nil
-	}
-	if ppid != int32(os.Getpid()) {
-		log.Info("process has already been killed", zap.Uint32("pid", pid), zap.Uint32("ppid", ppid))
-		// return successfully as the process has exited
-		return nil
-	}
-
-	err = p.Signal(syscall.SIGTERM)
-	if err != nil && err.Error() != "os: process already finished" {
-		log.Error("failed to kill process", zap.Uint32("pid", pid), zap.Error(err))
+	if err = s.backgroundProcessManager.KillBackgroundProcess(ctx, pid, req.StartTime); err != nil {
 		return errors.WithStack(err)
 	}
 
