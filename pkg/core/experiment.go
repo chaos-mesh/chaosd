@@ -18,22 +18,32 @@ import (
 	"time"
 )
 
+const (
+	Created   = "Created"
+	Success   = "Success"
+	Running   = "Running"
+	Error     = "Error"
+	Destroyed = "Destroyed"
+	Revoked   = "Revoked"
+)
+
 // ExperimentStore defines operations for working with experiments
 type ExperimentStore interface {
 	List(ctx context.Context) ([]*Experiment, error)
 	ListByStatus(ctx context.Context, status string) ([]*Experiment, error)
 	FindByUid(ctx context.Context, uid string) (*Experiment, error)
 	Set(ctx context.Context, exp *Experiment) error
+	Update(ctx context.Context, uid, status, msg string) error
 }
 
 // Experiment represents an experiment instance.
 type Experiment struct {
 	ID        uint      `gorm:"primary_key" json:"id"`
-	Uid       string    `json:"uid"`
+	Uid       string    `gorm:"index:uid" json:"uid"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Status    string    `json:"status"`
-	Error     string    `json:"error"`
+	Message   string    `json:"error"`
 	// TODO: need to improve
 	Kind           string `json:"kind"`
 	RecoverCommand string `json:"recover_command"`

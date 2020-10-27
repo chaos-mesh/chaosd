@@ -11,23 +11,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+// +build !swagger_server
+
+package swaggerserver
 
 import (
-	"go.uber.org/fx"
+	"net/http"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/httpserver"
+	"github.com/gin-gonic/gin"
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		grpcserver.NewServer,
-		httpserver.NewServer,
-	),
-
-	fx.Invoke(grpcserver.Register),
-	fx.Invoke(httpserver.Register),
-)
+// Handler returns an empty `http.Handler`.
+func Handler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.String(http.StatusOK, "Swagger UI is not built. Please run `SWAGGER=1 make`.")
+	}
+}

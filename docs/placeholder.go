@@ -11,23 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+// This file only ensures `doc` package exist even if swagger is not enabled. This is required for `go mod tidy`.
 
-import (
-	"go.uber.org/fx"
-
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/httpserver"
-)
-
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		grpcserver.NewServer,
-		httpserver.NewServer,
-	),
-
-	fx.Invoke(grpcserver.Register),
-	fx.Invoke(httpserver.Register),
-)
+package docs
