@@ -11,23 +11,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+// +build swagger_server
+
+package swaggerserver
 
 import (
-	"go.uber.org/fx"
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/httpserver"
+	_ "github.com/chaos-mesh/chaos-mesh/docs" // for swagger api
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		grpcserver.NewServer,
-		httpserver.NewServer,
-	),
-
-	fx.Invoke(grpcserver.Register),
-	fx.Invoke(httpserver.Register),
-)
+// Handler returns a swagger `http.Handler`.
+func Handler() gin.HandlerFunc {
+	return ginSwagger.WrapHandler(
+		swaggerFiles.Handler,
+		ginSwagger.URL("./doc.json"),
+	)
+}

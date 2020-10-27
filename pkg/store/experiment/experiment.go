@@ -47,3 +47,7 @@ func (e *experimentStore) FindByUid(_ context.Context, uid string) (*core.Experi
 func (e *experimentStore) Set(_ context.Context, exp *core.Experiment) error {
 	return nil
 }
+
+func (e *experimentStore) Update(_ context.Context, uid, status, msg string) error {
+	return nil
+}

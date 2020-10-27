@@ -11,23 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package core
 
-import (
-	"go.uber.org/fx"
-
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/httpserver"
-)
-
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		grpcserver.NewServer,
-		httpserver.NewServer,
-	),
-
-	fx.Invoke(grpcserver.Register),
-	fx.Invoke(httpserver.Register),
-)
+type ProcessCommand struct {
+	// Process defines the process name or the process ID.
+	Process string
+	Signal  string
+	// TODO: support these feature
+	// Newest       bool
+	// Oldest       bool
+	// Exact        bool
+	// Duration     string
+	// Interval     int64
+	// KillChildren bool
+	// User         string
+}

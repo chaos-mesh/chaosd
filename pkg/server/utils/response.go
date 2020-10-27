@@ -11,23 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package utils
 
-import (
-	"go.uber.org/fx"
+type Response struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+	UID     string `json:"uid"`
+}
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/httpserver"
-)
-
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		grpcserver.NewServer,
-		httpserver.NewServer,
-	),
-
-	fx.Invoke(grpcserver.Register),
-	fx.Invoke(httpserver.Register),
-)
+func AttackSuccessResponse(uid string) *Response {
+	return &Response{
+		Status:  200,
+		Message: "attack successfully",
+		UID:     uid,
+	}
+}
