@@ -37,8 +37,9 @@ failpoint-disable: $(GOBIN)/failpoint-ctl
 $(GOBIN)/failpoint-ctl:
 	$(GO) get github.com/pingcap/failpoint/failpoint-ctl@v0.0.0-20200210140405-f8f9fb234798
 
+build: binary
 
-binary: chaosd bin/pause bin/suicide
+binary: chaosd chaos bin/pause bin/suicide
 
 taily-build:
 	if [ "$(shell docker ps --filter=name=$@ -q)" = "" ]; then \
@@ -100,3 +101,5 @@ tidy:
 	@echo "go mod tidy"
 	GO111MODULE=on go mod tidy
 	git diff -U --exit-code go.mod go.sum
+
+.PHONY: all build check fmt vet tidy binary chaosd chaos image-binary image-chaosd
