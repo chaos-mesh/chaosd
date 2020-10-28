@@ -11,20 +11,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package client
 
-import "syscall"
+import (
+	"net/http"
+)
 
-type ProcessCommand struct {
-	// Process defines the process name or the process ID.
-	Process string
-	Signal  syscall.Signal
-	// TODO: support these feature
-	// Newest       bool
-	// Oldest       bool
-	// Exact        bool
-	// Duration     string
-	// Interval     int64
-	// KillChildren bool
-	// User         string
+// Client is used to communicate with the chaosd
+type Client struct {
+	cfg    Config
+	client *http.Client
+}
+
+// Config defines for chaosd client
+type Config struct {
+	Addr string
+}
+
+// NewClient creates a new chaosd client from a given address
+func NewClient(cfg Config) *Client {
+	return &Client{
+		cfg:    cfg,
+		client: http.DefaultClient,
+	}
 }

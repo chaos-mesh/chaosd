@@ -44,9 +44,9 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 	for _, p := range processes {
 		if attack.Process == strconv.Itoa(p.Pid()) || attack.Process == p.Executable() {
 			switch attack.Signal {
-			case "KILL":
+			case syscall.SIGKILL:
 				syscall.Kill(p.Pid(), syscall.SIGKILL)
-			case "TERM":
+			case syscall.SIGTERM:
 				syscall.Kill(p.Pid(), syscall.SIGTERM)
 			default:
 				return "", errors.Errorf("signal %s is not supported", attack.Signal)

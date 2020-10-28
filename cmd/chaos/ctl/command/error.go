@@ -11,20 +11,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package command
 
-import "syscall"
+import (
+	"fmt"
+	"os"
+)
 
-type ProcessCommand struct {
-	// Process defines the process name or the process ID.
-	Process string
-	Signal  syscall.Signal
-	// TODO: support these feature
-	// Newest       bool
-	// Oldest       bool
-	// Exact        bool
-	// Duration     string
-	// Interval     int64
-	// KillChildren bool
-	// User         string
+// http://tldp.org/LDP/abs/html/exitcodes.html
+const (
+	ExitSuccess = iota
+	ExitError
+	ExitBadConnection
+	ExitInterrupted
+	ExitIO
+	ExitBadArgs = 128
+)
+
+// ExitWithError exits with error
+func ExitWithError(code int, err error) {
+	fmt.Fprintln(os.Stderr, "Error:", err)
+	os.Exit(code)
+}
+
+// NormalExit exits normally
+func NormalExit(msg string) {
+	fmt.Fprintln(os.Stdout, msg)
+	os.Exit(ExitSuccess)
 }
