@@ -23,7 +23,7 @@ import (
 
 	"github.com/shirou/gopsutil/process"
 
-	"github.com/chaos-mesh/chaos-mesh/pkg/mock"
+	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 )

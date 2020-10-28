@@ -28,14 +28,14 @@ import (
 )
 
 type httpServer struct {
-	conf   config.Config
+	conf   *config.Config
 	chaos  *chaosd.Server
 	exp    core.ExperimentStore
 	engine *gin.Engine
 }
 
 func NewServer(
-	conf config.Config,
+	conf *config.Config,
 	chaos *chaosd.Server,
 	exp core.ExperimentStore,
 ) *httpServer {

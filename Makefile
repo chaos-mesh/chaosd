@@ -78,8 +78,21 @@ bin/pause: ./hack/pause.c
 bin/suicide: ./hack/suicide.c
 	cc ./hack/suicide.c -o bin/suicide
 
+
+image-chaos-mesh-protoc:
+	docker build -t pingcap/chaos-daemon-protoc ${DOCKER_BUILD_ARGS} ./images/protoc
+
+ifeq ($(IN_DOCKER),1)
 proto:
-	protoc -I pkg/chaosdaemon/pb pkg/chaosdaemon/pb/*.proto --go_out=plugins=grpc:pkg/chaosdaemon/pb --go_out=./pkg/chaosdaemon/pb
+	protoc -I pkg/server/serverpb pkg/server/serverpb/*.proto --go_out=plugins=grpc:pkg/server/serverpb --go_out=./pkg/server/serverpb
+else
+proto: image-chaos-mesh-protoc
+	docker run --rm --workdir /mnt/ --volume $(shell pwd):/mnt \
+		--user $(shell id -u):$(shell id -g) --env IN_DOCKER=1 pingcap/chaos-daemon-protoc \
+		/usr/bin/make proto
+
+	make fmt
+endif
 
 check: fmt vet boilerplate lint tidy
 

@@ -21,7 +21,7 @@ import (
 	"github.com/pingcap/log"
 	"github.com/pkg/errors"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
 	"github.com/chaos-mesh/chaos-daemon/pkg/time"
 )
 
