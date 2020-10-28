@@ -11,20 +11,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package command
 
-import "syscall"
+import "github.com/spf13/cobra"
 
-type ProcessCommand struct {
-	// Process defines the process name or the process ID.
-	Process string
-	Signal  syscall.Signal
-	// TODO: support these feature
-	// Newest       bool
-	// Oldest       bool
-	// Exact        bool
-	// Duration     string
-	// Interval     int64
-	// KillChildren bool
-	// User         string
+func NewAttackCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "attack <subcommand>",
+		Short: "Attack related commands",
+	}
+
+	cmd.AddCommand(
+		NewProcessAttackCommand(),
+	)
+
+	return cmd
 }

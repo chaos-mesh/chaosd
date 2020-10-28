@@ -62,6 +62,9 @@ endif
 chaosd:
 	$(CGOENV) go build -ldflags '$(LDFLAGS)' -o bin/chaosd ./cmd/chaosd/main.go
 
+chaos:
+	$(GOENV) go build -ldflags '$(LDFLAGS)' -o bin/chaos ./cmd/chaos/main.go
+
 image-build-base:
 	DOCKER_BUILDKIT=0 docker build --ulimit nofile=65536:65536 -t pingcap/chaos-build-base ${DOCKER_BUILD_ARGS} images/build-base
 

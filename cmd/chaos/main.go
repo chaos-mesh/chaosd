@@ -13,6 +13,8 @@
 
 package main
 
-func main() {
+import "github.com/chaos-mesh/chaos-daemon/cmd/chaos/ctl"
 
+func main() {
+	ctl.Execute()
 }
