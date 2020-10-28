@@ -24,7 +24,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
 )
 
 const (

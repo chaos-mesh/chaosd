@@ -15,7 +15,6 @@ package chaosd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -25,10 +24,8 @@ import (
 	"github.com/shirou/gopsutil/process"
 	"go.uber.org/zap"
 
-	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
-
 	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
 )
 
 const (
@@ -43,10 +40,7 @@ func (s *Server) ApplyIoChaos(ctx context.Context, in *pb.ApplyIoChaosRequest) (
 		}
 	}
 
-	actions := []v1alpha1.IoChaosAction{}
-	json.Unmarshal([]byte(in.Actions), &actions)
-	log.Info("the length of actions", zap.Int("length", len(actions)))
-	if len(actions) == 0 {
+	if len(in.Actions) == 0 {
 		return &pb.ApplyIoChaosResponse{
 			Instance:  0,
 			StartTime: 0,

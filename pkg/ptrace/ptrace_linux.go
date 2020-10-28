@@ -38,7 +38,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/chaos-mesh/chaos-mesh/pkg/mapreader"
+	"github.com/chaos-mesh/chaos-daemon/pkg/mapreader"
 )
 
 var log = ctrl.Log.WithName("ptrace")

@@ -48,7 +48,7 @@ type CRIClient interface {
 }
 
 // NewCRIClient creates a container runtime information client.
-func NewCRIClient(conf config.Config) (CRIClient, error) {
+func NewCRIClient(conf *config.Config) (CRIClient, error) {
 	// TODO: support more container runtime
 
 	var cli CRIClient

@@ -22,13 +22,19 @@ import (
 
 type Server struct {
 	exp                      core.ExperimentStore
-	conf                     config.Config
+	conf                     *config.Config
 	criCli                   container.CRIClient
 	backgroundProcessManager bpm.BackgroundProcessManager
 }
 
-func NewServer(exp core.ExperimentStore, cli container.CRIClient, bpm bpm.BackgroundProcessManager) *Server {
+func NewServer(
+	conf *config.Config,
+	exp core.ExperimentStore,
+	cli container.CRIClient,
+	bpm bpm.BackgroundProcessManager,
+) *Server {
 	return &Server{
+		conf:                     conf,
 		exp:                      exp,
 		criCli:                   cli,
 		backgroundProcessManager: bpm,

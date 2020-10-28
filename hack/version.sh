@@ -36,7 +36,7 @@ function chaos-daemon::version::ldflag() {
   local key=${1}
   local val=${2}
 
-  echo "-X 'github.com/chaos-mesh/chaos-mesh/pkg/version.${key}=${val}'"
+  echo "-X 'github.com/chaos-mesh/chaos-daemon/pkg/version.${key}=${val}'"
 }
 
 # Prints the value that needs to be passed to the -ldflags parameter of go build

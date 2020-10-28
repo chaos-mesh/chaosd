@@ -29,16 +29,16 @@ import (
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/pb"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
 	"github.com/chaos-mesh/chaos-daemon/pkg/utils"
 )
 
 type grpcServer struct {
-	conf  config.Config
+	conf  *config.Config
 	chaos *chaosd.Server
 }
 
-func NewServer(conf config.Config, chaos *chaosd.Server) *grpcServer {
+func NewServer(conf *config.Config, chaos *chaosd.Server) *grpcServer {
 	return &grpcServer{
 		conf:  conf,
 		chaos: chaos,

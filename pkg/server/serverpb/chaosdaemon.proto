@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package pb;
+package serverpb;
 
 import "google/protobuf/empty.proto";
 
