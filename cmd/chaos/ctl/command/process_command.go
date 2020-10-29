@@ -14,10 +14,10 @@
 package command
 
 import (
-	"errors"
 	"fmt"
 	"syscall"
 
+	"github.com/pingcap/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
@@ -35,6 +35,7 @@ func NewProcessAttackCommand() *cobra.Command {
 
 	cmd.AddCommand(
 		NewProcessKillCommand(),
+		NewProcessStopCommand(),
 	)
 
 	return cmd
@@ -43,7 +44,7 @@ func NewProcessAttackCommand() *cobra.Command {
 func NewProcessKillCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kill [options]",
-		Short: "kill process, default signal 9",
+		Short: "kill process, default signal SIGKILL",
 		Run:   processKillCommandFunc,
 	}
 
@@ -52,21 +53,50 @@ func NewProcessKillCommand() *cobra.Command {
 	return cmd
 }
 
+func NewProcessStopCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "stop [options]",
+		Short: "stop process, this action will stop the process with SIGSTOP",
+
+		Run: processStopCommandFunc,
+	}
+
+	cmd.Flags().StringVarP(&process, "process", "p", "", "The process name or the process ID")
+
+	return cmd
+}
+
 func processKillCommandFunc(cmd *cobra.Command, args []string) {
+	processAttackF(cmd, syscall.SIGKILL)
+}
+
+func processStopCommandFunc(cmd *cobra.Command, args []string) {
+	processAttackF(cmd, syscall.SIGSTOP)
+}
+
+func processAttackF(cmd *cobra.Command, sig syscall.Signal) {
 	if len(process) == 0 {
 		ExitWithError(ExitBadArgs, errors.New("process not provided"))
 	}
 
 	cli := mustClientFromCmd(cmd)
 
-	resp, err := cli.CreateProcessAttack(&core.ProcessCommand{
+	resp, apiErr, err := cli.CreateProcessAttack(&core.ProcessCommand{
 		Process: process,
-		Signal:  syscall.SIGKILL,
+		Signal:  sig,
 	})
 
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
 
-	fmt.Println(resp)
+	if apiErr != nil {
+		ExitWithMsg(ExitError, fmt.Sprintf("Failed to attack process %s, %s", process, apiErr.Message))
+	}
+
+	if resp.Status != 200 {
+		ExitWithMsg(ExitError, fmt.Sprintf("Failed to attack process %s, %s", process, resp.Message))
+	}
+
+	NormalExit(fmt.Sprintf("Attack process %s successfully, uid: %s", process, resp.UID))
 }

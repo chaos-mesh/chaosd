@@ -41,46 +41,46 @@ func doRequest(
 	cli *http.Client,
 	url, method string,
 	opts ...BodyOption,
-) ([]byte, error) {
+) ([]byte, []byte, error) {
 	b := &bodyOption{}
 	for _, o := range opts {
 		o(b)
 	}
 	req, err := http.NewRequest(method, url, b.body)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
 
 	if b.contentType != "" {
 		req.Header.Set("Content-Type", b.contentType)
 	}
 
-	resp, err := dial(cli, req)
+	resp, apiErr, err := dial(cli, req)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
 
-	return resp, nil
+	return resp, apiErr, nil
 }
 
-func dial(cli *http.Client, req *http.Request) ([]byte, error) {
+func dial(cli *http.Client, req *http.Request) ([]byte, []byte, error) {
 	resp, err := cli.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		var msg []byte
-		msg, err = ioutil.ReadAll(resp.Body)
+		var apiErr []byte
+		apiErr, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		return nil, errors.Errorf("[%d] %s", resp.StatusCode, msg)
+		return nil, apiErr, nil
 	}
 
 	content, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return content, nil
+	return content, nil, nil
 }

@@ -83,15 +83,13 @@ func handler(s *httpServer) {
 func (s *httpServer) createProcessAttack(c *gin.Context) {
 	attack := &core.ProcessCommand{}
 	if err := c.ShouldBindJSON(attack); err != nil {
-		c.Status(http.StatusBadRequest)
-		_ = c.Error(utils.ErrInvalidRequest.WrapWithNoMessage(err))
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
 	uid, err := s.chaos.ProcessAttack(attack)
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
-		_ = c.Error(utils.ErrInternalServer.WrapWithNoMessage(err))
+		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
