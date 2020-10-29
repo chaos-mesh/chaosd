@@ -39,3 +39,9 @@ func NormalExit(msg string) {
 	fmt.Fprintln(os.Stdout, msg)
 	os.Exit(ExitSuccess)
 }
+
+// ExitWithMsg exits with error message
+func ExitWithMsg(code int, msg string) {
+	fmt.Fprintln(os.Stderr, msg)
+	os.Exit(code)
+}

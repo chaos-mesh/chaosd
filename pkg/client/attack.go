@@ -28,22 +28,30 @@ const (
 	processAttack = "api/attack/process"
 )
 
-func (c *Client) CreateProcessAttack(attack *core.ProcessCommand) (*utils.Response, error) {
+func (c *Client) CreateProcessAttack(attack *core.ProcessCommand) (*utils.Response, *utils.APIError, error) {
 	a, err := json.Marshal(attack)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
 
 	url := fmt.Sprintf("%s/%s", c.cfg.Addr, processAttack)
-	data, err := doRequest(c.client, url, http.MethodPost, withJsonBody(a))
+	data, apiErr, err := doRequest(c.client, url, http.MethodPost, withJsonBody(a))
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
+	}
+
+	if apiErr != nil {
+		aerr := &utils.APIError{}
+		if err := json.Unmarshal(apiErr, aerr); err != nil {
+			return nil, nil, errors.WithStack(err)
+		}
+		return nil, aerr, nil
 	}
 
 	resp := &utils.Response{}
 	if err := json.Unmarshal(data, resp); err != nil {
-		return nil, errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
 
-	return resp, nil
+	return resp, nil, nil
 }
