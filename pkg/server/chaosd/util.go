@@ -23,7 +23,7 @@ import (
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
 
-	"github.com/pkg/errors"
+	"github.com/pingcap/errors"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
 	"github.com/chaos-mesh/chaos-daemon/pkg/utils"
