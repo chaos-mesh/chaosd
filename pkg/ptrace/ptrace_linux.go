@@ -36,7 +36,7 @@ import (
 	"github.com/go-logr/logr"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/pkg/errors"
+	"github.com/pingcap/errors"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/mapreader"
 )
@@ -385,7 +385,7 @@ func (p *TracedProgram) PtraceWriteSlice(addr uint64, buffer []byte) error {
 		_, err := syscall.PtracePokeData(p.pid, addr, data)
 		if err != nil {
 			err = errors.WithStack(err)
-			return errors.WithMessagef(err, "write to addr %x with %+v failed", addr, data)
+			return errors.WithMessage(err, fmt.Sprintf("write to addr %x with %+v failed", addr, data))
 		}
 
 		wroteSize += ptrSize

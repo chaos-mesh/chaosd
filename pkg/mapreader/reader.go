@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/pingcap/errors"
 )
 
 // Entry is one line in /proc/pid/maps

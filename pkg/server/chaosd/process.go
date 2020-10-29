@@ -20,7 +20,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mitchellh/go-ps"
-	"github.com/pkg/errors"
+	"github.com/pingcap/errors"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 )

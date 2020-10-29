@@ -34,7 +34,7 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&cmdFlags.URL, "url", "u", "http://127.0.0.0:31767", "chaosd address")
+	rootCmd.PersistentFlags().StringVarP(&cmdFlags.URL, "url", "u", "http://127.0.0.1:31767", "chaosd address")
 	rootCmd.AddCommand(
 		command.NewAttackCommand(),
 	)

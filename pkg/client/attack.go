@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pkg/errors"
+	"github.com/pingcap/errors"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/utils"

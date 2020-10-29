@@ -28,8 +28,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/containerd/cgroups"
+	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
-	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/process"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"

@@ -24,8 +24,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	grpcm "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
-	"github.com/pkg/errors"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"

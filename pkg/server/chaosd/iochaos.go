@@ -19,8 +19,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
-	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/process"
 	"go.uber.org/zap"
 

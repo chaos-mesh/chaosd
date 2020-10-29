@@ -19,7 +19,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/pkg/errors"
+	"github.com/pingcap/errors"
 )
 
 // BodyOption sets the type and content of the body

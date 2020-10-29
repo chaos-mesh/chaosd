@@ -16,7 +16,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
+	"github.com/pingcap/errors"
 	flag "github.com/spf13/pflag"
 )
 

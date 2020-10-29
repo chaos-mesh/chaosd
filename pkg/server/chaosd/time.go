@@ -18,8 +18,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
-	"github.com/pkg/errors"
 
 	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
 	"github.com/chaos-mesh/chaos-daemon/pkg/time"

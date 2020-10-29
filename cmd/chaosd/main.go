@@ -14,16 +14,15 @@
 package main
 
 import (
-	"flag"
 	"os"
 
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"github.com/pingcap/log"
-	"github.com/pkg/errors"
-
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/pingcap/errors"
+	"github.com/pingcap/log"
+	flag "github.com/spf13/pflag"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
@@ -34,16 +33,8 @@ import (
 )
 
 func main() {
-	// Flushing any buffered log entries
-	defer log.Sync() //nolint:errcheck
-
-	version.PrintVersionInfo("Chaosd Server")
 	cfg := config.NewConfig()
 	err := cfg.Parse(os.Args[1:])
-
-	if cfg.Version {
-		os.Exit(0)
-	}
 
 	switch errors.Cause(err) {
 	case nil:
@@ -51,6 +42,11 @@ func main() {
 		os.Exit(0)
 	default:
 		log.Fatal("parse cmd flags error", zap.Error(err))
+	}
+
+	version.PrintVersionInfo("Chaosd Server")
+	if cfg.Version {
+		os.Exit(0)
 	}
 
 	app := fx.New(
