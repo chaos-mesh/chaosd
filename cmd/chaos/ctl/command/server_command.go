@@ -11,18 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package command
 
 import (
-	"os"
-
+	"github.com/spf13/cobra"
 	"go.uber.org/fx"
-	"go.uber.org/zap"
-
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/pingcap/errors"
-	"github.com/pingcap/log"
-	flag "github.com/spf13/pflag"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
@@ -32,27 +25,36 @@ import (
 	"github.com/chaos-mesh/chaos-daemon/pkg/version"
 )
 
-func main() {
-	cfg := config.NewConfig()
-	err := cfg.Parse(os.Args[1:])
+func NewServerCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "server <option>",
+		Short: "run Chaosd Server",
+		Run:   serverCommandFunc,
+	}
 
-	switch errors.Cause(err) {
-	case nil:
-	case flag.ErrHelp:
-		os.Exit(0)
-	default:
-		log.Fatal("parse cmd flags error", zap.Error(err))
+	cmd.Flags().IntVarP(&conf.ListenPort, "port", "p", 31767, "listen port of the Chaosd Server")
+	cmd.Flags().StringVarP(&conf.ListenHost, "host", "h", "0.0.0.0", "listen host of the Chaosd Server")
+	cmd.Flags().StringVarP(&conf.Runtime, "runtime", "r", "docker", "current container runtime")
+	cmd.Flags().BoolVar(&conf.EnablePprof, "enable-pprof", true, "enable pprof")
+	cmd.Flags().IntVar(&conf.PprofPort, "pprof-port", 31766, "listen port of the pprof server")
+	cmd.Flags().StringVarP(&conf.Platform, "platform", "f", "local", "platform to deploy, default: local, supported platform: local, kubernetes")
+
+	return cmd
+}
+
+var conf *config.Config
+
+func serverCommandFunc(cmd *cobra.Command, args []string) {
+	if err := conf.Validate(); err != nil {
+		ExitWithError(ExitBadArgs, err)
 	}
 
 	version.PrintVersionInfo("Chaosd Server")
-	if cfg.Version {
-		os.Exit(0)
-	}
 
 	app := fx.New(
 		fx.Provide(
 			func() *config.Config {
-				return cfg
+				return conf
 			},
 			container.NewCRIClient,
 			bpm.NewBackgroundProcessManager,

@@ -13,7 +13,6 @@ RUN update-alternatives --set iptables /usr/sbin/iptables-legacy
 ENV RUST_BACKTRACE 1
 
 COPY --from=pingcap/chaos-binary /bin/chaosd /usr/local/bin/chaosd
-COPY --from=pingcap/chaos-binary /bin/chaos /usr/local/bin/chaos
 COPY --from=pingcap/chaos-binary /bin/toda /usr/local/bin/toda
 COPY --from=pingcap/chaos-binary /bin/pause /usr/local/bin/pause
 COPY --from=pingcap/chaos-binary /bin/suicide /usr/local/bin/suicide

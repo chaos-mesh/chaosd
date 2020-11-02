@@ -11,18 +11,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package command
 
-import "syscall"
+import "github.com/spf13/cobra"
 
-type ProcessCommand struct {
-	// Process defines the process name or the process ID.
-	Process string
-	Signal  syscall.Signal
-	// TODO: support these feature
-	// Newest       bool
-	// Oldest       bool
-	// Exact        bool
-	// KillChildren bool
-	// User         string
+func NewDestroyCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "destroy UID",
+		Short: "Destroy a chaos experiment",
+		Args:  cobra.MinimumNArgs(1),
+		Run:   destroyCommandF,
+	}
+
+	return cmd
+}
+
+func destroyCommandF(cmd *cobra.Command, args []string) {
+
 }
