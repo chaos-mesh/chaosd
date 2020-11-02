@@ -53,3 +53,17 @@ func NewDBStore(lc fx.Lifecycle) (*DB, error) {
 
 	return db, nil
 }
+
+func DryDBStore() (*DB, error) {
+	gormDB, err := gorm.Open("sqlite3", path.Join(utils.GetProgramPath(), dataFile))
+	if err != nil {
+		log.Error("failed to open DB", zap.Error(err))
+		return nil, err
+	}
+
+	db := &DB{
+		gormDB,
+	}
+
+	return db, nil
+}

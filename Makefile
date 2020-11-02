@@ -37,9 +37,15 @@ failpoint-disable: $(GOBIN)/failpoint-ctl
 $(GOBIN)/failpoint-ctl:
 	$(GO) get github.com/pingcap/failpoint/failpoint-ctl@v0.0.0-20200210140405-f8f9fb234798
 
+$(GOBIN)/revive:
+	$(GO) get github.com/mgechev/revive@v1.0.2-0.20200225072153-6219ca02fffb
+
+$(GOBIN)/goimports:
+	$(GO) get golang.org/x/tools/cmd/goimports@v0.0.0-20200309202150-20ab64c0d93f
+
 build: binary
 
-binary: chaosd chaos bin/pause bin/suicide
+binary: chaosd bin/pause bin/suicide
 
 taily-build:
 	if [ "$(shell docker ps --filter=name=$@ -q)" = "" ]; then \
@@ -61,10 +67,7 @@ image-binary: image-build-base
 endif
 
 chaosd:
-	$(CGOENV) go build -ldflags '$(LDFLAGS)' -o bin/chaosd ./cmd/chaosd/main.go
-
-chaos:
-	$(GOENV) go build -ldflags '$(LDFLAGS)' -o bin/chaos ./cmd/chaos/main.go
+	$(CGOENV) go build -ldflags '$(LDFLAGS)' -o bin/chaosd ./cmd/chaos/main.go
 
 image-build-base:
 	DOCKER_BUILDKIT=0 docker build --ulimit nofile=65536:65536 -t pingcap/chaos-build-base ${DOCKER_BUILD_ARGS} images/build-base
@@ -77,7 +80,6 @@ bin/pause: ./hack/pause.c
 
 bin/suicide: ./hack/suicide.c
 	cc ./hack/suicide.c -o bin/suicide
-
 
 image-chaos-mesh-protoc:
 	docker build -t pingcap/chaos-daemon-protoc ${DOCKER_BUILD_ARGS} ./images/protoc
@@ -107,6 +109,10 @@ groupimports: $(GOBIN)/goimports
 vet:
 	$(CGOENV) go vet ./...
 
+lint: $(GOBIN)/revive
+	@echo "linting"
+	$< -formatter friendly -config revive.toml $$($(PACKAGE_LIST))
+
 boilerplate:
 	./hack/verify-boilerplate.sh
 
@@ -115,4 +121,4 @@ tidy:
 	GO111MODULE=on go mod tidy
 	git diff -U --exit-code go.mod go.sum
 
-.PHONY: all build check fmt vet tidy binary chaosd chaos image-binary image-chaosd
+.PHONY: all build check fmt vet lint tidy binary chaosd chaos image-binary image-chaosd
