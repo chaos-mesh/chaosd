@@ -38,7 +38,7 @@ func init() {
 	rootCmd.AddCommand(
 		command.NewServerCommand(),
 		command.NewAttackCommand(),
-		command.NewDestroyCommand(),
+		command.NewRecoverCommand(),
 	)
 }
 

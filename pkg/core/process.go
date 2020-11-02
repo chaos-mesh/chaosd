@@ -13,16 +13,26 @@
 
 package core
 
-import "syscall"
+import (
+	"encoding/json"
+	"syscall"
+)
 
 type ProcessCommand struct {
 	// Process defines the process name or the process ID.
 	Process string
 	Signal  syscall.Signal
+	PIDs    []int
 	// TODO: support these feature
 	// Newest       bool
 	// Oldest       bool
 	// Exact        bool
 	// KillChildren bool
 	// User         string
+}
+
+func (p *ProcessCommand) String() string {
+	data, _ := json.Marshal(p)
+
+	return string(data)
 }
