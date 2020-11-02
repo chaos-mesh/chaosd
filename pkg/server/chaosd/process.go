@@ -25,6 +25,10 @@ import (
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 )
 
+const (
+	ProcessAttack = "process attack"
+)
+
 func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 	processes, err := ps.Processes()
 	if err != nil {
@@ -34,9 +38,10 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 	uid := uuid.New()
 
 	if err := s.exp.Set(context.Background(), &core.Experiment{
-		Uid:    uid.String(),
-		Status: core.Created,
-		Kind:   "process attack",
+		Uid:            uid.String(),
+		Status:         core.Created,
+		Kind:           ProcessAttack,
+		RecoverCommand: attack.String(),
 	}); err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -51,6 +56,8 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 				kerr = syscall.Kill(p.Pid(), syscall.SIGKILL)
 			case syscall.SIGTERM:
 				kerr = syscall.Kill(p.Pid(), syscall.SIGTERM)
+			case syscall.SIGSTOP:
+				kerr = syscall.Kill(p.Pid(), syscall.SIGSTOP)
 			default:
 				return "", errors.Errorf("signal %s is not supported", attack.Signal)
 			}
@@ -58,6 +65,7 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 			if kerr != nil {
 				return "", errors.WithStack(kerr)
 			}
+			attack.PIDs = append(attack.PIDs, p.Pid())
 		}
 	}
 
@@ -65,9 +73,23 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 		return "", errors.Errorf("process %s not found", attack.Process)
 	}
 
-	if err := s.exp.Update(context.Background(), uid.String(), core.Success, ""); err != nil {
+	if err := s.exp.Update(context.Background(), uid.String(), core.Success, "", attack.PIDs); err != nil {
 		return "", errors.WithStack(err)
 	}
 
 	return uid.String(), nil
+}
+
+func (s *Server) RecoverProcessAttack(uid string, attack *core.ProcessCommand) error {
+	if attack.Signal != syscall.SIGSTOP {
+		return errors.Errorf("chaos experiment %s not supported to recover", uid)
+	}
+
+	for _, pid := range attack.PIDs {
+		if err := syscall.Kill(pid, syscall.SIGCONT); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	return nil
 }
