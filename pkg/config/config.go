@@ -20,24 +20,6 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-// NewConfig creates a new config.
-func NewConfig() *Config {
-	cfg := &Config{}
-	cfg.flagSet = flag.NewFlagSet("chaosd", flag.ContinueOnError)
-
-	fg := cfg.flagSet
-
-	fg.BoolVarP(&cfg.Version, "version", "V", false, "print version information and exit")
-	fg.IntVarP(&cfg.ListenPort, "port", "p", 31767, "listen port of the Chaosd Server")
-	fg.StringVarP(&cfg.ListenHost, "host", "h", "0.0.0.0", "listen host of the Chaosd Server")
-	fg.StringVarP(&cfg.Runtime, "runtime", "r", "docker", "current container runtime")
-	fg.BoolVar(&cfg.EnablePprof, "enable-pprof", true, "enable pprof")
-	fg.IntVar(&cfg.PprofPort, "pprof-port", 31766, "listen port of the pprof server")
-	fg.StringVarP(&cfg.Platform, "platform", "f", "local", "platform to deploy, default: local, supported platform: local, kubernetes")
-
-	return cfg
-}
-
 // Config defines the configuration for Chaosd.
 type Config struct {
 	flagSet *flag.FlagSet
