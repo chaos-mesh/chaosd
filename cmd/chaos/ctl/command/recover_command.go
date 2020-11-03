@@ -28,7 +28,7 @@ import (
 
 func NewRecoverCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "Recover UID",
+		Use:   "recover UID",
 		Short: "Recover a chaos experiment",
 		Args:  cobra.MinimumNArgs(1),
 		Run:   recoverCommandF,
@@ -52,7 +52,7 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 	if exp == nil {
 		ExitWithMsg(ExitError, fmt.Sprintf("chaos experiment %s not found", uid))
 	}
-	chaos := mustChaosdFromCmd(cmd, conf)
+	chaos := mustChaosdFromCmd(cmd, &conf)
 
 	switch exp.Kind {
 	case chaosd.ProcessAttack:

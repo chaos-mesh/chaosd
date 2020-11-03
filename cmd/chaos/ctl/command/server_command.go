@@ -42,7 +42,7 @@ func NewServerCommand() *cobra.Command {
 	return cmd
 }
 
-var conf *config.Config
+var conf config.Config
 
 func serverCommandFunc(cmd *cobra.Command, args []string) {
 	if err := conf.Validate(); err != nil {
@@ -54,7 +54,7 @@ func serverCommandFunc(cmd *cobra.Command, args []string) {
 	app := fx.New(
 		fx.Provide(
 			func() *config.Config {
-				return conf
+				return &conf
 			},
 			container.NewCRIClient,
 			bpm.NewBackgroundProcessManager,

@@ -41,7 +41,7 @@ func (f *processFlag) valid(action string) error {
 	return nil
 }
 
-var pFlag *processFlag
+var pFlag processFlag
 
 func NewProcessAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -94,7 +94,7 @@ func processKillCommandFunc(cmd *cobra.Command, args []string) {
 		ExitWithError(ExitBadArgs, err)
 	}
 
-	processAttackF(cmd, pFlag)
+	processAttackF(cmd, &pFlag)
 }
 
 func processStopCommandFunc(cmd *cobra.Command, args []string) {
@@ -102,11 +102,11 @@ func processStopCommandFunc(cmd *cobra.Command, args []string) {
 		ExitWithError(ExitBadArgs, err)
 	}
 
-	processAttackF(cmd, pFlag)
+	processAttackF(cmd, &pFlag)
 }
 
 func processAttackF(cmd *cobra.Command, f *processFlag) {
-	chaos := mustChaosdFromCmd(cmd, conf)
+	chaos := mustChaosdFromCmd(cmd, &conf)
 
 	uid, err := chaos.ProcessAttack(&core.ProcessCommand{
 		Process: pFlag.process,
