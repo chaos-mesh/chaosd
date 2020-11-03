@@ -19,22 +19,13 @@ import (
 	"github.com/chaos-mesh/chaos-daemon/cmd/chaos/ctl/command"
 )
 
-type CommandFlags struct {
-	URL string
-}
-
 // CommandFlags are flags that used in all Commands
 var rootCmd = &cobra.Command{
 	Use:   "chaos",
 	Short: "A command line client to run chaos experiment",
 }
 
-var (
-	cmdFlags = CommandFlags{}
-)
-
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&cmdFlags.URL, "url", "u", "http://127.0.0.1:31767", "chaosd address")
 	rootCmd.AddCommand(
 		command.NewServerCommand(),
 		command.NewAttackCommand(),
