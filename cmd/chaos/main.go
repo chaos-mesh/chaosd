@@ -13,7 +13,11 @@
 
 package main
 
-import "github.com/chaos-mesh/chaos-daemon/cmd/chaos/ctl"
+import (
+	"github.com/chaos-mesh/chaos-daemon/cmd/chaos/ctl"
+
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+)
 
 func main() {
 	ctl.Execute()

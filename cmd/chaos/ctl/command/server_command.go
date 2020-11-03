@@ -28,12 +28,12 @@ import (
 func NewServerCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server <option>",
-		Short: "run Chaosd Server",
+		Short: "Run Chaosd Server",
 		Run:   serverCommandFunc,
 	}
 
 	cmd.Flags().IntVarP(&conf.ListenPort, "port", "p", 31767, "listen port of the Chaosd Server")
-	cmd.Flags().StringVarP(&conf.ListenHost, "host", "h", "0.0.0.0", "listen host of the Chaosd Server")
+	cmd.Flags().StringVarP(&conf.ListenHost, "host", "a", "0.0.0.0", "listen host of the Chaosd Server")
 	cmd.Flags().StringVarP(&conf.Runtime, "runtime", "r", "docker", "current container runtime")
 	cmd.Flags().BoolVar(&conf.EnablePprof, "enable-pprof", true, "enable pprof")
 	cmd.Flags().IntVar(&conf.PprofPort, "pprof-port", 31766, "listen port of the pprof server")
