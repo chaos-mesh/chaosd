@@ -11,20 +11,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
-
-import "github.com/spf13/cobra"
-
-func NewAttackCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
-	}
-
-	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-	)
-
-	return cmd
-}
+package utils

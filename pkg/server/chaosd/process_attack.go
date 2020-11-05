@@ -52,11 +52,11 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 			notFound = false
 			var kerr error
 			switch attack.Signal {
-			case syscall.SIGKILL:
+			case int(syscall.SIGKILL):
 				kerr = syscall.Kill(p.Pid(), syscall.SIGKILL)
-			case syscall.SIGTERM:
+			case int(syscall.SIGTERM):
 				kerr = syscall.Kill(p.Pid(), syscall.SIGTERM)
-			case syscall.SIGSTOP:
+			case int(syscall.SIGSTOP):
 				kerr = syscall.Kill(p.Pid(), syscall.SIGSTOP)
 			default:
 				return "", errors.Errorf("signal %s is not supported", attack.Signal)
@@ -81,7 +81,7 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 }
 
 func (s *Server) RecoverProcessAttack(uid string, attack *core.ProcessCommand) error {
-	if attack.Signal != syscall.SIGSTOP {
+	if attack.Signal != int(syscall.SIGSTOP) {
 		return errors.Errorf("chaos experiment %s not supported to recover", uid)
 	}
 

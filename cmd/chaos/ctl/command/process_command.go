@@ -17,31 +17,12 @@ import (
 	"fmt"
 	"syscall"
 
-	"github.com/pingcap/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 )
 
-type processFlag struct {
-	process string
-	single  int
-}
-
-const (
-	killProcessAction = "kill"
-	stopProcessAction = "stop"
-)
-
-func (f *processFlag) valid(action string) error {
-	if len(f.process) == 0 {
-		return errors.New("process not provided")
-	}
-
-	return nil
-}
-
-var pFlag processFlag
+var pFlag core.ProcessCommand
 
 func NewProcessAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -64,10 +45,8 @@ func NewProcessKillCommand() *cobra.Command {
 		Run:   processKillCommandFunc,
 	}
 
-	cmd.Flags().StringVarP(&pFlag.process, "process", "p", "", "The process name or the process ID")
-	cmd.Flags().IntVarP(&pFlag.single, "single", "s", 9, "The signal number to send")
-	cmd.Flags().StringVarP(&conf.Runtime, "runtime", "r", "docker", "current container runtime")
-	cmd.Flags().StringVarP(&conf.Platform, "platform", "f", "local", "platform to deploy, default: local, supported platform: local, kubernetes")
+	cmd.Flags().StringVarP(&pFlag.Process, "process", "p", "", "The process name or the process ID")
+	cmd.Flags().IntVarP(&pFlag.Signal, "single", "s", 9, "The signal number to send")
 
 	return cmd
 }
@@ -80,41 +59,31 @@ func NewProcessStopCommand() *cobra.Command {
 		Run: processStopCommandFunc,
 	}
 
-	cmd.Flags().StringVarP(&pFlag.process, "process", "p", "", "The process name or the process ID")
-	pFlag.single = int(syscall.SIGSTOP)
-
-	cmd.Flags().StringVarP(&conf.Runtime, "runtime", "r", "docker", "current container runtime")
-	cmd.Flags().StringVarP(&conf.Platform, "platform", "f", "local", "platform to deploy, default: local, supported platform: local, kubernetes")
+	cmd.Flags().StringVarP(&pFlag.Process, "process", "p", "", "The process name or the process ID")
+	pFlag.Signal = int(syscall.SIGSTOP)
 
 	return cmd
 }
 
 func processKillCommandFunc(cmd *cobra.Command, args []string) {
-	if err := pFlag.valid(killProcessAction); err != nil {
-		ExitWithError(ExitBadArgs, err)
-	}
-
 	processAttackF(cmd, &pFlag)
 }
 
 func processStopCommandFunc(cmd *cobra.Command, args []string) {
-	if err := pFlag.valid(stopProcessAction); err != nil {
-		ExitWithError(ExitBadArgs, err)
-	}
-
 	processAttackF(cmd, &pFlag)
 }
 
-func processAttackF(cmd *cobra.Command, f *processFlag) {
+func processAttackF(cmd *cobra.Command, f *core.ProcessCommand) {
+	if err := pFlag.Validate(); err != nil {
+		ExitWithError(ExitBadArgs, err)
+	}
+
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.ProcessAttack(&core.ProcessCommand{
-		Process: pFlag.process,
-		Signal:  syscall.Signal(f.single),
-	})
+	uid, err := chaos.ProcessAttack(f)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Attack process %s successfully, uid: %s", f.process, uid))
+	NormalExit(fmt.Sprintf("Attack process %s successfully, uid: %s", f.Process, uid))
 }

@@ -42,7 +42,10 @@ func NewServerCommand() *cobra.Command {
 	return cmd
 }
 
-var conf config.Config
+var conf = config.Config{
+	Platform: config.LocalPlatform,
+	Runtime:  "docker",
+}
 
 func serverCommandFunc(cmd *cobra.Command, args []string) {
 	if err := conf.Validate(); err != nil {

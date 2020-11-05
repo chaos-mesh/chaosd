@@ -61,7 +61,7 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 			ExitWithError(ExitError, err)
 		}
 
-		if pcmd.Signal != syscall.SIGSTOP {
+		if pcmd.Signal != int(syscall.SIGSTOP) {
 			ExitWithMsg(ExitError, fmt.Sprintf("process attack %s not support to recover", uid))
 		}
 

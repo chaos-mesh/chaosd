@@ -11,20 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package chaosd
 
-import "github.com/spf13/cobra"
+import "github.com/chaos-mesh/chaos-daemon/pkg/core"
 
-func NewAttackCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
-	}
-
-	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-	)
-
-	return cmd
+func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
+	return "", nil
 }

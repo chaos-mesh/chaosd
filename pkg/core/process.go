@@ -15,13 +15,20 @@ package core
 
 import (
 	"encoding/json"
-	"syscall"
+
+	"github.com/pingcap/errors"
+)
+
+const (
+	ProcessKillAction = "kill"
+	ProcessStopAction = "stop"
 )
 
 type ProcessCommand struct {
+	Action string
 	// Process defines the process name or the process ID.
 	Process string
-	Signal  syscall.Signal
+	Signal  int
 	PIDs    []int
 	// TODO: support these feature
 	// Newest       bool
@@ -29,6 +36,16 @@ type ProcessCommand struct {
 	// Exact        bool
 	// KillChildren bool
 	// User         string
+}
+
+func (p *ProcessCommand) Validate() error {
+	if len(p.Process) == 0 {
+		return errors.New("process not provided")
+	}
+
+	// TODO: validate signal
+
+	return nil
 }
 
 func (p *ProcessCommand) String() string {
