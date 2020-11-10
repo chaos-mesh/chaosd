@@ -30,7 +30,7 @@ func CheckPorts(p string) bool {
 			return false
 		}
 
-		ps := strings.Split(p, "-")
+		ps := strings.Split(p, ":")
 		if len(ps) == 0 {
 			if _, err := strconv.Atoi(p); err != nil {
 				return false
@@ -72,12 +72,9 @@ func CheckIPProtocols(p string) bool {
 		return true
 	}
 
-	pros := strings.Split(p, ",")
-	for _, protocol := range pros {
-		if protocol != "TCP" || protocol != "UDP" || protocol != "ICMP" {
-			return false
-		}
+	if p == "tcp" || p == "udp" || p == "icmp" || p == "all" {
+		return true
 	}
 
-	return true
+	return false
 }

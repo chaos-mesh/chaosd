@@ -76,6 +76,19 @@ func (s *Server) SetContainerTcRules(ctx context.Context, in *pb.TcsRequest) err
 	nsPath := GetNsPath(pid, bpm.NetNS)
 	tcClient := buildTcClient(ctx, nsPath)
 
+	iptables := buildIptablesClient(ctx, nsPath)
+
+	return applyTCRules(ctx, tcClient, iptables, in)
+}
+
+func (s *Server) SetNodeTcRules(ctx context.Context, in *pb.TcsRequest) error {
+	tcClient := buildTcClient(ctx, "")
+	iptables := buildIptablesClient(ctx, "")
+
+	return applyTCRules(ctx, tcClient, iptables, in)
+}
+
+func applyTCRules(ctx context.Context, tcClient *tcClient, iptables *iptablesClient, in *pb.TcsRequest) error {
 	if err := tcClient.flush(); err != nil {
 		return errors.WithStack(err)
 	}
@@ -133,8 +146,7 @@ func (s *Server) SetContainerTcRules(ctx context.Context, in *pb.TcsRequest) err
 
 	parent := len(globalTc)
 	band := 3 + len(filterTc) // 3 handlers for normal sfq on prio qdisc
-	err = tcClient.addPrio(parent, band)
-	if err != nil {
+	if err := tcClient.addPrio(parent, band); err != nil {
 		log.Error("failed to add prio", zap.Error(err))
 		return errors.WithStack(err)
 	}
@@ -143,8 +155,6 @@ func (s *Server) SetContainerTcRules(ctx context.Context, in *pb.TcsRequest) err
 
 	index := 0
 	currentHandler := parent + 3 // 3 handlers for sfq on prio qdisc
-
-	iptables := buildIptablesClient(ctx, nsPath)
 
 	// iptables chain has been initialized by previous grpc request to set iptables
 	// and iptables rules are recovered by previous call too, so there is no need
@@ -167,16 +177,36 @@ func (s *Server) SetContainerTcRules(ctx context.Context, in *pb.TcsRequest) err
 			}
 		}
 
-		chains = append(chains, &pb.Chain{
+		ch := &pb.Chain{
 			Name:      fmt.Sprintf("TC-TABLES-%d", index),
 			Direction: pb.Chain_OUTPUT,
 			Ipsets:    []string{ipset},
 			Target:    fmt.Sprintf("CLASSIFY --set-class %d:%d", parent, index+4),
-		})
+		}
+
+		// TODO: refactor this
+		tc := tcs[0]
+		if len(tc.Protocol) > 0 {
+			ch.Protocol = fmt.Sprintf("--protocol %s", tc.Protocol)
+		}
+
+		if len(tc.SourcePort) > 0 || len(tc.EgressPort) > 0 {
+			ch.SourcePorts = fmt.Sprintf("--source-port %s", tc.SourcePort)
+			if strings.Contains(tc.SourcePort, ",") {
+				ch.SourcePorts = fmt.Sprintf("-m multiport --source-ports %s", tc.SourcePort)
+			}
+
+			ch.DestinationPorts = fmt.Sprintf("--destination-port %s", tc.EgressPort)
+			if strings.Contains(tc.EgressPort, ",") {
+				ch.DestinationPorts = fmt.Sprintf("-m multiport --destination-ports %s", tc.EgressPort)
+			}
+		}
+
+		chains = append(chains, ch)
 
 		index++
 	}
-	if err = iptables.setIptablesChains(chains); err != nil {
+	if err := iptables.setIptablesChains(chains); err != nil {
 		log.Error("failed to set iptables", zap.Error(err))
 		return errors.WithStack(err)
 	}
@@ -190,8 +220,8 @@ type tcClient struct {
 	nsPath string
 }
 
-func buildTcClient(ctx context.Context, nsPath string) tcClient {
-	return tcClient{
+func buildTcClient(ctx context.Context, nsPath string) *tcClient {
+	return &tcClient{
 		ctx,
 		nsPath,
 	}

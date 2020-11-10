@@ -13,8 +13,61 @@
 
 package chaosd
 
-import "github.com/chaos-mesh/chaos-daemon/pkg/core"
+import (
+	"context"
+	"fmt"
+
+	"github.com/google/uuid"
+	"github.com/pingcap/errors"
+
+	"github.com/chaos-mesh/chaos-daemon/pkg/core"
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
+)
 
 func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
+	uid := uuid.New()
+	ipsetName := ""
+	if attack.NeedApplyIPSet() {
+		ipset, err := attack.ToIPSet(fmt.Sprintf("chaos-%s", uid.String()))
+		if err != nil {
+			return "", errors.WithStack(err)
+		}
+
+		if err := flushIPSet(context.Background(), "", ipset); err != nil {
+			return "", errors.WithStack(err)
+		}
+		ipsetName = ipset.Name
+	}
+
+	switch attack.Action {
+	case core.NetworkDelayAction:
+		netem, err := attack.ToNetem()
+		if err != nil {
+			return "", errors.WithStack(err)
+		}
+		tc := &pb.Tc{
+			Type:       pb.Tc_NETEM,
+			Netem:      netem,
+			Ipset:      ipsetName,
+			Protocol:   attack.IPProtocol,
+			SourcePort: attack.SourcePort,
+			EgressPort: attack.EgressPort,
+		}
+
+		in := &pb.TcsRequest{
+			Tcs: []*pb.Tc{tc},
+		}
+
+		if err := s.SetNodeTcRules(context.Background(), in); err != nil {
+			return "", errors.WithStack(err)
+		}
+
+		return uid.String(), nil
+	}
+
 	return "", nil
+}
+
+func (s *Server) applyIPSet(attack *core.NetworkCommand) error {
+	return nil
 }

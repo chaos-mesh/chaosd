@@ -16,9 +16,14 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/chaos-mesh/chaos-daemon/pkg/utils"
-	"github.com/pingcap/errors"
+	"strconv"
+	"strings"
 	"time"
+
+	"github.com/pingcap/errors"
+
+	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
+	"github.com/chaos-mesh/chaos-daemon/pkg/utils"
 )
 
 type NetworkCommand struct {
@@ -68,20 +73,32 @@ func (n *NetworkCommand) validNetworkDelay() error {
 		return errors.New("device is required")
 	}
 
-	if !utils.CheckPorts(n.SourcePort) {
-		return errors.Errorf("source ports %s not valid", n.SourcePort)
-	}
-
-	if !utils.CheckPorts(n.EgressPort) {
-		return errors.Errorf("egress ports %s not valid", n.EgressPort)
-	}
-
 	if !utils.CheckIPs(n.IPAddress) {
 		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
 	}
 
-	if !utils.CheckIPProtocols(n.IPProtocol) {
-		return errors.Errorf("ip protocols %s not valid", n.IPProtocol)
+	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
+}
+
+func checkProtocolAndPorts(p string, sports string, dports string) error {
+	if !utils.CheckPorts(sports) {
+		return errors.Errorf("source ports %s not valid", sports)
+	}
+
+	if !utils.CheckPorts(dports) {
+		return errors.Errorf("egress ports %s not valid", dports)
+	}
+
+	if !utils.CheckIPProtocols(p) {
+		return errors.Errorf("ip protocols %s not valid", p)
+	}
+
+	if len(sports) > 0 || len(dports) > 0 {
+		if p == "tcp" || p == "udp" {
+			return nil
+		}
+
+		return errors.New("ip protocol is required")
 	}
 
 	return nil
@@ -91,4 +108,64 @@ func (n *NetworkCommand) String() string {
 	data, _ := json.Marshal(n)
 
 	return string(data)
+}
+
+func (n *NetworkCommand) ToNetem() (*pb.Netem, error) {
+	delayTime, err := time.ParseDuration(n.Latency)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	jitter, err := time.ParseDuration(n.Jitter)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	corr, err := strconv.ParseFloat(n.Correlation, 32)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	netem := &pb.Netem{
+		Device:    n.Device,
+		Time:      uint32(delayTime.Nanoseconds() / 1e3),
+		DelayCorr: float32(corr),
+		Jitter:    uint32(jitter.Nanoseconds() / 1e3),
+	}
+
+	return netem, nil
+}
+
+func (n *NetworkCommand) ToIPSet(name string) (*pb.IPSet, error) {
+	var (
+		cidrs []string
+		err   error
+	)
+	if len(n.IPAddress) > 0 {
+		cidrs, err = utils.ResolveCidrs(strings.Split(n.IPAddress, ","))
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	if len(n.Hostname) > 0 {
+		cs, err := utils.ResolveCidrs(strings.Split(n.Hostname, ","))
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		cidrs = append(cidrs, cs...)
+	}
+
+	return &pb.IPSet{
+		Name:  name,
+		Cidrs: cidrs,
+	}, nil
+}
+
+func (n *NetworkCommand) NeedApplyIPSet() bool {
+	if len(n.IPAddress) > 0 || len(n.Hostname) > 0 {
+		return true
+	}
+
+	return false
 }

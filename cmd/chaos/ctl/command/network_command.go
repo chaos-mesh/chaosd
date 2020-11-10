@@ -50,13 +50,13 @@ func NewNetworkDelayCommand() *cobra.Command {
 		"jitter time, time units: ns, us (or µs), ms, s, m, h.")
 	cmd.Flags().StringVarP(&nFlag.Device, "device", "d", "", "the network interface to impact")
 	cmd.Flags().StringVarP(&nFlag.EgressPort, "egress-port", "e", "",
-		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001-8010")
+		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. It can only be used in conjunction with -p tcp or -p udp")
 	cmd.Flags().StringVarP(&nFlag.SourcePort, "source-port", "s", "",
-		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001-8010")
+		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. It can only be used in conjunction with -p tcp or -p udp")
 	cmd.Flags().StringVarP(&nFlag.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
 	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "h", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
-		"only impact traffic using this IP protocol, supported: TCP, UDP, ICMP")
+		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
 	nFlag.Action = core.NetworkDelayAction
 
 	return cmd

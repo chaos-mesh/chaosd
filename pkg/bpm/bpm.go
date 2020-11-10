@@ -232,6 +232,9 @@ type ProcessBuilder struct {
 
 // SetNetNS sets the net namespace of the process
 func (b *ProcessBuilder) SetNetNS(nsPath string) *ProcessBuilder {
+	if len(nsPath) == 0 {
+		return b
+	}
 	return b.SetNS([]nsOption{{
 		Typ:  NetNS,
 		Path: nsPath,
@@ -240,6 +243,9 @@ func (b *ProcessBuilder) SetNetNS(nsPath string) *ProcessBuilder {
 
 // SetPidNS sets the pid namespace of the process
 func (b *ProcessBuilder) SetPidNS(nsPath string) *ProcessBuilder {
+	if len(nsPath) == 0 {
+		return b
+	}
 	return b.SetNS([]nsOption{{
 		Typ:  PidNS,
 		Path: nsPath,

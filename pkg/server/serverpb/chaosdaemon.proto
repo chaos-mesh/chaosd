@@ -45,21 +45,22 @@ message NetemRequest {
 }
 
 message Netem {
-  uint32 time = 1;
-  uint32 jitter = 2;
-  float delay_corr = 3;
-  uint32 limit = 4;
-  float loss = 5;
-  float loss_corr = 6;
-  uint32 gap = 7;
-  float duplicate = 8;
-  float duplicate_corr = 9;
-  float reorder = 10;
-  float reorder_corr = 11;
-  float corrupt = 12;
-  float corrupt_corr = 13;
-  TcHandle parent = 14;
-  TcHandle handle = 15;
+  string device = 1;
+  uint32 time = 2;
+  uint32 jitter = 3;
+  float delay_corr = 4;
+  uint32 limit = 5;
+  float loss = 6;
+  float loss_corr = 7;
+  uint32 gap = 8;
+  float duplicate = 9;
+  float duplicate_corr = 10;
+  float reorder = 11;
+  float reorder_corr = 12;
+  float corrupt = 13;
+  float corrupt_corr = 14;
+  TcHandle parent = 15;
+  TcHandle handle = 16;
 }
 
 message TbfRequest {
@@ -131,6 +132,9 @@ message Chain {
   Direction direction = 2;
   repeated string ipsets = 3;
   string target = 4;
+  string protocol = 5;
+  string source_ports = 6;
+  string destination_ports = 7;
 }
 
 message TimeRequest {
@@ -196,4 +200,7 @@ message Tc {
   Netem netem = 2;
   Tbf tbf = 3;
   string ipset = 4;
+  string protocol = 5;
+  string sourcePort = 6;
+  string egressPort = 7;
 }

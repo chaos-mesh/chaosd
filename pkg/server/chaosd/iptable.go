@@ -68,8 +68,8 @@ type iptablesChain struct {
 	Rules []string
 }
 
-func buildIptablesClient(ctx context.Context, nsPath string) iptablesClient {
-	return iptablesClient{
+func buildIptablesClient(ctx context.Context, nsPath string) *iptablesClient {
+	return &iptablesClient{
 		ctx,
 		nsPath,
 	}
@@ -96,16 +96,28 @@ func (iptables *iptablesClient) setIptablesChain(chain *pb.Chain) error {
 		return fmt.Errorf("unknown chain direction %d", chain.Direction)
 	}
 
+	protocolAndPort := chain.Protocol
+	if len(protocolAndPort) > 0 {
+		if len(chain.SourcePorts) > 0 {
+			protocolAndPort += " " + chain.SourcePorts
+		}
+
+		if len(chain.DestinationPorts) > 0 {
+			protocolAndPort += " " + chain.DestinationPorts
+		}
+	}
+
 	rules := []string{}
 	for _, ipset := range chain.Ipsets {
-		rules = append(rules, fmt.Sprintf("-A %s -m set --match-set %s %s -j DROP -w 5", chain.Name, ipset, matchPart))
+		rules = append(rules, fmt.Sprintf("-A %s -m set --match-set %s %s -j %s -w 5 %s",
+			chain.Name, ipset, matchPart, chain.Target, protocolAndPort))
 	}
 	err := iptables.createNewChain(&iptablesChain{
 		Name:  chain.Name,
 		Rules: rules,
 	})
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	if chain.Direction == pb.Chain_INPUT {
@@ -113,14 +125,14 @@ func (iptables *iptablesClient) setIptablesChain(chain *pb.Chain) error {
 			Name: "CHAOS-INPUT",
 		}, "-A CHAOS-INPUT -j "+chain.Name)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	} else if chain.Direction == pb.Chain_OUTPUT {
 		iptables.ensureRule(&iptablesChain{
 			Name: "CHAOS-OUTPUT",
 		}, "-A CHAOS-OUTPUT -j "+chain.Name)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	} else {
 		return fmt.Errorf("unknown direction %d", chain.Direction)
