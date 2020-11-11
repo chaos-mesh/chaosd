@@ -61,19 +61,17 @@ func flushIPSet(ctx context.Context, nsPath string, set *pb.IPSet) error {
 	// the ipset while existing iptables rules are using them can not be deleted,.
 	// so we creates an temp ipset and swap it with existing one.
 	if err := createIPSet(ctx, nsPath, tmpName); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	// add ips to the temp ipset
 	if err := addCIDRsToIPSet(ctx, nsPath, tmpName, set.Cidrs); err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	// rename the temp ipset with the target name of ipset if the taget ipset not exists,
 	// otherwise swap  them with each other.
-	err := renameIPSet(ctx, nsPath, tmpName, name)
-
-	return err
+	return renameIPSet(ctx, nsPath, tmpName, name)
 }
 
 func createIPSet(ctx context.Context, nsPath string, name string) error {
@@ -147,7 +145,7 @@ func renameIPSet(ctx context.Context, nsPath string, oldName string, newName str
 		if !strings.Contains(output, ipsetNewNameExistErr) {
 			log.Error("rename ipset failed",
 				zap.String("command", cmd.String()), zap.String("output", output), zap.Error(err))
-			return err
+			return errors.WithStack(err)
 		}
 
 		// swap the old ipset and the new ipset if the new ipset already exist.
@@ -159,7 +157,7 @@ func renameIPSet(ctx context.Context, nsPath string, oldName string, newName str
 		if err != nil {
 			log.Error("swap ipset failed",
 				zap.String("command", cmd.String()), zap.String("output", string(out)), zap.Error(err))
-			return err
+			return errors.WithStack(err)
 		}
 	}
 	return nil

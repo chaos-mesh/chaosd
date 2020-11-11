@@ -28,7 +28,7 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 	uid := uuid.New()
 	ipsetName := ""
 	if attack.NeedApplyIPSet() {
-		ipset, err := attack.ToIPSet(fmt.Sprintf("chaos-%s", uid.String()))
+		ipset, err := attack.ToIPSet(fmt.Sprintf("chaos-%s", uid.String()[:16]))
 		if err != nil {
 			return "", errors.WithStack(err)
 		}

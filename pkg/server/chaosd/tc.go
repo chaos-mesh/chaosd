@@ -184,7 +184,7 @@ func applyTCRules(ctx context.Context, tcClient *tcClient, iptables *iptablesCli
 			Target:    fmt.Sprintf("CLASSIFY --set-class %d:%d", parent, index+4),
 		}
 
-		// TODO: refactor this
+		// TODO: refactor this logic
 		tc := tcs[0]
 		if len(tc.Protocol) > 0 {
 			ch.Protocol = fmt.Sprintf("--protocol %s", tc.Protocol)

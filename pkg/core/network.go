@@ -80,6 +80,16 @@ func (n *NetworkCommand) validNetworkDelay() error {
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
 }
 
+func (n *NetworkCommand) SetDefault() {
+	if len(n.Jitter) == 0 {
+		n.Jitter = "0ms"
+	}
+
+	if len(n.Correlation) == 0 {
+		n.Correlation = "0"
+	}
+}
+
 func checkProtocolAndPorts(p string, sports string, dports string) error {
 	if !utils.CheckPorts(sports) {
 		return errors.Errorf("source ports %s not valid", sports)
