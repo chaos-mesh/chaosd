@@ -84,6 +84,9 @@ func (s *Server) SetContainerTcRules(ctx context.Context, in *pb.TcsRequest) err
 func (s *Server) SetNodeTcRules(ctx context.Context, in *pb.TcsRequest) error {
 	tcClient := buildTcClient(ctx, "")
 	iptables := buildIptablesClient(ctx, "")
+	if err := iptables.initializeEnv(); err != nil {
+		return errors.WithStack(err)
+	}
 
 	return applyTCRules(ctx, tcClient, iptables, in)
 }

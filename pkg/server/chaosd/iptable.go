@@ -79,7 +79,7 @@ func (iptables *iptablesClient) setIptablesChains(chains []*pb.Chain) error {
 	for _, chain := range chains {
 		err := iptables.setIptablesChain(chain)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
@@ -109,8 +109,8 @@ func (iptables *iptablesClient) setIptablesChain(chain *pb.Chain) error {
 
 	rules := []string{}
 	for _, ipset := range chain.Ipsets {
-		rules = append(rules, fmt.Sprintf("-A %s -m set --match-set %s %s -j %s -w 5 %s",
-			chain.Name, ipset, matchPart, chain.Target, protocolAndPort))
+		rules = append(rules, strings.TrimSpace(fmt.Sprintf("-A %s -m set --match-set %s %s -j %s -w 5 %s",
+			chain.Name, ipset, matchPart, chain.Target, protocolAndPort)))
 	}
 	err := iptables.createNewChain(&iptablesChain{
 		Name:  chain.Name,
@@ -149,7 +149,7 @@ func (iptables *iptablesClient) initializeEnv() error {
 			Rules: []string{},
 		})
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		iptables.ensureRule(&iptablesChain{
@@ -178,17 +178,16 @@ func (iptables *iptablesClient) createNewChain(chain *iptablesChain) error {
 // deleteAndWriteRules will remove all existing function in the chain
 // and replace with the new settings
 func (iptables *iptablesClient) deleteAndWriteRules(chain *iptablesChain) error {
-
 	// This chain should already exist
 	err := iptables.flushIptablesChain(chain)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	for _, rule := range chain.Rules {
 		err := iptables.ensureRule(chain, rule)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
