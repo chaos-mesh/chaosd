@@ -73,7 +73,7 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 		return "", errors.Errorf("process %s not found", attack.Process)
 	}
 
-	if err := s.exp.Update(context.Background(), uid.String(), core.Success, "", attack.PIDs); err != nil {
+	if err := s.exp.Update(context.Background(), uid.String(), core.Success, "", attack.String()); err != nil {
 		return "", errors.WithStack(err)
 	}
 
@@ -89,6 +89,10 @@ func (s *Server) RecoverProcessAttack(uid string, attack *core.ProcessCommand) e
 		if err := syscall.Kill(pid, syscall.SIGCONT); err != nil {
 			return errors.WithStack(err)
 		}
+	}
+
+	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
+		return errors.WithStack(err)
 	}
 
 	return nil

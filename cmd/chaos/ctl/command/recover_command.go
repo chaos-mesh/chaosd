@@ -68,6 +68,15 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 		if err := chaos.RecoverProcessAttack(uid, pcmd); err != nil {
 			ExitWithError(ExitError, errors.Errorf("Recover experiment %s failed, %s", uid, err.Error()))
 		}
+	case chaosd.NetworkAttack:
+		ncmd := &core.NetworkCommand{}
+		if err := json.Unmarshal([]byte(exp.RecoverCommand), ncmd); err != nil {
+			ExitWithError(ExitError, err)
+		}
+
+		if err := chaos.RecoverNetworkAttack(uid, ncmd); err != nil {
+			ExitWithError(ExitError, errors.Errorf("Recover experiment %s failed, %s", uid, err.Error()))
+		}
 	default:
 		ExitWithMsg(ExitError, fmt.Sprintf("chaos experiment kind %s not found", exp.Kind))
 	}

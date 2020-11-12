@@ -33,7 +33,7 @@ type ExperimentStore interface {
 	ListByStatus(ctx context.Context, status string) ([]*Experiment, error)
 	FindByUid(ctx context.Context, uid string) (*Experiment, error)
 	Set(ctx context.Context, exp *Experiment) error
-	Update(ctx context.Context, uid, status, msg string, pids []int) error
+	Update(ctx context.Context, uid, status, msg string, command string) error
 }
 
 // Experiment represents an experiment instance.

@@ -24,6 +24,10 @@ import (
 	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
 )
 
+const (
+	NetworkAttack = "network attack"
+)
+
 func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 	uid := uuid.New()
 	ipsetName := ""
@@ -37,6 +41,15 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 			return "", errors.WithStack(err)
 		}
 		ipsetName = ipset.Name
+	}
+
+	if err := s.exp.Set(context.Background(), &core.Experiment{
+		Uid:            uid.String(),
+		Status:         core.Created,
+		Kind:           NetworkAttack,
+		RecoverCommand: attack.String(),
+	}); err != nil {
+		return "", errors.WithStack(err)
 	}
 
 	switch attack.Action {
@@ -61,11 +74,35 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 		if err := s.SetNodeTcRules(context.Background(), in); err != nil {
 			return "", errors.WithStack(err)
 		}
-
-		return uid.String(), nil
 	}
 
-	return "", nil
+	if err := s.exp.Update(context.Background(), uid.String(), core.Success, "", attack.String()); err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	return uid.String(), nil
+}
+
+func (s *Server) RecoverNetworkAttack(uid string, attack *core.NetworkCommand) error {
+	switch attack.Action {
+	case core.NetworkDelayAction:
+		tc := &pb.Tc{
+			Type: pb.Tc_NETEM,
+		}
+
+		in := &pb.TcsRequest{
+			Tcs: []*pb.Tc{tc},
+		}
+
+		if err := s.SetNodeTcRules(context.Background(), in); err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
 }
 
 func (s *Server) applyIPSet(attack *core.NetworkCommand) error {
