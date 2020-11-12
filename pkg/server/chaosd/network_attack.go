@@ -86,15 +86,7 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 func (s *Server) RecoverNetworkAttack(uid string, attack *core.NetworkCommand) error {
 	switch attack.Action {
 	case core.NetworkDelayAction:
-		tc := &pb.Tc{
-			Type: pb.Tc_NETEM,
-		}
-
-		in := &pb.TcsRequest{
-			Tcs: []*pb.Tc{tc},
-		}
-
-		if err := s.SetNodeTcRules(context.Background(), in); err != nil {
+		if err := s.SetNodeTcRules(context.Background(), &pb.TcsRequest{}); err != nil {
 			return errors.WithStack(err)
 		}
 	}
