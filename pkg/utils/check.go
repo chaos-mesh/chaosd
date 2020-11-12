@@ -38,7 +38,7 @@ func CheckPorts(p string) bool {
 			continue
 		}
 
-		if len(ps) != 2 {
+		if len(ps) > 2 {
 			return false
 		}
 
@@ -59,7 +59,14 @@ func CheckIPs(i string) bool {
 
 	ips := strings.Split(i, ",")
 	for _, ip := range ips {
-		if ret := net.ParseIP(ip); ret == nil {
+		if !strings.Contains(ip, "/") {
+			if net.ParseIP(ip) == nil {
+				return false
+			}
+			continue
+		}
+
+		if _, _, err := net.ParseCIDR(ip); err != nil {
 			return false
 		}
 	}
