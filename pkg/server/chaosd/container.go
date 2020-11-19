@@ -22,7 +22,7 @@ import (
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
+	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 )
 
 // ContainerKill kills container according to container id in the req

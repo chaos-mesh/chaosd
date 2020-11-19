@@ -33,7 +33,7 @@ import (
 	"github.com/shirou/gopsutil/process"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
+	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 )
 
 var (

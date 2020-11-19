@@ -16,7 +16,7 @@ package chaosd
 import (
 	"context"
 
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
+	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 )
 
 func (s *Server) ExecContainerStress(context.Context, *pb.ExecStressRequest) (*pb.ExecStressResponse, error) {

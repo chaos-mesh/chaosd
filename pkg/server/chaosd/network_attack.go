@@ -21,10 +21,10 @@ import (
 	"github.com/pingcap/errors"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
-	pb2 "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
+	//pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 )
 
 const (
@@ -45,8 +45,8 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 			return "", err
 		}
 
-		_, err = chaosDaemon.FlushIPSets(context.Background(), &pb2.IPSetsRequest{
-			Ipsets: []*pb2.IPSet{{
+		_, err = chaosDaemon.FlushIPSets(context.Background(), &pb.IPSetsRequest{
+			Ipsets: []*pb.IPSet{{
 				Name:  ipset.Name,
 				Cidrs: ipset.Cidrs,
 			}},

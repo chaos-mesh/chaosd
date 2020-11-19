@@ -14,6 +14,7 @@
 package grpcserver
 
 import (
+	/*
 	"context"
 	"net"
 
@@ -29,10 +30,12 @@ import (
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
+	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 	"github.com/chaos-mesh/chaos-daemon/pkg/utils"
+	*/
 )
 
+/*
 type grpcServer struct {
 	conf  *config.Config
 	chaos *chaosd.Server
@@ -150,3 +153,5 @@ func (s *grpcServer) ApplyIoChaos(ctx context.Context, in *pb.ApplyIoChaosReques
 	log.Info("apply iochaos", zap.Any("request", in))
 	return s.chaos.ApplyIoChaos(ctx, in)
 }
+
+*/
