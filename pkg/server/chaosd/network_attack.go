@@ -20,6 +20,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
 
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
+	pb2 "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
 )
@@ -37,9 +40,26 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 			return "", errors.WithStack(err)
 		}
 
-		if err := flushIPSet(context.Background(), "", ipset); err != nil {
-			return "", errors.WithStack(err)
+		chaosDaemon, err := chaosdaemon.NewDaemonServer(chaosdaemon.ContainerRuntimeNone)
+		if err != nil {
+			return "", err
 		}
+
+		_, err = chaosDaemon.FlushIPSets(context.Background(), &pb2.IPSetsRequest{
+			Ipsets: []*pb2.IPSet{{
+				Name:  ipset.Name,
+				Cidrs: ipset.Cidrs,
+			}},
+		})
+		if err != nil {
+			return "", err
+		}
+
+		/*
+			if err := flushIPSet(context.Background(), "", ipset); err != nil {
+				return "", errors.WithStack(err)
+			}
+		*/
 		ipsetName = ipset.Name
 	}
 
