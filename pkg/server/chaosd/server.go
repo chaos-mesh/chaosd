@@ -22,6 +22,9 @@ import (
 
 type Server struct {
 	exp                      core.ExperimentStore
+	ipsetRule                core.IPSetRuleStore
+	iptablesRule              core.IptablesRuleStore
+	tcRule                   core.TCRuleStore
 	conf                     *config.Config
 	criCli                   container.CRIClient
 	backgroundProcessManager bpm.BackgroundProcessManager

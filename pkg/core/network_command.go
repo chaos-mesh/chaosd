@@ -146,6 +146,29 @@ func (n *NetworkCommand) ToNetem() (*pb.Netem, error) {
 	return netem, nil
 }
 
+func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
+	tc := &pb.Tc{
+		Type:       pb.Tc_NETEM,
+		Ipset:      ipset,
+		Protocol:   n.IPProtocol,
+		SourcePort: n.SourcePort,
+		EgressPort: n.EgressPort,
+	}
+
+	switch n.Action {
+	case NetworkDelayAction:
+		netem, err := n.ToNetem()
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		tc.Netem = netem
+	default:
+		return nil, errors.Errorf("action %s not supported", n.Action)
+	}
+
+	return tc, nil
+}
+
 func (n *NetworkCommand) ToIPSet(name string) (*pb.IPSet, error) {
 	var (
 		cidrs []string
@@ -178,4 +201,16 @@ func (n *NetworkCommand) NeedApplyIPSet() bool {
 	}
 
 	return false
+}
+
+func (n *NetworkCommand) NeedApplyIptables() bool {
+	return false
+}
+
+func (n *NetworkCommand) NeedApplyTC() bool {
+	return true
+}
+
+func (n *NetworkCommand) ToChain() (*pb.Chain, error) {
+	return nil, nil
 }

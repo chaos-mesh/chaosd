@@ -33,6 +33,21 @@ const (
 	iptablesChainAlreadyExistErr = "iptables: Chain already exists."
 )
 
+func (s *Server) SetNodeIptablesChains(ctx context.Context, req []*pb.Chain) error {
+	iptables := buildIptablesClient(ctx, "")
+	if err := iptables.initializeEnv(); err != nil {
+		log.Error("failed to initialize iptables", zap.Error(err))
+		return errors.WithStack(err)
+	}
+
+	if err := iptables.setIptablesChains(req); err != nil {
+		log.Error("failed to set iptables chains", zap.Error(err))
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
 func (s *Server) SetContainerIptablesChains(ctx context.Context, req *pb.IptablesChainsRequest) error {
 	pid, err := s.criCli.GetPidFromContainerID(ctx, req.ContainerId)
 	if err != nil {

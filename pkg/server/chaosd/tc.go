@@ -181,7 +181,7 @@ func applyTCRules(ctx context.Context, tcClient *tcClient, iptables *iptablesCli
 		}
 
 		ch := &pb.Chain{
-			Name:      fmt.Sprintf("TC-TABLES-%d", index),
+			Name:      fmt.Sprintf("IPTABLES-%d", index),
 			Direction: pb.Chain_OUTPUT,
 			Ipsets:    []string{ipset},
 			Target:    fmt.Sprintf("CLASSIFY --set-class %d:%d", parent, index+4),
