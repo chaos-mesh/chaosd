@@ -16,6 +16,9 @@ package experiment
 import (
 	"context"
 
+	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
+
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 	"github.com/chaos-mesh/chaos-daemon/pkg/store/dbstore"
 )
@@ -33,21 +36,51 @@ type experimentStore struct {
 }
 
 func (e *experimentStore) List(_ context.Context) ([]*core.Experiment, error) {
-	return nil, nil
+	exps := make([]*core.Experiment, 0)
+	if err := e.db.
+		Find(&exps).
+		Order("created_at DESC").
+		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
+		return nil, errors.WithStack(err)
+	}
+
+	return exps, nil
 }
 
 func (e *experimentStore) ListByStatus(_ context.Context, status string) ([]*core.Experiment, error) {
-	return nil, nil
+	exps := make([]*core.Experiment, 0)
+	if err := e.db.
+		Where("status = ?", status).
+		Find(&exps).
+		Order("created_at DESC").
+		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
+		return nil, errors.WithStack(err)
+	}
+
+	return exps, nil
 }
 
 func (e *experimentStore) FindByUid(_ context.Context, uid string) (*core.Experiment, error) {
-	return nil, nil
+	exps := make([]*core.Experiment, 0)
+	if err := e.db.
+		Where("uid = ?", uid).
+		Find(&exps).
+		Order("created_at DESC").
+		Error; err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return exps[0], nil
 }
 
 func (e *experimentStore) Set(_ context.Context, exp *core.Experiment) error {
-	return nil
+	return e.db.Model(core.Experiment{}).Save(exp).Error
 }
 
 func (e *experimentStore) Update(_ context.Context, uid, status, msg string, command string) error {
-	return nil
+	return e.db.
+		Model(core.Experiment{}).
+		Where("uid = ?", uid).
+		Updates(core.Experiment{Status: status, Message: msg, RecoverCommand: command}).
+		Error
 }

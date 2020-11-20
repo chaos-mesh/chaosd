@@ -38,7 +38,7 @@ type ipsetRuleStore struct {
 func (i *ipsetRuleStore) List(_ context.Context) ([]*core.IPSetRule, error) {
 	rules := make([]*core.IPSetRule, 0)
 	if err := i.db.
-		Find(rules).
+		Find(&rules).
 		Order("created_at DESC").
 		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
 		return nil, errors.WithStack(err)
