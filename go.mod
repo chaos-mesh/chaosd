@@ -8,9 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
-	github.com/golang/protobuf v1.4.2
 	github.com/google/uuid v1.1.1
-	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/jinzhu/gorm v1.9.16
 	github.com/joomcode/errorx v1.0.1
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
@@ -27,7 +25,6 @@ require (
 	github.com/swaggo/gin-swagger v1.2.0
 	go.uber.org/fx v1.13.1
 	go.uber.org/zap v1.15.0
-	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	google.golang.org/grpc v1.27.0
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
