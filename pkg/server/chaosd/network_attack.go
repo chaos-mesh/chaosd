@@ -31,17 +31,17 @@ const (
 )
 
 func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
+	chaosDaemon, err := chaosdaemon.NewDaemonServer(chaosdaemon.ContainerRuntimeNone)
+	if err != nil {
+		return "", err
+	}
+
 	uid := uuid.New()
 	ipsetName := ""
 	if attack.NeedApplyIPSet() {
 		ipset, err := attack.ToIPSet(fmt.Sprintf("chaos-%s", uid.String()[:16]))
 		if err != nil {
 			return "", errors.WithStack(err)
-		}
-
-		chaosDaemon, err := chaosdaemon.NewDaemonServer(chaosdaemon.ContainerRuntimeNone)
-		if err != nil {
-			return "", err
 		}
 
 		_, err = chaosDaemon.FlushIPSets(context.Background(), &pb.IPSetsRequest{
@@ -82,7 +82,7 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 			Tcs: []*pb.Tc{tc},
 		}
 
-		if err := s.SetNodeTcRules(context.Background(), in); err != nil {
+		if _, err := chaosDaemon.SetTcs(context.Background(), in); err != nil {
 			return "", errors.WithStack(err)
 		}
 	}
@@ -95,9 +95,14 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 }
 
 func (s *Server) RecoverNetworkAttack(uid string, attack *core.NetworkCommand) error {
+	chaosDaemon, err := chaosdaemon.NewDaemonServer(chaosdaemon.ContainerRuntimeNone)
+	if err != nil {
+		return err
+	}
+
 	switch attack.Action {
 	case core.NetworkDelayAction:
-		if err := s.SetNodeTcRules(context.Background(), &pb.TcsRequest{}); err != nil {
+		if _, err := chaosDaemon.SetTcs(context.Background(), &pb.TcsRequest{}); err != nil {
 			return errors.WithStack(err)
 		}
 	}

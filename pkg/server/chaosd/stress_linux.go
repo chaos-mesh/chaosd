@@ -32,8 +32,9 @@ import (
 	"github.com/pingcap/log"
 	"github.com/shirou/gopsutil/process"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
 	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+
+	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
 )
 
 var (
