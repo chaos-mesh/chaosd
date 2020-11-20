@@ -17,14 +17,10 @@ import (
 	"go.uber.org/fx"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	//"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
 )
 
 var Module = fx.Options(
 	fx.Provide(
 		chaosd.NewServer,
-		//grpcserver.NewServer,
 	),
-
-	//fx.Invoke(grpcserver.Register),
 )

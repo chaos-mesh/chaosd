@@ -24,7 +24,6 @@ import (
 	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
-	//pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 )
 
 const (
@@ -46,20 +45,12 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 		}
 
 		_, err = chaosDaemon.FlushIPSets(context.Background(), &pb.IPSetsRequest{
-			Ipsets: []*pb.IPSet{{
-				Name:  ipset.Name,
-				Cidrs: ipset.Cidrs,
-			}},
+			Ipsets: []*pb.IPSet{ipset},
 		})
 		if err != nil {
 			return "", err
 		}
 
-		/*
-			if err := flushIPSet(context.Background(), "", ipset); err != nil {
-				return "", errors.WithStack(err)
-			}
-		*/
 		ipsetName = ipset.Name
 	}
 
