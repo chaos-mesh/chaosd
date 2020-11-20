@@ -35,7 +35,7 @@ require (
 )
 
 replace (
-	github.com/chaos-mesh/chaos-mesh => github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201119100347-7d7f2c07b0fb
+	github.com/chaos-mesh/chaos-mesh => github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201120090520-04a1e899ed6b
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.17.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.0
