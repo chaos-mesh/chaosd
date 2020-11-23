@@ -15,6 +15,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"math"
 	"strconv"
 	"strings"
@@ -38,9 +39,14 @@ type IPSetRule struct {
 	// The name of ipset
 	Name string `gorm:"index:name" json:"name"`
 	// The contents of ipset
-	Cidrs []string `json:"cidrs"`
+	Cidrs string `json:"cidrs"`
 	// Experiment represents the experiment which the rule belong to.
 	Experiment string `gorm:"index:experiment" json:"experiment"`
+}
+
+type Cidr struct {
+	gorm.Model
+	Cidr string
 }
 
 // ChainDirection represents the direction of chain
@@ -58,7 +64,7 @@ type IptablesRule struct {
 	// The name of iptables chain
 	Name string `gorm:"index:name" json:"name"`
 	// The name of related ipset
-	IPSets []string `json:"ipsets"`
+	IPSets string `json:"ipsets"`
 	// The block direction of this iptables rule
 	Direction string `json:"direction"`
 	// Experiment represents the experiment which the rule belong to.
@@ -68,7 +74,7 @@ type IptablesRule struct {
 func (i *IptablesRule) ToChain() *pb.Chain {
 	ch := &pb.Chain{
 		Name:      i.Name,
-		Ipsets:    i.IPSets,
+		Ipsets:    strings.Split(i.IPSets, ","),
 		Direction: pb.Chain_Direction(pb.Chain_Direction_value[i.Direction]),
 		Target:    "DROP",
 	}
@@ -98,8 +104,8 @@ type TCRuleStore interface {
 type TCRule struct {
 	gorm.Model
 	// The type of traffic control
-	Type        string `json:"type"`
-	TcParameter `json:",inline"`
+	Type string `json:"type"`
+	TC   string `json:"tc"`
 	// The name of target ipset
 	IPSet string `json:"ipset,omitempty"`
 	// Experiment represents the experiment which the rule belong to.
@@ -117,9 +123,15 @@ func (t *TCRule) ToTC() (*pb.Tc, error) {
 		SourcePort: t.SourcePort,
 		EgressPort: t.EgressPort,
 	}
+
+	tcp := &TcParameter{}
+	if err := json.Unmarshal([]byte(t.TC), tcp); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
 	switch t.Type {
 	case pb.Tc_BANDWIDTH.String():
-		tbf, err := t.Bandwidth.ToTbf()
+		tbf, err := tcp.Bandwidth.ToTbf()
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -127,7 +139,7 @@ func (t *TCRule) ToTC() (*pb.Tc, error) {
 		tc.Type = pb.Tc_BANDWIDTH
 		tc.Tbf = tbf
 	case pb.Tc_NETEM.String():
-		netem, err := toNetem(t.TcParameter)
+		netem, err := toNetem(tcp)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -377,7 +389,7 @@ type NetemSpec interface {
 }
 
 // toNetem calls ToNetem on all non nil network emulation specs and merges them into one request.
-func toNetem(spec TcParameter) (*pb.Netem, error) {
+func toNetem(spec *TcParameter) (*pb.Netem, error) {
 	// NOTE: a cleaner way like
 	// emSpecs = []NetemSpec{spec.Delay, spec.Loss} won't work.
 	// Because in the for _, spec := range emSpecs loop,

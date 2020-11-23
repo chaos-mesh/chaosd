@@ -15,7 +15,9 @@ package chaosd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
@@ -72,7 +74,7 @@ func (s *Server) applyIPSet(attack *core.NetworkCommand, uid string) (string, er
 	}
 	if err := s.ipsetRule.Set(context.Background(), &core.IPSetRule{
 		Name:       ipset.Name,
-		Cidrs:      ipset.Cidrs,
+		Cidrs:      strings.Join(ipset.Cidrs, ","),
 		Experiment: uid,
 	}); err != nil {
 		return "", errors.WithStack(err)
@@ -99,7 +101,7 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, uid string) error {
 
 	if err := s.iptablesRule.Set(context.Background(), &core.IptablesRule{
 		Name:       newChain.Name,
-		IPSets:     newChain.Ipsets,
+		IPSets:     strings.Join(newChain.Ipsets, ","),
 		Direction:  pb.Chain_Direction_name[int32(newChain.Direction)],
 		Experiment: uid,
 	}); err != nil {
@@ -130,16 +132,22 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 		return errors.WithStack(err)
 	}
 
-	if err := s.tcRule.Set(context.Background(), &core.TCRule{
-		Type: pb.Tc_Type_name[int32(newTC.Type)],
-		TcParameter: core.TcParameter{
-			Device: attack.Device,
-			Delay: &core.DelaySpec{
-				Latency:     attack.Latency,
-				Correlation: attack.Correlation,
-				Jitter:      attack.Latency,
-			},
+	tc := &core.TcParameter{
+		Device: attack.Device,
+		Delay: &core.DelaySpec{
+			Latency:     attack.Latency,
+			Correlation: attack.Correlation,
+			Jitter:      attack.Latency,
 		},
+	}
+	tcString, err := json.Marshal(tc)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err := s.tcRule.Set(context.Background(), &core.TCRule{
+		Type:       pb.Tc_Type_name[int32(newTC.Type)],
+		TC:         string(tcString),
 		IPSet:      newTC.Ipset,
 		Protocal:   newTC.Protocol,
 		SourcePort: newTC.SourcePort,

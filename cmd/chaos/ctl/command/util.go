@@ -23,6 +23,7 @@ import (
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
 	"github.com/chaos-mesh/chaos-daemon/pkg/store/dbstore"
 	"github.com/chaos-mesh/chaos-daemon/pkg/store/experiment"
+	"github.com/chaos-mesh/chaos-daemon/pkg/store/network"
 )
 
 func mustChaosdFromCmd(cmd *cobra.Command, conf *config.Config) *chaosd.Server {
@@ -31,7 +32,14 @@ func mustChaosdFromCmd(cmd *cobra.Command, conf *config.Config) *chaosd.Server {
 		ExitWithError(ExitError, err)
 	}
 
-	return chaosd.NewServer(conf, mustExpStoreFromCmd(), cli, bpm.NewBackgroundProcessManager())
+	return chaosd.NewServer(
+		conf,
+		mustExpStoreFromCmd(),
+		mustIPSetRuleStroeFromCmd(),
+		mustIptablesRuleStroeFromCmd(),
+		mustTCRuleStroeFromCmd(),
+		cli,
+		bpm.NewBackgroundProcessManager())
 }
 
 func mustExpStoreFromCmd() core.ExperimentStore {
@@ -41,4 +49,31 @@ func mustExpStoreFromCmd() core.ExperimentStore {
 	}
 
 	return experiment.NewStore(db)
+}
+
+func mustTCRuleStroeFromCmd() core.TCRuleStore {
+	db, err := dbstore.DryDBStore()
+	if err != nil {
+		ExitWithError(ExitError, err)
+	}
+
+	return network.NewTCRuleStore(db)
+}
+
+func mustIPSetRuleStroeFromCmd() core.IPSetRuleStore {
+	db, err := dbstore.DryDBStore()
+	if err != nil {
+		ExitWithError(ExitError, err)
+	}
+
+	return network.NewIPSetRuleStore(db)
+}
+
+func mustIptablesRuleStroeFromCmd() core.IptablesRuleStore {
+	db, err := dbstore.DryDBStore()
+	if err != nil {
+		ExitWithError(ExitError, err)
+	}
+
+	return network.NewIptablesRuleStore(db)
 }

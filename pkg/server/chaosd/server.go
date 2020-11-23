@@ -23,7 +23,7 @@ import (
 type Server struct {
 	exp                      core.ExperimentStore
 	ipsetRule                core.IPSetRuleStore
-	iptablesRule              core.IptablesRuleStore
+	iptablesRule             core.IptablesRuleStore
 	tcRule                   core.TCRuleStore
 	conf                     *config.Config
 	criCli                   container.CRIClient
@@ -33,12 +33,18 @@ type Server struct {
 func NewServer(
 	conf *config.Config,
 	exp core.ExperimentStore,
+	ipset core.IPSetRuleStore,
+	iptables core.IptablesRuleStore,
+	tc core.TCRuleStore,
 	cli container.CRIClient,
 	bpm bpm.BackgroundProcessManager,
 ) *Server {
 	return &Server{
 		conf:                     conf,
 		exp:                      exp,
+		ipsetRule:                ipset,
+		iptablesRule:             iptables,
+		tcRule:                   tc,
 		criCli:                   cli,
 		backgroundProcessManager: bpm,
 	}
