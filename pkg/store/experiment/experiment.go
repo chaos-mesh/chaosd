@@ -70,7 +70,11 @@ func (e *experimentStore) FindByUid(_ context.Context, uid string) (*core.Experi
 		return nil, errors.WithStack(err)
 	}
 
-	return exps[0], nil
+	if len(exps) > 0 {
+		return exps[0], nil
+	}
+
+	return nil, gorm.ErrRecordNotFound
 }
 
 func (e *experimentStore) Set(_ context.Context, exp *core.Experiment) error {

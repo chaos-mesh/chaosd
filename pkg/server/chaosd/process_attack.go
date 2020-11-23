@@ -18,9 +18,12 @@ import (
 	"strconv"
 	"syscall"
 
+	"go.uber.org/zap"
+
 	"github.com/google/uuid"
 	"github.com/mitchellh/go-ps"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 )
@@ -35,10 +38,10 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 		return "", errors.WithStack(err)
 	}
 
-	uid := uuid.New()
+	uid := uuid.New().String()
 
 	if err := s.exp.Set(context.Background(), &core.Experiment{
-		Uid:            uid.String(),
+		Uid:            uid,
 		Status:         core.Created,
 		Kind:           ProcessAttack,
 		RecoverCommand: attack.String(),
@@ -46,38 +49,46 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 		return "", errors.WithStack(err)
 	}
 
+	defer func() {
+		if err == nil {
+			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), attack.String()); err != nil {
+				log.Error("failed to update experiment", zap.Error(err))
+			}
+			return
+		}
+		if err := s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
+			log.Error("failed to update experiment", zap.Error(err))
+		}
+	}()
+
 	notFound := true
 	for _, p := range processes {
 		if attack.Process == strconv.Itoa(p.Pid()) || attack.Process == p.Executable() {
 			notFound = false
-			var kerr error
 			switch attack.Signal {
 			case int(syscall.SIGKILL):
-				kerr = syscall.Kill(p.Pid(), syscall.SIGKILL)
+				err = syscall.Kill(p.Pid(), syscall.SIGKILL)
 			case int(syscall.SIGTERM):
-				kerr = syscall.Kill(p.Pid(), syscall.SIGTERM)
+				err = syscall.Kill(p.Pid(), syscall.SIGTERM)
 			case int(syscall.SIGSTOP):
-				kerr = syscall.Kill(p.Pid(), syscall.SIGSTOP)
+				err = syscall.Kill(p.Pid(), syscall.SIGSTOP)
 			default:
 				return "", errors.Errorf("signal %s is not supported", attack.Signal)
 			}
 
-			if kerr != nil {
-				return "", errors.WithStack(kerr)
+			if err != nil {
+				return "", errors.WithStack(err)
 			}
 			attack.PIDs = append(attack.PIDs, p.Pid())
 		}
 	}
 
 	if notFound {
-		return "", errors.Errorf("process %s not found", attack.Process)
-	}
-
-	if err := s.exp.Update(context.Background(), uid.String(), core.Success, "", attack.String()); err != nil {
+		err = errors.Errorf("process %s not found", attack.Process)
 		return "", errors.WithStack(err)
 	}
 
-	return uid.String(), nil
+	return uid, nil
 }
 
 func (s *Server) RecoverProcessAttack(uid string, attack *core.ProcessCommand) error {

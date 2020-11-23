@@ -50,12 +50,11 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 	}
 
 	if exp == nil {
-		// TODO: refactor this
-		// Just use this to test
-		// ExitWithMsg(ExitError, fmt.Sprintf("chaos experiment %s not found", uid))
-		exp = &core.Experiment{
-			Kind: chaosd.NetworkAttack,
-		}
+		ExitWithMsg(ExitError, fmt.Sprintf("experiment %s not found", uid))
+	}
+
+	if exp.Status != core.Success {
+		ExitWithMsg(ExitError, fmt.Sprintf("can not recover %s experiment", exp.Status))
 	}
 
 	chaos := mustChaosdFromCmd(cmd, &conf)
@@ -87,6 +86,10 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 		}
 	default:
 		ExitWithMsg(ExitError, fmt.Sprintf("chaos experiment kind %s not found", exp.Kind))
+	}
+
+	if err := expStore.Update(context.Background(), uid, core.Destroyed, "", exp.RecoverCommand); err != nil {
+		ExitWithError(ExitError, errors.Errorf("Update %s failed, %s", uid, err.Error()))
 	}
 
 	NormalExit(fmt.Sprintf("Recover %s successfully", uid))

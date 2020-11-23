@@ -19,8 +19,11 @@ import (
 	"fmt"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
@@ -36,6 +39,27 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 		err       error
 	)
 	uid := uuid.New().String()
+
+	if err := s.exp.Set(context.Background(), &core.Experiment{
+		Uid:            uid,
+		Status:         core.Created,
+		Kind:           NetworkAttack,
+		RecoverCommand: attack.String(),
+	}); err != nil {
+		return "", errors.WithStack(err)
+	}
+
+	defer func() {
+		if err == nil {
+			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), attack.String()); err != nil {
+				log.Error("failed to update experiment", zap.Error(err))
+			}
+			return
+		}
+		if err := s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
+			log.Error("failed to update experiment", zap.Error(err))
+		}
+	}()
 
 	if attack.NeedApplyIPSet() {
 		ipsetName, err = s.applyIPSet(attack, uid)
