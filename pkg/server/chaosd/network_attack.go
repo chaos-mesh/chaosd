@@ -161,7 +161,7 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 		Delay: &core.DelaySpec{
 			Latency:     attack.Latency,
 			Correlation: attack.Correlation,
-			Jitter:      attack.Latency,
+			Jitter:      attack.Jitter,
 		},
 	}
 	tcString, err := json.Marshal(tc)
@@ -185,15 +185,61 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 }
 
 func (s *Server) RecoverNetworkAttack(uid string, attack *core.NetworkCommand) error {
-	switch attack.Action {
-	case core.NetworkDelayAction:
-		if err := s.SetNodeTcRules(context.Background(), &pb.TcsRequest{}); err != nil {
-			return errors.WithStack(err)
-		}
+	if attack.NeedApplyIPSet() {
+		return errors.WithStack(s.recoverIPSet(uid))
+	}
+
+	if attack.NeedApplyIptables() {
+		return errors.WithStack(s.recoverIptables(uid))
+	}
+
+	if attack.NeedApplyTC() {
+		return errors.WithStack(s.recoverTC(uid))
 	}
 
 	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+func (s *Server) recoverIPSet(uid string) error {
+	if err := s.ipsetRule.DeleteByExperiment(context.Background(), uid); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func (s *Server) recoverIptables(uid string) error {
+	if err := s.iptablesRule.DeleteByExperiment(context.Background(), uid); err != nil {
+		return errors.WithStack(err)
+	}
+
+	iptables, err := s.iptablesRule.List(context.Background())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	chains := core.IptablesRuleList(iptables).ToChains()
+
+	return errors.WithStack(s.SetNodeIptablesChains(context.Background(), chains))
+}
+
+func (s *Server) recoverTC(uid string) error {
+	if err := s.tcRule.DeleteByExperiment(context.Background(), uid); err != nil {
+		return errors.WithStack(err)
+	}
+
+	tcRules, err := s.tcRule.List(context.Background())
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	tcs, err := core.TCRuleList(tcRules).ToTCs()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return errors.WithStack(s.SetNodeTcRules(context.Background(), &pb.TcsRequest{Tcs: tcs}))
 }

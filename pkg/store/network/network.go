@@ -118,7 +118,6 @@ func (i *iptablesRuleStore) DeleteByExperiment(_ context.Context, experiment str
 }
 
 func NewTCRuleStore(db *dbstore.DB) core.TCRuleStore {
-
 	db.AutoMigrate(&core.TCRule{})
 
 	ts := &tcRuleStore{db}

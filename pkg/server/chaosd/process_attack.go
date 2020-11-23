@@ -73,7 +73,7 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 			case int(syscall.SIGSTOP):
 				err = syscall.Kill(p.Pid(), syscall.SIGSTOP)
 			default:
-				return "", errors.Errorf("signal %s is not supported", attack.Signal)
+				return "", errors.Errorf("signal %d is not supported", attack.Signal)
 			}
 
 			if err != nil {
