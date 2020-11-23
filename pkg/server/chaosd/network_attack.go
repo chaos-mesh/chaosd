@@ -40,7 +40,7 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 	)
 	uid := uuid.New().String()
 
-	if err := s.exp.Set(context.Background(), &core.Experiment{
+	if err = s.exp.Set(context.Background(), &core.Experiment{
 		Uid:            uid,
 		Status:         core.Created,
 		Kind:           NetworkAttack,
@@ -50,7 +50,7 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 	}
 
 	defer func() {
-		if err == nil {
+		if err != nil {
 			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), attack.String()); err != nil {
 				log.Error("failed to update experiment", zap.Error(err))
 			}
@@ -69,18 +69,18 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 	}
 
 	if attack.NeedApplyIptables() {
-		if err := s.applyIptables(attack, uid); err != nil {
+		if err = s.applyIptables(attack, uid); err != nil {
 			return "", errors.WithStack(err)
 		}
 	}
 
 	if attack.NeedApplyTC() {
-		if err := s.applyTC(attack, ipsetName, uid); err != nil {
+		if err = s.applyTC(attack, ipsetName, uid); err != nil {
 			return "", errors.WithStack(err)
 		}
 	}
 
-	if err := s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
+	if err = s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
 		return "", errors.WithStack(err)
 	}
 

@@ -50,7 +50,7 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 	}
 
 	defer func() {
-		if err == nil {
+		if err != nil {
 			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), attack.String()); err != nil {
 				log.Error("failed to update experiment", zap.Error(err))
 			}
