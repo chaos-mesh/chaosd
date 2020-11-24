@@ -269,7 +269,12 @@ func (n *NetworkCommand) NeedApplyIptables() bool {
 }
 
 func (n *NetworkCommand) NeedApplyTC() bool {
-	return true
+	switch n.Action {
+	case NetworkDelayAction, NetworkLossAction:
+		return true
+	default:
+		return false
+	}
 }
 
 func (n *NetworkCommand) ToChain() (*pb.Chain, error) {
