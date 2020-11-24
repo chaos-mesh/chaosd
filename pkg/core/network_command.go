@@ -31,6 +31,7 @@ type NetworkCommand struct {
 	Latency     string
 	Jitter      string
 	Correlation string
+	Percent     string
 	Device      string
 	SourcePort  string
 	EgressPort  string
@@ -41,17 +42,18 @@ type NetworkCommand struct {
 
 const (
 	NetworkDelayAction = "delay"
+	NetworkLossAction  = "loss"
 )
 
 func (n *NetworkCommand) Validate() error {
 	switch n.Action {
 	case NetworkDelayAction:
 		return n.validNetworkDelay()
+	case NetworkLossAction:
+		return n.validNetworkLoss()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
-
-	return nil
 }
 
 func (n *NetworkCommand) validNetworkDelay() error {
@@ -69,6 +71,10 @@ func (n *NetworkCommand) validNetworkDelay() error {
 		}
 	}
 
+	if !utils.CheckPercent(n.Correlation) {
+		return errors.Errorf("correlation %s not valid", n.Correlation)
+	}
+
 	if len(n.Device) == 0 {
 		return errors.New("device is required")
 	}
@@ -80,11 +86,41 @@ func (n *NetworkCommand) validNetworkDelay() error {
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
 }
 
-func (n *NetworkCommand) SetDefault() {
+func (n *NetworkCommand) validNetworkLoss() error {
+	if len(n.Percent) == 0 {
+		return errors.New("percent is required")
+	}
+
+	if !utils.CheckPercent(n.Percent) {
+		return errors.Errorf("percent %s not valid", n.Percent)
+	}
+
+	if !utils.CheckPercent(n.Correlation) {
+		return errors.Errorf("correlation %s not valid", n.Correlation)
+	}
+
+	if len(n.Device) == 0 {
+		return errors.New("device is required")
+	}
+
+	if !utils.CheckIPs(n.IPAddress) {
+		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
+	}
+
+	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
+}
+
+func (n *NetworkCommand) SetDefaultForNetworkDelay() {
 	if len(n.Jitter) == 0 {
 		n.Jitter = "0ms"
 	}
 
+	if len(n.Correlation) == 0 {
+		n.Correlation = "0"
+	}
+}
+
+func (n *NetworkCommand) SetDefaultForNetworkLoss() {
 	if len(n.Correlation) == 0 {
 		n.Correlation = "0"
 	}
@@ -120,7 +156,7 @@ func (n *NetworkCommand) String() string {
 	return string(data)
 }
 
-func (n *NetworkCommand) ToNetem() (*pb.Netem, error) {
+func (n *NetworkCommand) ToDelayNetem() (*pb.Netem, error) {
 	delayTime, err := time.ParseDuration(n.Latency)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -146,6 +182,23 @@ func (n *NetworkCommand) ToNetem() (*pb.Netem, error) {
 	return netem, nil
 }
 
+func (n *NetworkCommand) ToLossNetem() (*pb.Netem, error) {
+	percent, err := strconv.ParseFloat(n.Percent, 32)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	corr, err := strconv.ParseFloat(n.Correlation, 32)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &pb.Netem{
+		Loss:     float32(percent),
+		LossCorr: float32(corr),
+	}, nil
+}
+
 func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 	tc := &pb.Tc{
 		Type:       pb.Tc_NETEM,
@@ -155,16 +208,24 @@ func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 		EgressPort: n.EgressPort,
 	}
 
+	var (
+		netem *pb.Netem
+		err   error
+	)
 	switch n.Action {
 	case NetworkDelayAction:
-		netem, err := n.ToNetem()
-		if err != nil {
+		if netem, err = n.ToDelayNetem(); err != nil {
 			return nil, errors.WithStack(err)
 		}
-		tc.Netem = netem
+	case NetworkLossAction:
+		if netem, err = n.ToLossNetem(); err != nil {
+			return nil, errors.WithStack(err)
+		}
 	default:
 		return nil, errors.Errorf("action %s not supported", n.Action)
 	}
+
+	tc.Netem = netem
 
 	return tc, nil
 }

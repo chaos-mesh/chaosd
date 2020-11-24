@@ -85,3 +85,20 @@ func CheckIPProtocols(p string) bool {
 
 	return false
 }
+
+func CheckPercent(p string) bool {
+	if len(p) == 0 {
+		return true
+	}
+
+	v, err := strconv.ParseFloat(p, 32)
+	if err != nil {
+		return false
+	}
+
+	if v < 0 || v > 100 {
+		return false
+	}
+
+	return true
+}

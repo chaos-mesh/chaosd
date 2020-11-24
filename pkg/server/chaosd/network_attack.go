@@ -163,7 +163,12 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 			Correlation: attack.Correlation,
 			Jitter:      attack.Jitter,
 		},
+		Loss: &core.LossSpec{
+			Loss:        attack.Percent,
+			Correlation: attack.Correlation,
+		},
 	}
+
 	tcString, err := json.Marshal(tc)
 	if err != nil {
 		return errors.WithStack(err)

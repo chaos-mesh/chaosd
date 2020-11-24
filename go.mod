@@ -17,7 +17,6 @@ require (
 	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-logr/logr v0.1.0
-	github.com/go-logr/zapr v0.1.0
 	github.com/go-ole/go-ole v1.2.1 // indirect
 	github.com/go-playground/validator/v10 v10.3.0 // indirect
 	github.com/gogo/googleapis v1.3.2 // indirect
@@ -35,7 +34,7 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/onsi/ginkgo v1.12.0
+	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/opencontainers/runc v1.0.0-rc9 // indirect

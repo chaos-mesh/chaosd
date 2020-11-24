@@ -104,9 +104,10 @@ func (i *iptablesRuleStore) FindByExperiment(_ context.Context, experiment strin
 		Where("experiment = ?", experiment).
 		Find(&rules).
 		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-
+		return nil, errors.WithStack(err)
 	}
-	return nil, nil
+
+	return rules, nil
 }
 
 func (i *iptablesRuleStore) DeleteByExperiment(_ context.Context, experiment string) error {
@@ -150,9 +151,9 @@ func (t *tcRuleStore) FindByExperiment(_ context.Context, experiment string) ([]
 		Where("experiment = ?", experiment).
 		Find(&rules).
 		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-
+		return nil, errors.WithStack(err)
 	}
-	return nil, nil
+	return rules, nil
 }
 
 func (t *tcRuleStore) DeleteByExperiment(_ context.Context, experiment string) error {
