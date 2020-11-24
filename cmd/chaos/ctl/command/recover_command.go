@@ -86,9 +86,5 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 		ExitWithMsg(ExitError, fmt.Sprintf("chaos experiment kind %s not found", exp.Kind))
 	}
 
-	if err := expStore.Update(context.Background(), uid, core.Destroyed, "", exp.RecoverCommand); err != nil {
-		ExitWithError(ExitError, errors.Errorf("Update %s failed, %s", uid, err.Error()))
-	}
-
 	NormalExit(fmt.Sprintf("Recover %s successfully", uid))
 }

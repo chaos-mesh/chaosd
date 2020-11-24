@@ -197,21 +197,25 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 
 func (s *Server) RecoverNetworkAttack(uid string, attack *core.NetworkCommand) error {
 	if attack.NeedApplyIPSet() {
-		return errors.WithStack(s.recoverIPSet(uid))
+		if err := s.recoverIPSet(uid); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	if attack.NeedApplyIptables() {
-		return errors.WithStack(s.recoverIptables(uid))
+		if err := s.recoverIptables(uid); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	if attack.NeedApplyTC() {
-		return errors.WithStack(s.recoverTC(uid))
+		if err := s.recoverTC(uid); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
-	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
-		return errors.WithStack(err)
-	}
-	return nil
+	return errors.WithStack(s.exp.Update(context.Background(),
+		uid, core.Destroyed, "", attack.String()))
 }
 
 func (s *Server) recoverIPSet(uid string) error {
