@@ -156,17 +156,23 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 		return errors.WithStack(err)
 	}
 
-	tc := &core.TcParameter{
-		Device: attack.Device,
-		Delay: &core.DelaySpec{
+	tc := &core.TcParameter{}
+	switch attack.Action {
+	case core.NetworkDelayAction:
+		tc.Device = attack.Device
+		tc.Delay = &core.DelaySpec{
 			Latency:     attack.Latency,
 			Correlation: attack.Correlation,
 			Jitter:      attack.Jitter,
-		},
-		Loss: &core.LossSpec{
+		}
+	case core.NetworkLossAction:
+		tc.Device = attack.Device
+		tc.Loss = &core.LossSpec{
 			Loss:        attack.Percent,
 			Correlation: attack.Correlation,
-		},
+		}
+	default:
+		return errors.Errorf("network %s attack not supported", attack.Action)
 	}
 
 	tcString, err := json.Marshal(tc)

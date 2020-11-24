@@ -42,7 +42,7 @@ func NewNetworkDelayCommand() *cobra.Command {
 		Use:   "delay [option]",
 		Short: "delay network",
 
-		Run: networkCommandFunc,
+		Run: networkDelayCommandFunc,
 	}
 
 	cmd.Flags().StringVarP(&nFlag.Latency, "latency", "l", "",
@@ -59,8 +59,6 @@ func NewNetworkDelayCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	nFlag.Action = core.NetworkDelayAction
-	nFlag.SetDefaultForNetworkDelay()
 
 	return cmd
 }
@@ -70,7 +68,7 @@ func NewNetworkLossCommand() *cobra.Command {
 		Use:   "loss [option]",
 		Short: "loss network packet",
 
-		Run: networkCommandFunc,
+		Run: networkLossCommandFunc,
 	}
 
 	cmd.Flags().StringVar(&nFlag.Percent, "percent", "1", "percentage of packets to drop (10 is 10%)")
@@ -84,13 +82,32 @@ func NewNetworkLossCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	nFlag.Action = core.NetworkLossAction
-	nFlag.SetDefaultForNetworkLoss()
 
 	return cmd
 }
 
-func networkCommandFunc(cmd *cobra.Command, args []string) {
+func networkDelayCommandFunc(cmd *cobra.Command, args []string) {
+	nFlag.Action = core.NetworkDelayAction
+	nFlag.SetDefaultForNetworkDelay()
+
+	if err := nFlag.Validate(); err != nil {
+		ExitWithError(ExitBadArgs, err)
+	}
+
+	chaos := mustChaosdFromCmd(cmd, &conf)
+
+	uid, err := chaos.NetworkAttack(&nFlag)
+	if err != nil {
+		ExitWithError(ExitError, err)
+	}
+
+	NormalExit(fmt.Sprintf("Attack network successfully, uid: %s", uid))
+}
+
+func networkLossCommandFunc(cmd *cobra.Command, args []string) {
+	nFlag.Action = core.NetworkLossAction
+	nFlag.SetDefaultForNetworkLoss()
+
 	if err := nFlag.Validate(); err != nil {
 		ExitWithError(ExitBadArgs, err)
 	}
