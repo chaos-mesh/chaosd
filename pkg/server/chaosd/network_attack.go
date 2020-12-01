@@ -16,6 +16,7 @@ package chaosd
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
@@ -31,10 +32,10 @@ const (
 )
 
 func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
-	chaosDaemon, err := chaosdaemon.NewDaemonServer(chaosdaemon.ContainerRuntimeNone)
-	if err != nil {
-		return "", err
-	}
+
+	client := newPhysicClient(os.Getpid())
+
+	chaosDaemon := chaosdaemon.NewDaemonServerWithCRClient(client)
 
 	uid := uuid.New()
 	ipsetName := ""
@@ -95,10 +96,9 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 }
 
 func (s *Server) RecoverNetworkAttack(uid string, attack *core.NetworkCommand) error {
-	chaosDaemon, err := chaosdaemon.NewDaemonServer(chaosdaemon.ContainerRuntimeNone)
-	if err != nil {
-		return err
-	}
+	client := newPhysicClient(os.Getpid())
+
+	chaosDaemon := chaosdaemon.NewDaemonServerWithCRClient(client)
 
 	switch attack.Action {
 	case core.NetworkDelayAction:
