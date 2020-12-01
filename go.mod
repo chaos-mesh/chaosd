@@ -1,7 +1,7 @@
 module github.com/chaos-mesh/chaos-daemon
 
 require (
-	github.com/chaos-mesh/chaos-mesh v1.0.2
+	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201201095545-3793473dab19
 	github.com/containerd/cgroups v0.0.0-20200404012852-53ba5634dc0f
 	github.com/containerd/containerd v1.2.3
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0
@@ -32,7 +32,6 @@ require (
 )
 
 replace (
-	github.com/chaos-mesh/chaos-mesh => github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201201084824-ea309e76fec8
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.17.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.0
