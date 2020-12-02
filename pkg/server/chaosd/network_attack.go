@@ -210,7 +210,7 @@ func (s *Server) RecoverNetworkAttack(uid string, attack *core.NetworkCommand) e
 	}
 
 	if attack.NeedApplyTC() {
-		if err := s.recoverTC(uid); err != nil {
+		if err := s.recoverTC(uid, attack.Device); err != nil {
 			return errors.WithStack(err)
 		}
 	}
@@ -242,26 +242,17 @@ func (s *Server) recoverIptables(uid string) error {
 	return errors.WithStack(s.SetNodeIptablesChains(context.Background(), chains))
 }
 
-func (s *Server) recoverTC(uid string) error {
+func (s *Server) recoverTC(uid string, device string) error {
 	if err := s.tcRule.DeleteByExperiment(context.Background(), uid); err != nil {
 		return errors.WithStack(err)
 	}
 
-	tcRules, err := s.tcRule.ListGroupDevice(context.Background())
+	tcRules, err := s.tcRule.FindByDevice(context.Background(), device)
+
+	tcs, err := core.TCRuleList(tcRules).ToTCs()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	for device,rules := range tcRules {
-		tcs, err := core.TCRuleList(rules).ToTCs()
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		if err := s.SetNodeTcRules(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: device}); err !=nil {
-			return errors.WithStack(err)
-		}
-	}
-
-	return nil
+	return errors.WithStack(s.SetNodeTcRules(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: device}))
 }
