@@ -15,9 +15,11 @@ package network
 
 import (
 	"context"
+	"errors"
 
-	"github.com/jinzhu/gorm"
-	"github.com/pingcap/errors"
+	"gorm.io/gorm"
+
+	perr "github.com/pingcap/errors"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 	"github.com/chaos-mesh/chaos-daemon/pkg/store/dbstore"
@@ -40,8 +42,8 @@ func (i *ipsetRuleStore) List(_ context.Context) ([]*core.IPSetRule, error) {
 	if err := i.db.
 		Find(&rules).
 		Order("created_at DESC").
-		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, errors.WithStack(err)
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
 	}
 
 	return rules, nil
@@ -56,8 +58,8 @@ func (i *ipsetRuleStore) FindByExperiment(_ context.Context, experiment string) 
 	if err := i.db.
 		Where("experiment = ?", experiment).
 		Find(&rules).Order("created_at DESC").
-		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, errors.WithStack(err)
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
 	}
 
 	return rules, nil
@@ -88,8 +90,8 @@ func (i *iptablesRuleStore) List(_ context.Context) ([]*core.IptablesRule, error
 	if err := i.db.
 		Find(&rules).
 		Order("created_at DESC").
-		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, errors.WithStack(err)
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
 	}
 	return rules, nil
 }
@@ -103,8 +105,8 @@ func (i *iptablesRuleStore) FindByExperiment(_ context.Context, experiment strin
 	if err := i.db.
 		Where("experiment = ?", experiment).
 		Find(&rules).
-		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, errors.WithStack(err)
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
 	}
 
 	return rules, nil
@@ -139,8 +141,8 @@ func (t *tcRuleStore) List(_ context.Context) ([]*core.TCRule, error) {
 	if err := t.db.
 		Find(&rules).
 		Order("created_at DESC").
-		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, errors.WithStack(err)
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
 	}
 	return rules, nil
 }
@@ -150,8 +152,8 @@ func (t *tcRuleStore) FindByExperiment(_ context.Context, experiment string) ([]
 	if err := t.db.
 		Where("experiment = ?", experiment).
 		Find(&rules).
-		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, errors.WithStack(err)
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
 	}
 	return rules, nil
 }

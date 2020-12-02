@@ -18,21 +18,14 @@ import (
 	"errors"
 	"runtime"
 
-	"github.com/go-logr/logr"
+	"go.uber.org/zap"
+
+	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/mapreader"
 	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
 	"github.com/chaos-mesh/chaos-daemon/pkg/ptrace"
-
-	ctrl "sigs.k8s.io/controller-runtime"
 )
-
-var log = ctrl.Log.WithName("time")
-
-// RegisterLogger registers a logger on time pkg
-func RegisterLogger(logger logr.Logger) {
-	log = logger
-}
 
 // TODO: support more cpu architecture
 // TODO: auto generate these codes
@@ -100,7 +93,7 @@ func ModifyTime(pid int, deltaSec int64, deltaNsec int64, clockIdsMask uint64) e
 	defer func() {
 		err = program.Detach()
 		if err != nil {
-			log.Error(err, "fail to detach program", "pid", program.Pid())
+			log.Error("fail to detach program", zap.Int("pid", program.Pid()), zap.Error(err))
 		}
 
 		runtime.UnlockOSThread()
@@ -135,7 +128,7 @@ func ModifyTime(pid int, deltaSec int64, deltaNsec int64, clockIdsMask uint64) e
 
 		if bytes.Equal(*image, fakeImage[0:constImageLen]) {
 			fakeEntry = &e
-			log.Info("found injected image", "addr", fakeEntry.StartAddress)
+			log.Debug("found injected image", zap.Uint64("addr", fakeEntry.StartAddress))
 			break
 		}
 	}

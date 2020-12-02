@@ -21,7 +21,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
+
 	"github.com/pingcap/errors"
 
 	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"

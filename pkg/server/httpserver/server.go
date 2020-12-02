@@ -59,7 +59,7 @@ func Register(s *httpServer) {
 
 	go func() {
 		addr := s.conf.Address()
-		log.Info("starting HTTP server", zap.String("address", addr))
+		log.Debug("starting HTTP server", zap.String("address", addr))
 
 		if err := s.engine.Run(addr); err != nil {
 			log.Fatal("failed to start HTTP server", zap.Error(err))

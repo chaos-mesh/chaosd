@@ -20,11 +20,11 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/shirou/gopsutil/process"
-	ctrl "sigs.k8s.io/controller-runtime"
-)
+	"go.uber.org/zap"
 
-var log = ctrl.Log.WithName("background-process-manager")
+	"github.com/pingcap/log"
+	"github.com/shirou/gopsutil/process"
+)
 
 type NsType string
 
@@ -85,7 +85,7 @@ func (m *BackgroundProcessManager) StartProcess(cmd *ManagedProcess) error {
 
 	err := cmd.Start()
 	if err != nil {
-		log.Error(err, "fail to start process")
+		log.Error("fail to start process", zap.Error(err))
 		return err
 	}
 
@@ -104,8 +104,6 @@ func (m *BackgroundProcessManager) StartProcess(cmd *ManagedProcess) error {
 	channel, _ := m.deathSig.LoadOrStore(pair, make(chan bool, 1))
 	deathChannel := channel.(chan bool)
 
-	log := log.WithValues("pid", pid)
-
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
@@ -116,11 +114,11 @@ func (m *BackgroundProcessManager) StartProcess(cmd *ManagedProcess) error {
 					log.Info("process stopped with SIGTERM signal")
 				}
 			} else {
-				log.Error(err, "process exited accidentally")
+				log.Error("process exited accidentally", zap.Error(err))
 			}
 		}
 
-		log.Info("process stopped")
+		log.Debug("process stopped")
 
 		deathChannel <- true
 		m.deathSig.Delete(pair)
@@ -136,11 +134,9 @@ func (m *BackgroundProcessManager) StartProcess(cmd *ManagedProcess) error {
 
 // KillBackgroundProcess sends SIGTERM to process
 func (m *BackgroundProcessManager) KillBackgroundProcess(ctx context.Context, pid int, startTime int64) error {
-	log := log.WithValues("pid", pid)
-
 	p, err := os.FindProcess(int(pid))
 	if err != nil {
-		log.Error(err, "unreachable path. `os.FindProcess` will never return an error on unix")
+		log.Error("unreachable path. `os.FindProcess` will never return an error on unix", zap.Error(err))
 		return err
 	}
 
@@ -151,24 +147,25 @@ func (m *BackgroundProcessManager) KillBackgroundProcess(ctx context.Context, pi
 	}
 	ct, err := procState.CreateTime()
 	if err != nil {
-		log.Error(err, "fail to read create time")
+		log.Error("fail to read create time", zap.Error(err))
 		// return successfully as the process has exited
 		return nil
 	}
 	if startTime != ct {
-		log.Info("process has already been killed", "startTime", ct, "expectedStartTime", startTime)
+		log.Debug("process has already been killed",
+			zap.Int64("startTime", ct), zap.Int64("expectedStartTime", startTime))
 		// return successfully as the process has exited
 		return nil
 	}
 
 	ppid, err := procState.Ppid()
 	if err != nil {
-		log.Error(err, "fail to read parent id")
+		log.Error("fail to read parent id", zap.Error(err))
 		// return successfully as the process has exited
 		return nil
 	}
 	if ppid != int32(os.Getpid()) {
-		log.Info("process has already been killed", "ppid", ppid)
+		log.Debug("process has already been killed", zap.Int32("ppid", ppid))
 		// return successfully as the process has exited
 		return nil
 	}
@@ -176,7 +173,7 @@ func (m *BackgroundProcessManager) KillBackgroundProcess(ctx context.Context, pi
 	err = p.Signal(syscall.SIGTERM)
 
 	if err != nil && err.Error() != "os: process already finished" {
-		log.Error(err, "error while killing process")
+		log.Error("error while killing process", zap.Error(err))
 		return err
 	}
 

@@ -19,6 +19,10 @@ import (
 	"strings"
 	"syscall"
 
+	"go.uber.org/zap"
+
+	"github.com/pingcap/log"
+
 	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
 )
 
@@ -66,7 +70,7 @@ func (b *ProcessBuilder) Build() *ManagedProcess {
 		}
 	}
 
-	log.Info("build command", "command", cmd+" "+strings.Join(args, " "))
+	log.Debug("build command", zap.String("command", cmd+" "+strings.Join(args, " ")))
 
 	command := exec.CommandContext(b.ctx, cmd, args...)
 	command.SysProcAttr = &syscall.SysProcAttr{}

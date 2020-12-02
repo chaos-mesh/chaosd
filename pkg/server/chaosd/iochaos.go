@@ -55,7 +55,7 @@ func (s *Server) ApplyIoChaos(ctx context.Context, in *pb.ApplyIoChaosRequest) (
 
 	// TODO: make this log level configurable
 	args := fmt.Sprintf("--path %s --pid %d --verbose info", in.Volume, pid)
-	log.Info("executing", zap.String("cmd", todaBin+" "+args))
+	log.Debug("executing", zap.String("cmd", todaBin+" "+args))
 	cmd := bpm.DefaultProcessBuilder(todaBin, strings.Split(args, " ")...).
 		EnableSuicide().
 		SetIdentifier(in.ContainerId).
@@ -88,12 +88,12 @@ func (s *Server) ApplyIoChaos(ctx context.Context, in *pb.ApplyIoChaosRequest) (
 }
 
 func (s *Server) killIoChaos(ctx context.Context, pid int64, startTime int64) error {
-	log.Info("killing toda", zap.Int64("pid", pid))
+	log.Debug("killing toda", zap.Int64("pid", pid))
 
 	err := s.backgroundProcessManager.KillBackgroundProcess(ctx, int(pid), startTime)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	log.Info("kill toda successfully")
+	log.Debug("kill toda successfully")
 	return nil
 }

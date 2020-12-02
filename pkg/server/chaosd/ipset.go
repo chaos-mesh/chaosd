@@ -85,7 +85,7 @@ func createIPSet(ctx context.Context, nsPath string, name string) error {
 		SetContext(ctx).
 		Build()
 
-	log.Info("create ipset", zap.String("command", cmd.String()))
+	log.Debug("create ipset", zap.String("command", cmd.String()))
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -101,7 +101,7 @@ func createIPSet(ctx context.Context, nsPath string, name string) error {
 			SetContext(ctx).
 			Build()
 
-		log.Info("flush ipset", zap.String("command", cmd.String()))
+		log.Debug("flush ipset", zap.String("command", cmd.String()))
 
 		out, err := cmd.CombinedOutput()
 		if err != nil {
@@ -118,7 +118,7 @@ func addCIDRsToIPSet(ctx context.Context, nsPath string, name string, cidrs []st
 	for _, cidr := range cidrs {
 		cmd := bpm.DefaultProcessBuilder("ipset", "add", name, cidr).SetNetNS(nsPath).SetContext(ctx).Build()
 
-		log.Info("add CIDR to ipset", zap.String("command", cmd.String()))
+		log.Debug("add CIDR to ipset", zap.String("command", cmd.String()))
 
 		out, err := cmd.CombinedOutput()
 		if err != nil {
@@ -137,7 +137,7 @@ func addCIDRsToIPSet(ctx context.Context, nsPath string, name string, cidrs []st
 func renameIPSet(ctx context.Context, nsPath string, oldName string, newName string) error {
 	cmd := bpm.DefaultProcessBuilder("ipset", "rename", oldName, newName).SetNetNS(nsPath).SetContext(ctx).Build()
 
-	log.Info("rename ipset", zap.String("command", cmd.String()))
+	log.Debug("rename ipset", zap.String("command", cmd.String()))
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -151,7 +151,7 @@ func renameIPSet(ctx context.Context, nsPath string, oldName string, newName str
 		// swap the old ipset and the new ipset if the new ipset already exist.
 		cmd := bpm.DefaultProcessBuilder("ipset", "swap", oldName, newName).SetNetNS(nsPath).SetContext(ctx).Build()
 
-		log.Info("swap ipset", zap.String("command", cmd.String()))
+		log.Debug("swap ipset", zap.String("command", cmd.String()))
 
 		out, err := cmd.CombinedOutput()
 		if err != nil {

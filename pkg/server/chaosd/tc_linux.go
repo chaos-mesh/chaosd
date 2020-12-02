@@ -39,7 +39,7 @@ func applyTc(ctx context.Context, pid uint32, args ...string) error {
 	nsPath := GetNsPath(pid, bpm.NetNS)
 
 	cmd := bpm.DefaultProcessBuilder("tc", args...).SetNetNS(nsPath).SetContext(ctx).Build()
-	log.Info("tc command", zap.String("command", cmd.String()), zap.Strings("args", args))
+	log.Debug("tc command", zap.String("command", cmd.String()), zap.Strings("args", args))
 
 	out, err := cmd.CombinedOutput()
 

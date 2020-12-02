@@ -247,7 +247,7 @@ func (c *tcClient) flush() error {
 }
 
 func (c *tcClient) addTc(parentArg string, handleArg string, tc *pb.Tc) error {
-	log.Info("add tc", zap.Any("tc", tc))
+	log.Debug("add tc", zap.Any("tc", tc))
 
 	if tc.Type == pb.Tc_BANDWIDTH {
 
@@ -277,7 +277,7 @@ func (c *tcClient) addTc(parentArg string, handleArg string, tc *pb.Tc) error {
 }
 
 func (c *tcClient) addPrio(parent int, band int) error {
-	log.Info("adding prio", zap.Int("parent", parent))
+	log.Debug("adding prio", zap.Int("parent", parent))
 
 	parentArg := "root"
 	if parent > 0 {
@@ -303,7 +303,7 @@ func (c *tcClient) addPrio(parent int, band int) error {
 }
 
 func (c *tcClient) addNetem(parent string, handle string, netem *pb.Netem) error {
-	log.Info("adding netem", zap.String("parent", parent), zap.String("handle", handle))
+	log.Debug("adding netem", zap.String("parent", parent), zap.String("handle", handle))
 
 	args := fmt.Sprintf("qdisc add dev eth0 %s %s netem %s", parent, handle, convertNetemToArgs(netem))
 	cmd := bpm.DefaultProcessBuilder("tc", strings.Split(args, " ")...).SetNetNS(c.nsPath).SetContext(c.ctx).Build()
@@ -315,7 +315,7 @@ func (c *tcClient) addNetem(parent string, handle string, netem *pb.Netem) error
 }
 
 func (c *tcClient) addTbf(parent string, handle string, tbf *pb.Tbf) error {
-	log.Info("adding tbf", zap.String("parent", parent), zap.String("handle", handle))
+	log.Debug("adding tbf", zap.String("parent", parent), zap.String("handle", handle))
 
 	args := fmt.Sprintf("qdisc add dev eth0 %s %s tbf %s", parent, handle, convertTbfToArgs(tbf))
 	cmd := bpm.DefaultProcessBuilder("tc", strings.Split(args, " ")...).SetNetNS(c.nsPath).SetContext(c.ctx).Build()
@@ -327,7 +327,7 @@ func (c *tcClient) addTbf(parent string, handle string, tbf *pb.Tbf) error {
 }
 
 func (c *tcClient) addFilter(parent string, classid string, ipset string) error {
-	log.Info("adding filter", zap.String("parent", parent), zap.String("classid", classid), zap.String("ipset", ipset))
+	log.Debug("adding filter", zap.String("parent", parent), zap.String("classid", classid), zap.String("ipset", ipset))
 
 	args := strings.Split(fmt.Sprintf("filter add dev eth0 %s basic match", parent), " ")
 	args = append(args, fmt.Sprintf("ipset(%s dst)", ipset))

@@ -77,7 +77,7 @@ func (s *Server) ExecContainerStress(
 	if err = s.backgroundProcessManager.StartProcess(cmd); err != nil {
 		return nil, errors.WithStack(err)
 	}
-	log.Info("Start process successfully")
+	log.Debug("Start process successfully")
 
 	procState, err := process.NewProcess(int32(cmd.Process.Pid))
 	if err != nil {
@@ -98,7 +98,7 @@ func (s *Server) ExecContainerStress(
 			return nil, err
 		}
 
-		log.Info("send signal to resume process")
+		log.Debug("send signal to resume process")
 		time.Sleep(time.Millisecond)
 
 		comm, err := ReadCommName(cmd.Process.Pid)
@@ -106,10 +106,10 @@ func (s *Server) ExecContainerStress(
 			return nil, errors.WithStack(err)
 		}
 		if comm != "pause\n" {
-			log.Info("pause has been resumed", zap.String("comm", comm))
+			log.Debug("pause has been resumed", zap.String("comm", comm))
 			break
 		}
-		log.Info("the process hasn't resumed, step into the following loop", zap.String("comm", comm))
+		log.Debug("the process hasn't resumed, step into the following loop", zap.String("comm", comm))
 	}
 
 	return &pb.ExecStressResponse{
@@ -133,7 +133,7 @@ func (s *Server) CancelContainerStress(
 		return errors.WithStack(err)
 	}
 
-	log.Info("Successfully canceled stressors")
+	log.Debug("Successfully canceled stressors")
 	return nil
 }
 

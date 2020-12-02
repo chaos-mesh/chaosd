@@ -15,9 +15,11 @@ package experiment
 
 import (
 	"context"
+	"errors"
 
-	"github.com/jinzhu/gorm"
-	"github.com/pkg/errors"
+	"gorm.io/gorm"
+
+	perr "github.com/pkg/errors"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 	"github.com/chaos-mesh/chaos-daemon/pkg/store/dbstore"
@@ -40,8 +42,8 @@ func (e *experimentStore) List(_ context.Context) ([]*core.Experiment, error) {
 	if err := e.db.
 		Find(&exps).
 		Order("created_at DESC").
-		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, errors.WithStack(err)
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
 	}
 
 	return exps, nil
@@ -53,8 +55,8 @@ func (e *experimentStore) ListByStatus(_ context.Context, status string) ([]*cor
 		Where("status = ?", status).
 		Find(&exps).
 		Order("created_at DESC").
-		Error; err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, errors.WithStack(err)
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
 	}
 
 	return exps, nil
@@ -67,7 +69,7 @@ func (e *experimentStore) FindByUid(_ context.Context, uid string) (*core.Experi
 		Find(&exps).
 		Order("created_at DESC").
 		Error; err != nil {
-		return nil, errors.WithStack(err)
+		return nil, perr.WithStack(err)
 	}
 
 	if len(exps) > 0 {

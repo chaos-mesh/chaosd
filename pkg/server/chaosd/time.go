@@ -37,7 +37,7 @@ func (s *Server) SetContainerTime(ctx context.Context, req *pb.TimeRequest) erro
 		log.Error("failed to get child processes", zap.Error(err))
 	}
 	allPids := append(childPids, pid)
-	log.Info("all related processes found", zap.Uint32s("pids", allPids))
+	log.Debug("all related processes found", zap.Uint32s("pids", allPids))
 
 	for _, pid := range allPids {
 		err = time.ModifyTime(int(pid), req.Sec, req.Nsec, req.ClkIdsMask)
@@ -62,7 +62,7 @@ func (s *Server) RecoverContainerTime(ctx context.Context, req *pb.TimeRequest) 
 		log.Error("failed to get child processes", zap.Error(err))
 	}
 	allPids := append(childPids, pid)
-	log.Info("get all related process pids", zap.Uint32s("pids", allPids))
+	log.Debug("get all related process pids", zap.Uint32s("pids", allPids))
 
 	for _, pid := range allPids {
 		// FIXME: if the process has halted and no process with this pid exists, we will get an error.

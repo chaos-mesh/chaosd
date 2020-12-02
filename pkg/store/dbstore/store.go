@@ -14,13 +14,14 @@
 package dbstore
 
 import (
-	"context"
 	"path"
 
-	"go.uber.org/fx"
 	"go.uber.org/zap"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
 	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/utils"
@@ -34,28 +35,10 @@ type DB struct {
 }
 
 // NewDBStore returns a new DB
-func NewDBStore(lc fx.Lifecycle) (*DB, error) {
-	gormDB, err := gorm.Open("sqlite3", path.Join(utils.GetProgramPath(), dataFile))
-	if err != nil {
-		log.Error("failed to open DB", zap.Error(err))
-		return nil, err
-	}
-
-	db := &DB{
-		gormDB,
-	}
-
-	lc.Append(fx.Hook{
-		OnStop: func(context.Context) error {
-			return db.Close()
-		},
+func NewDBStore() (*DB, error) {
+	gormDB, err := gorm.Open(sqlite.Open(path.Join(utils.GetProgramPath(), dataFile)), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
 	})
-
-	return db, nil
-}
-
-func DryDBStore() (*DB, error) {
-	gormDB, err := gorm.Open("sqlite3", path.Join(utils.GetProgramPath(), dataFile))
 	if err != nil {
 		log.Error("failed to open DB", zap.Error(err))
 		return nil, err
@@ -67,3 +50,19 @@ func DryDBStore() (*DB, error) {
 
 	return db, nil
 }
+
+//func DryDBStore() (*DB, error) {
+//	gormDB, err := gorm.Open(sqlite.Open(path.Join(utils.GetProgramPath(), dataFile)), &gorm.Config{
+//		Logger: logger.Default.LogMode(logger.Silent),
+//	})
+//	if err != nil {
+//		log.Error("failed to open DB", zap.Error(err))
+//		return nil, err
+//	}
+//
+//	db := &DB{
+//		gormDB,
+//	}
+//
+//	return db, nil
+//}

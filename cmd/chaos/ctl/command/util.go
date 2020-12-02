@@ -35,15 +35,15 @@ func mustChaosdFromCmd(cmd *cobra.Command, conf *config.Config) *chaosd.Server {
 	return chaosd.NewServer(
 		conf,
 		mustExpStoreFromCmd(),
-		mustIPSetRuleStroeFromCmd(),
-		mustIptablesRuleStroeFromCmd(),
-		mustTCRuleStroeFromCmd(),
+		mustIPSetRuleStoreFromCmd(),
+		mustIptablesRuleStoreFromCmd(),
+		mustTCRuleStoreFromCmd(),
 		cli,
 		bpm.NewBackgroundProcessManager())
 }
 
 func mustExpStoreFromCmd() core.ExperimentStore {
-	db, err := dbstore.DryDBStore()
+	db, err := dbstore.NewDBStore()
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
@@ -51,8 +51,8 @@ func mustExpStoreFromCmd() core.ExperimentStore {
 	return experiment.NewStore(db)
 }
 
-func mustTCRuleStroeFromCmd() core.TCRuleStore {
-	db, err := dbstore.DryDBStore()
+func mustTCRuleStoreFromCmd() core.TCRuleStore {
+	db, err := dbstore.NewDBStore()
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
@@ -60,8 +60,8 @@ func mustTCRuleStroeFromCmd() core.TCRuleStore {
 	return network.NewTCRuleStore(db)
 }
 
-func mustIPSetRuleStroeFromCmd() core.IPSetRuleStore {
-	db, err := dbstore.DryDBStore()
+func mustIPSetRuleStoreFromCmd() core.IPSetRuleStore {
+	db, err := dbstore.NewDBStore()
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
@@ -69,8 +69,8 @@ func mustIPSetRuleStroeFromCmd() core.IPSetRuleStore {
 	return network.NewIPSetRuleStore(db)
 }
 
-func mustIptablesRuleStroeFromCmd() core.IptablesRuleStore {
-	db, err := dbstore.DryDBStore()
+func mustIptablesRuleStoreFromCmd() core.IptablesRuleStore {
+	db, err := dbstore.NewDBStore()
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
