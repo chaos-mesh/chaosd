@@ -27,46 +27,6 @@ import (
 	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
 )
 
-const (
-	ruleNotExist             = "Cannot delete qdisc with handle of zero."
-	ruleNotExistLowerVersion = "RTNETLINK answers: No such file or directory"
-)
-
-func generateQdiscArgs(action string, qdisc *pb.Qdisc) ([]string, error) {
-
-	if qdisc == nil {
-		return nil, fmt.Errorf("qdisc is required")
-	}
-
-	if qdisc.Type == "" {
-		return nil, fmt.Errorf("qdisc.Type is required")
-	}
-
-	args := []string{"qdisc", action, "dev", "eth0"}
-
-	if qdisc.Parent == nil {
-		args = append(args, "root")
-	} else if qdisc.Parent.Major == 1 && qdisc.Parent.Minor == 0 {
-		args = append(args, "root")
-	} else {
-		args = append(args, "parent", fmt.Sprintf("%d:%d", qdisc.Parent.Major, qdisc.Parent.Minor))
-	}
-
-	if qdisc.Handle == nil {
-		args = append(args, "handle", fmt.Sprintf("%d:%d", 1, 0))
-	} else {
-		args = append(args, "handle", fmt.Sprintf("%d:%d", qdisc.Handle.Major, qdisc.Handle.Minor))
-	}
-
-	args = append(args, qdisc.Type)
-
-	if qdisc.Args != nil {
-		args = append(args, qdisc.Args...)
-	}
-
-	return args, nil
-}
-
 func (s *Server) SetContainerTcRules(ctx context.Context, in *pb.TcsRequest) error {
 	pid, err := s.criCli.GetPidFromContainerID(ctx, in.ContainerId)
 	if err != nil {
@@ -74,7 +34,7 @@ func (s *Server) SetContainerTcRules(ctx context.Context, in *pb.TcsRequest) err
 	}
 
 	nsPath := GetNsPath(pid, bpm.NetNS)
-	tcClient := buildTcClient(ctx, nsPath)
+	tcClient := buildTcClient(ctx, nsPath, in.Device)
 
 	iptables := buildIptablesClient(ctx, nsPath)
 
@@ -82,7 +42,7 @@ func (s *Server) SetContainerTcRules(ctx context.Context, in *pb.TcsRequest) err
 }
 
 func (s *Server) SetNodeTcRules(ctx context.Context, in *pb.TcsRequest) error {
-	tcClient := buildTcClient(ctx, "")
+	tcClient := buildTcClient(ctx, "", in.Device)
 	iptables := buildIptablesClient(ctx, "")
 	if err := iptables.initializeEnv(); err != nil {
 		return errors.WithStack(err)
@@ -92,7 +52,7 @@ func (s *Server) SetNodeTcRules(ctx context.Context, in *pb.TcsRequest) error {
 }
 
 func applyTCRules(ctx context.Context, tcClient *tcClient, iptables *iptablesClient, in *pb.TcsRequest) error {
-	if err := tcClient.flush(); err != nil {
+	if err := tcClient.flush(in.Device); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -140,7 +100,7 @@ func applyTCRules(ctx context.Context, tcClient *tcClient, iptables *iptablesCli
 
 		handleArg := fmt.Sprintf("handle %d:", index+1)
 
-		err := tcClient.addTc(parentArg, handleArg, tc)
+		err := tcClient.addTc(parentArg, handleArg, in.Device, tc)
 		if err != nil {
 			log.Error("error while adding tc", zap.Error(err))
 			return errors.WithStack(err)
@@ -149,7 +109,7 @@ func applyTCRules(ctx context.Context, tcClient *tcClient, iptables *iptablesCli
 
 	parent := len(globalTc)
 	band := 3 + len(filterTc) // 3 handlers for normal sfq on prio qdisc
-	if err := tcClient.addPrio(parent, band); err != nil {
+	if err := tcClient.addPrio(parent, band, in.Device); err != nil {
 		log.Error("failed to add prio", zap.Error(err))
 		return errors.WithStack(err)
 	}
@@ -173,7 +133,7 @@ func applyTCRules(ctx context.Context, tcClient *tcClient, iptables *iptablesCli
 			currentHandler++
 			handleArg := fmt.Sprintf("handle %d:", currentHandler)
 
-			err := tcClient.addTc(parentArg, handleArg, tc)
+			err := tcClient.addTc(parentArg, handleArg, in.Device, tc)
 			if err != nil {
 				log.Error("failed to add tc rules", zap.Error(err))
 				return errors.WithStack(err)
@@ -221,12 +181,14 @@ func applyTCRules(ctx context.Context, tcClient *tcClient, iptables *iptablesCli
 type tcClient struct {
 	ctx    context.Context
 	nsPath string
+	device string
 }
 
-func buildTcClient(ctx context.Context, nsPath string) *tcClient {
+func buildTcClient(ctx context.Context, nsPath string, device string) *tcClient {
 	return &tcClient{
 		ctx,
 		nsPath,
+		device,
 	}
 }
 
@@ -234,8 +196,9 @@ const (
 	RULE_NOT_EXIST = "RTNETLINK answers: No such file or directory"
 )
 
-func (c *tcClient) flush() error {
-	cmd := bpm.DefaultProcessBuilder("tc", "qdisc", "del", "dev", "eth0", "root").SetNetNS(c.nsPath).SetContext(c.ctx).Build()
+func (c *tcClient) flush(device string) error {
+	cmd := bpm.DefaultProcessBuilder("tc", "qdisc", "del", "dev", device, "root").
+		SetNetNS(c.nsPath).SetContext(c.ctx).Build()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		output := string(output)
@@ -246,7 +209,7 @@ func (c *tcClient) flush() error {
 	return nil
 }
 
-func (c *tcClient) addTc(parentArg string, handleArg string, tc *pb.Tc) error {
+func (c *tcClient) addTc(parentArg string, handleArg string, device string, tc *pb.Tc) error {
 	log.Debug("add tc", zap.Any("tc", tc))
 
 	if tc.Type == pb.Tc_BANDWIDTH {
@@ -254,7 +217,7 @@ func (c *tcClient) addTc(parentArg string, handleArg string, tc *pb.Tc) error {
 		if tc.Tbf == nil {
 			return fmt.Errorf("tbf is nil while type is BANDWIDTH")
 		}
-		err := c.addTbf(parentArg, handleArg, tc.Tbf)
+		err := c.addTbf(parentArg, handleArg, device, tc.Tbf)
 		if err != nil {
 			return err
 		}
@@ -264,7 +227,7 @@ func (c *tcClient) addTc(parentArg string, handleArg string, tc *pb.Tc) error {
 		if tc.Netem == nil {
 			return fmt.Errorf("netem is nil while type is NETEM")
 		}
-		err := c.addNetem(parentArg, handleArg, tc.Netem)
+		err := c.addNetem(parentArg, handleArg, device, tc.Netem)
 		if err != nil {
 			return err
 		}
@@ -276,14 +239,14 @@ func (c *tcClient) addTc(parentArg string, handleArg string, tc *pb.Tc) error {
 	return nil
 }
 
-func (c *tcClient) addPrio(parent int, band int) error {
+func (c *tcClient) addPrio(parent int, band int, device string) error {
 	log.Debug("adding prio", zap.Int("parent", parent))
 
 	parentArg := "root"
 	if parent > 0 {
 		parentArg = fmt.Sprintf("parent %d:", parent)
 	}
-	args := fmt.Sprintf("qdisc add dev eth0 %s handle %d: prio bands %d priomap 1 2 2 2 1 2 0 0 1 1 1 1 1 1 1 1", parentArg, parent+1, band)
+	args := fmt.Sprintf("qdisc add dev %s %s handle %d: prio bands %d priomap 1 2 2 2 1 2 0 0 1 1 1 1 1 1 1 1", device, parentArg, parent+1, band)
 	cmd := bpm.DefaultProcessBuilder("tc", strings.Split(args, " ")...).SetNetNS(c.nsPath).SetContext(c.ctx).Build()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -291,7 +254,7 @@ func (c *tcClient) addPrio(parent int, band int) error {
 	}
 
 	for index := 1; index <= 3; index++ {
-		args := fmt.Sprintf("qdisc add dev eth0 parent %d:%d handle %d: sfq", parent+1, index, parent+1+index)
+		args := fmt.Sprintf("qdisc add dev %s parent %d:%d handle %d: sfq", device, parent+1, index, parent+1+index)
 		cmd := bpm.DefaultProcessBuilder("tc", strings.Split(args, " ")...).SetNetNS(c.nsPath).SetContext(c.ctx).Build()
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -302,10 +265,10 @@ func (c *tcClient) addPrio(parent int, band int) error {
 	return nil
 }
 
-func (c *tcClient) addNetem(parent string, handle string, netem *pb.Netem) error {
+func (c *tcClient) addNetem(parent string, handle string, device string, netem *pb.Netem) error {
 	log.Debug("adding netem", zap.String("parent", parent), zap.String("handle", handle))
 
-	args := fmt.Sprintf("qdisc add dev eth0 %s %s netem %s", parent, handle, convertNetemToArgs(netem))
+	args := fmt.Sprintf("qdisc add dev %s %s %s netem %s", device, parent, handle, convertNetemToArgs(netem))
 	cmd := bpm.DefaultProcessBuilder("tc", strings.Split(args, " ")...).SetNetNS(c.nsPath).SetContext(c.ctx).Build()
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -314,10 +277,10 @@ func (c *tcClient) addNetem(parent string, handle string, netem *pb.Netem) error
 	return nil
 }
 
-func (c *tcClient) addTbf(parent string, handle string, tbf *pb.Tbf) error {
+func (c *tcClient) addTbf(parent string, handle string, device string, tbf *pb.Tbf) error {
 	log.Debug("adding tbf", zap.String("parent", parent), zap.String("handle", handle))
 
-	args := fmt.Sprintf("qdisc add dev eth0 %s %s tbf %s", parent, handle, convertTbfToArgs(tbf))
+	args := fmt.Sprintf("qdisc add dev %s %s %s tbf %s", device, parent, handle, convertTbfToArgs(tbf))
 	cmd := bpm.DefaultProcessBuilder("tc", strings.Split(args, " ")...).SetNetNS(c.nsPath).SetContext(c.ctx).Build()
 	output, err := cmd.CombinedOutput()
 	if err != nil {

@@ -98,12 +98,14 @@ func (l IptablesRuleList) ToChains() []*pb.Chain {
 type TCRuleStore interface {
 	List(ctx context.Context) ([]*TCRule, error)
 	Set(ctx context.Context, rule *TCRule) error
+	FindByDevice(ctx context.Context, experiment string) ([]*TCRule, error)
 	FindByExperiment(ctx context.Context, experiment string) ([]*TCRule, error)
 	DeleteByExperiment(ctx context.Context, experiment string) error
 }
 
 type TCRule struct {
 	gorm.Model
+	Device string `json:"device"`
 	// The type of traffic control
 	Type string `json:"type"`
 	TC   string `json:"tc"`
@@ -119,6 +121,7 @@ type TCRule struct {
 
 func (t *TCRule) ToTC() (*pb.Tc, error) {
 	tc := &pb.Tc{
+		Device:     t.Device,
 		Ipset:      t.IPSet,
 		Protocol:   t.Protocal,
 		SourcePort: t.SourcePort,

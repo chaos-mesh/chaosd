@@ -147,6 +147,17 @@ func (t *tcRuleStore) List(_ context.Context) ([]*core.TCRule, error) {
 	return rules, nil
 }
 
+func (t *tcRuleStore) FindByDevice(_ context.Context, device string) ([]*core.TCRule, error) {
+	rules := make([]*core.TCRule, 0)
+	if err := t.db.
+		Where("device = ?", device).
+		Find(&rules).
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
+	}
+	return rules, nil
+}
+
 func (t *tcRuleStore) FindByExperiment(_ context.Context, experiment string) ([]*core.TCRule, error) {
 	rules := make([]*core.TCRule, 0)
 	if err := t.db.

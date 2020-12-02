@@ -173,7 +173,6 @@ func (n *NetworkCommand) ToDelayNetem() (*pb.Netem, error) {
 	}
 
 	netem := &pb.Netem{
-		Device:    n.Device,
 		Time:      uint32(delayTime.Nanoseconds() / 1e3),
 		DelayCorr: float32(corr),
 		Jitter:    uint32(jitter.Nanoseconds() / 1e3),
@@ -202,6 +201,7 @@ func (n *NetworkCommand) ToLossNetem() (*pb.Netem, error) {
 func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 	tc := &pb.Tc{
 		Type:       pb.Tc_NETEM,
+		Device:     n.Device,
 		Ipset:      ipset,
 		Protocol:   n.IPProtocol,
 		SourcePort: n.SourcePort,

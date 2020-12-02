@@ -136,7 +136,7 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, uid string) error {
 }
 
 func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) error {
-	tcRules, err := s.tcRule.List(context.Background())
+	tcRules, err := s.tcRule.FindByDevice(context.Background(), attack.Device)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -152,21 +152,21 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	}
 
 	tcs = append(tcs, newTC)
-	if err := s.SetNodeTcRules(context.Background(), &pb.TcsRequest{Tcs: tcs}); err != nil {
+	if err := s.SetNodeTcRules(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: attack.Device}); err != nil {
 		return errors.WithStack(err)
 	}
 
-	tc := &core.TcParameter{}
+	tc := &core.TcParameter{
+		Device: attack.Device,
+	}
 	switch attack.Action {
 	case core.NetworkDelayAction:
-		tc.Device = attack.Device
 		tc.Delay = &core.DelaySpec{
 			Latency:     attack.Latency,
 			Correlation: attack.Correlation,
 			Jitter:      attack.Jitter,
 		}
 	case core.NetworkLossAction:
-		tc.Device = attack.Device
 		tc.Loss = &core.LossSpec{
 			Loss:        attack.Percent,
 			Correlation: attack.Correlation,
@@ -182,6 +182,7 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 
 	if err := s.tcRule.Set(context.Background(), &core.TCRule{
 		Type:       pb.Tc_Type_name[int32(newTC.Type)],
+		Device:     attack.Device,
 		TC:         string(tcString),
 		IPSet:      newTC.Ipset,
 		Protocal:   newTC.Protocol,
