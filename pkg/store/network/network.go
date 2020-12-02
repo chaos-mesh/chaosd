@@ -176,3 +176,26 @@ func (t *tcRuleStore) DeleteByExperiment(_ context.Context, experiment string) e
 		Delete(core.TCRule{}).
 		Error
 }
+
+func (t *tcRuleStore) ListGroupDevice(ctx context.Context) (map[string][]*core.TCRule, error) {
+	rules := make(map[string][]*core.TCRule)
+	devices := []string{}
+	if err := t.db.
+		Model(&core.TCRule{}).
+		Select("device").
+		Group("device").
+		Find(&devices).
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
+	}
+
+	for _, device := range devices {
+		rs, err := t.FindByDevice(ctx, device)
+		if err != nil {
+			return nil, perr.WithStack(err)
+		}
+		rules[device] = rs
+	}
+
+	return rules, nil
+}

@@ -247,15 +247,21 @@ func (s *Server) recoverTC(uid string) error {
 		return errors.WithStack(err)
 	}
 
-	tcRules, err := s.tcRule.List(context.Background())
+	tcRules, err := s.tcRule.ListGroupDevice(context.Background())
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	tcs, err := core.TCRuleList(tcRules).ToTCs()
-	if err != nil {
-		return errors.WithStack(err)
+	for device,rules := range tcRules {
+		tcs, err := core.TCRuleList(rules).ToTCs()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if err := s.SetNodeTcRules(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: device}); err !=nil {
+			return errors.WithStack(err)
+		}
 	}
 
-	return errors.WithStack(s.SetNodeTcRules(context.Background(), &pb.TcsRequest{Tcs: tcs}))
+	return nil
 }

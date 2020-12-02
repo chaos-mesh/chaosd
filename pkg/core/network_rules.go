@@ -97,6 +97,7 @@ func (l IptablesRuleList) ToChains() []*pb.Chain {
 
 type TCRuleStore interface {
 	List(ctx context.Context) ([]*TCRule, error)
+	ListGroupDevice(ctx context.Context) (map[string][]*TCRule, error)
 	Set(ctx context.Context, rule *TCRule) error
 	FindByDevice(ctx context.Context, experiment string) ([]*TCRule, error)
 	FindByExperiment(ctx context.Context, experiment string) ([]*TCRule, error)
