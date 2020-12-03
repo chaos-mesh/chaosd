@@ -201,7 +201,6 @@ func (n *NetworkCommand) ToLossNetem() (*pb.Netem, error) {
 func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 	tc := &pb.Tc{
 		Type:       pb.Tc_NETEM,
-		Device:     n.Device,
 		Ipset:      ipset,
 		Protocol:   n.IPProtocol,
 		SourcePort: n.SourcePort,

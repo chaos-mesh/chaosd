@@ -122,7 +122,6 @@ type TCRule struct {
 
 func (t *TCRule) ToTC() (*pb.Tc, error) {
 	tc := &pb.Tc{
-		Device:     t.Device,
 		Ipset:      t.IPSet,
 		Protocol:   t.Protocal,
 		SourcePort: t.SourcePort,

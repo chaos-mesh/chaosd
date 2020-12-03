@@ -203,5 +203,4 @@ message Tc {
   string protocol = 5;
   string sourcePort = 6;
   string egressPort = 7;
-  string device = 8;
 }
