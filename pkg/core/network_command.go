@@ -24,7 +24,7 @@ import (
 
 	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/utils"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 type NetworkCommand struct {

@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-function chaos-daemon::version::get_version_vars() {
+function chaosd::version::get_version_vars() {
   if [[ -n ${GIT_COMMIT-} ]] || GIT_COMMIT=$(git rev-parse "HEAD^{commit}" 2>/dev/null); then
 
     # Use git describe to find the version based on tags.
@@ -32,26 +32,26 @@ function chaos-daemon::version::get_version_vars() {
   fi
 }
 
-function chaos-daemon::version::ldflag() {
+function chaosd::version::ldflag() {
   local key=${1}
   local val=${2}
 
-  echo "-X 'github.com/chaos-mesh/chaos-daemon/pkg/version.${key}=${val}'"
+  echo "-X 'github.com/chaos-mesh/chaosd/pkg/version.${key}=${val}'"
 }
 
 # Prints the value that needs to be passed to the -ldflags parameter of go build
-function chaos-daemon::version::ldflags() {
-  chaos-daemon::version::get_version_vars
+function chaosd::version::ldflags() {
+  chaosd::version::get_version_vars
 
   local buildDate=
   [[ -z ${SOURCE_DATE_EPOCH-} ]] || buildDate="--date=@${SOURCE_DATE_EPOCH}"
-  local -a ldflags=($(chaos-daemon::version::ldflag "buildDate" "$(date ${buildDate} -u +'%Y-%m-%dT%H:%M:%SZ')"))
+  local -a ldflags=($(chaosd::version::ldflag "buildDate" "$(date ${buildDate} -u +'%Y-%m-%dT%H:%M:%SZ')"))
   if [[ -n ${GIT_COMMIT-} ]]; then
-    ldflags+=($(chaos-daemon::version::ldflag "gitCommit" "${GIT_COMMIT}"))
+    ldflags+=($(chaosd::version::ldflag "gitCommit" "${GIT_COMMIT}"))
   fi
 
   if [[ -n ${GIT_VERSION-} ]]; then
-    ldflags+=($(chaos-daemon::version::ldflag "gitVersion" "${GIT_VERSION}"))
+    ldflags+=($(chaosd::version::ldflag "gitVersion" "${GIT_VERSION}"))
   fi
 
   # The -ldflags parameter takes a single string, so join the output.
@@ -59,4 +59,4 @@ function chaos-daemon::version::ldflags() {
 }
 
 # output -ldflags parameters
-chaos-daemon::version::ldflags
+chaosd::version::ldflags

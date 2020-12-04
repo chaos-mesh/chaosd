@@ -20,7 +20,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "github.com/chaos-mesh/chaos-daemon/docs" // for swagger api
+	_ "github.com/chaos-mesh/chaosd/docs" // for swagger api
 )
 
 // Handler returns a swagger `http.Handler`.

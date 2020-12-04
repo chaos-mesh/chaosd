@@ -27,7 +27,7 @@ import (
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 const (

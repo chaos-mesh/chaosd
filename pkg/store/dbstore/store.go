@@ -24,7 +24,7 @@ import (
 
 	"github.com/pingcap/log"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/utils"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 const dataFile = "chaosd.dat"

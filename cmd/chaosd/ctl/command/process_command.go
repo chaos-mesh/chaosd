@@ -19,7 +19,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 var pFlag core.ProcessCommand

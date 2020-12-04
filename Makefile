@@ -24,7 +24,7 @@ FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git|bin)" | xargs $(G
 FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git|bin)" | xargs $(GOBIN)/failpoint-ctl disable)
 
 PACKAGE_LIST := go list ./... | grep -vE "chaos-daemon/test|pkg/ptrace|zz_generated|vendor"
-PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/chaos-mesh/chaos-daemon/||'
+PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/chaos-mesh/chaosd/||'
 
 failpoint-enable: $(GOBIN)/failpoint-ctl
 # Converting gofail failpoints...
@@ -82,7 +82,7 @@ fmt: groupimports
 	$(CGOENV) go fmt ./...
 
 groupimports: $(GOBIN)/goimports
-	$< -w -l -local github.com/chaos-mesh/chaos-daemon $$($(PACKAGE_DIRECTORIES))
+	$< -w -l -local github.com/chaos-mesh/chaosd $$($(PACKAGE_DIRECTORIES))
 
 # Run go vet against code
 vet:

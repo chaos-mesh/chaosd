@@ -16,7 +16,7 @@ package ctl
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/chaos-mesh/chaos-daemon/cmd/chaosd/ctl/command"
+	"github.com/chaos-mesh/chaosd/cmd/chaosd/ctl/command"
 )
 
 // CommandFlags are flags that used in all Commands

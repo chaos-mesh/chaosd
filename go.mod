@@ -1,4 +1,4 @@
-module github.com/chaos-mesh/chaos-daemon
+module github.com/chaos-mesh/chaosd
 
 require (
 	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201204093407-b4bd6cd95438

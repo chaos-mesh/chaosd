@@ -17,11 +17,11 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/config"
-	"github.com/chaos-mesh/chaos-daemon/pkg/container"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server"
-	"github.com/chaos-mesh/chaos-daemon/pkg/store"
-	"github.com/chaos-mesh/chaos-daemon/pkg/version"
+	"github.com/chaos-mesh/chaosd/pkg/config"
+	"github.com/chaos-mesh/chaosd/pkg/container"
+	"github.com/chaos-mesh/chaosd/pkg/server"
+	"github.com/chaos-mesh/chaosd/pkg/store"
+	"github.com/chaos-mesh/chaosd/pkg/version"
 )
 
 func NewServerCommand() *cobra.Command {

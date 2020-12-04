@@ -20,11 +20,11 @@ import (
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/config"
-	"github.com/chaos-mesh/chaos-daemon/pkg/core"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/utils"
-	"github.com/chaos-mesh/chaos-daemon/pkg/swaggerserver"
+	"github.com/chaos-mesh/chaosd/pkg/config"
+	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
+	"github.com/chaos-mesh/chaosd/pkg/server/utils"
+	"github.com/chaos-mesh/chaosd/pkg/swaggerserver"
 )
 
 type httpServer struct {

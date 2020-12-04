@@ -21,8 +21,8 @@ import (
 
 	perr "github.com/pingcap/errors"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/core"
-	"github.com/chaos-mesh/chaos-daemon/pkg/store/dbstore"
+	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/store/dbstore"
 )
 
 func NewIPSetRuleStore(db *dbstore.DB) core.IPSetRuleStore {

@@ -20,13 +20,13 @@ import (
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/config"
-	"github.com/chaos-mesh/chaos-daemon/pkg/core"
-	"github.com/chaos-mesh/chaos-daemon/pkg/crclient"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/store/dbstore"
-	"github.com/chaos-mesh/chaos-daemon/pkg/store/experiment"
-	"github.com/chaos-mesh/chaos-daemon/pkg/store/network"
+	"github.com/chaos-mesh/chaosd/pkg/config"
+	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/crclient"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
+	"github.com/chaos-mesh/chaosd/pkg/store/dbstore"
+	"github.com/chaos-mesh/chaosd/pkg/store/experiment"
+	"github.com/chaos-mesh/chaosd/pkg/store/network"
 )
 
 func mustChaosdFromCmd(cmd *cobra.Command, conf *config.Config) *chaosd.Server {
