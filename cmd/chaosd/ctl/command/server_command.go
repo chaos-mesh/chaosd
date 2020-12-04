@@ -17,7 +17,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
 	"github.com/chaos-mesh/chaos-daemon/pkg/container"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server"
@@ -60,7 +59,6 @@ func serverCommandFunc(cmd *cobra.Command, args []string) {
 				return &conf
 			},
 			container.NewCRIClient,
-			bpm.NewBackgroundProcessManager,
 		),
 		store.Module,
 		server.Module,

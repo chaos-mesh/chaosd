@@ -11,14 +11,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package ctl
 
 import (
-	"github.com/chaos-mesh/chaos-daemon/cmd/chaos/ctl"
+	"github.com/spf13/cobra"
 
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/chaos-mesh/chaos-daemon/cmd/chaosd/ctl/command"
 )
 
-func main() {
-	ctl.Execute()
+// CommandFlags are flags that used in all Commands
+var rootCmd = &cobra.Command{
+	Use:   "chaos",
+	Short: "A command line client to run chaos experiment",
+}
+
+func init() {
+	rootCmd.AddCommand(
+		command.NewServerCommand(),
+		command.NewAttackCommand(),
+		command.NewRecoverCommand(),
+	)
+}
+
+// Execute execs Command
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		command.ExitWithError(command.ExitError, err)
+	}
 }

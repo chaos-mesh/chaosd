@@ -29,6 +29,7 @@ func NewNetworkAttackCommand() *cobra.Command {
 
 	cmd.AddCommand(
 		NewNetworkDelayCommand(),
+		NewNetworkLossCommand(),
 	)
 
 	return cmd
@@ -48,6 +49,7 @@ func NewNetworkDelayCommand() *cobra.Command {
 		"delay egress time, time units: ns, us (or µs), ms, s, m, h.")
 	cmd.Flags().StringVarP(&nFlag.Jitter, "jitter", "j", "",
 		"jitter time, time units: ns, us (or µs), ms, s, m, h.")
+	cmd.Flags().StringVarP(&nFlag.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
 	cmd.Flags().StringVarP(&nFlag.Device, "device", "d", "", "the network interface to impact")
 	cmd.Flags().StringVarP(&nFlag.EgressPort, "egress-port", "e", "",
 		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. It can only be used in conjunction with -p tcp or -p udp")
@@ -57,13 +59,55 @@ func NewNetworkDelayCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	nFlag.Action = core.NetworkDelayAction
-	nFlag.SetDefault()
+
+	return cmd
+}
+
+func NewNetworkLossCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "loss [option]",
+		Short: "loss network packet",
+
+		Run: networkLossCommandFunc,
+	}
+
+	cmd.Flags().StringVar(&nFlag.Percent, "percent", "1", "percentage of packets to drop (10 is 10%)")
+	cmd.Flags().StringVarP(&nFlag.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
+	cmd.Flags().StringVarP(&nFlag.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVarP(&nFlag.EgressPort, "egress-port", "e", "",
+		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. It can only be used in conjunction with -p tcp or -p udp")
+	cmd.Flags().StringVarP(&nFlag.SourcePort, "source-port", "s", "",
+		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. It can only be used in conjunction with -p tcp or -p udp")
+	cmd.Flags().StringVarP(&nFlag.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
+	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
+		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
 
 	return cmd
 }
 
 func networkDelayCommandFunc(cmd *cobra.Command, args []string) {
+	nFlag.Action = core.NetworkDelayAction
+	nFlag.SetDefaultForNetworkDelay()
+
+	if err := nFlag.Validate(); err != nil {
+		ExitWithError(ExitBadArgs, err)
+	}
+
+	chaos := mustChaosdFromCmd(cmd, &conf)
+
+	uid, err := chaos.NetworkAttack(&nFlag)
+	if err != nil {
+		ExitWithError(ExitError, err)
+	}
+
+	NormalExit(fmt.Sprintf("Attack network successfully, uid: %s", uid))
+}
+
+func networkLossCommandFunc(cmd *cobra.Command, args []string) {
+	nFlag.Action = core.NetworkLossAction
+	nFlag.SetDefaultForNetworkLoss()
+
 	if err := nFlag.Validate(); err != nil {
 		ExitWithError(ExitBadArgs, err)
 	}

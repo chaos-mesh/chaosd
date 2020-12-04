@@ -69,6 +69,6 @@ func (g *Graph) Flatten(source uint32) []uint32 {
 		current = current.Next
 	}
 
-	log.Info("get flatTree", zap.Uint32("source", source), zap.Uint32s("flatTree", flatTree))
+	log.Debug("get flatTree", zap.Uint32("source", source), zap.Uint32s("flatTree", flatTree))
 	return flatTree
 }

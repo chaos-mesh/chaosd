@@ -18,11 +18,15 @@ import (
 
 	"github.com/chaos-mesh/chaos-daemon/pkg/store/dbstore"
 	"github.com/chaos-mesh/chaos-daemon/pkg/store/experiment"
+	"github.com/chaos-mesh/chaos-daemon/pkg/store/network"
 )
 
 var Module = fx.Options(
 	fx.Provide(
 		dbstore.NewDBStore,
 		experiment.NewStore,
+		network.NewIPSetRuleStore,
+		network.NewIptablesRuleStore,
+		network.NewTCRuleStore,
 	),
 )

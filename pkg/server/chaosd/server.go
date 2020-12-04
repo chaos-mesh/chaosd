@@ -14,29 +14,35 @@
 package chaosd
 
 import (
-	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
+
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
-	"github.com/chaos-mesh/chaos-daemon/pkg/container"
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
 )
 
 type Server struct {
-	exp                      core.ExperimentStore
-	conf                     *config.Config
-	criCli                   container.CRIClient
-	backgroundProcessManager bpm.BackgroundProcessManager
+	exp          core.ExperimentStore
+	ipsetRule    core.IPSetRuleStore
+	iptablesRule core.IptablesRuleStore
+	tcRule       core.TCRuleStore
+	conf         *config.Config
+	svr          *chaosdaemon.DaemonServer
 }
 
 func NewServer(
 	conf *config.Config,
 	exp core.ExperimentStore,
-	cli container.CRIClient,
-	bpm bpm.BackgroundProcessManager,
+	ipset core.IPSetRuleStore,
+	iptables core.IptablesRuleStore,
+	tc core.TCRuleStore,
+	svr *chaosdaemon.DaemonServer,
 ) *Server {
 	return &Server{
-		conf:                     conf,
-		exp:                      exp,
-		criCli:                   cli,
-		backgroundProcessManager: bpm,
+		conf:         conf,
+		exp:          exp,
+		ipsetRule:    ipset,
+		iptablesRule: iptables,
+		tcRule:       tc,
+		svr:          svr,
 	}
 }

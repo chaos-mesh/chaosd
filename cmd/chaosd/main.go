@@ -11,18 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chaosd
+package main
 
 import (
-	"context"
-
-	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+	"github.com/chaos-mesh/chaos-daemon/cmd/chaosd/ctl"
 )
 
-func (s *Server) ExecContainerStress(context.Context, *pb.ExecStressRequest) (*pb.ExecStressResponse, error) {
-	return nil, nil
-}
-
-func (s *Server) CancelContainerStress(context.Context, *pb.CancelStressRequest) error {
-	return nil
+func main() {
+	ctl.Execute()
 }

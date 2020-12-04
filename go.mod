@@ -1,31 +1,31 @@
 module github.com/chaos-mesh/chaos-daemon
 
 require (
-	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201201095545-3793473dab19
-	github.com/containerd/cgroups v0.0.0-20200404012852-53ba5634dc0f
+	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201204093407-b4bd6cd95438
 	github.com/containerd/containerd v1.2.3
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0
 	github.com/gin-gonic/gin v1.6.3
-	github.com/go-logr/logr v0.1.0
-	github.com/go-logr/zapr v0.1.0
 	github.com/google/uuid v1.1.1
-	github.com/jinzhu/gorm v1.9.16
 	github.com/joomcode/errorx v1.0.1
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
-	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/pingcap/errors v0.11.5-0.20190809092503-95897b64e011
 	github.com/pingcap/failpoint v0.0.0-20200210140405-f8f9fb234798
 	github.com/pingcap/log v0.0.0-20200117041106-d28c14d3b1cd
 	github.com/pkg/errors v0.9.1
-	github.com/shirou/gopsutil v0.0.0-20180427012116-c95755e4bcd7
 	github.com/spf13/cobra v0.0.6
 	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.2.0
 	go.uber.org/fx v1.13.1
 	go.uber.org/zap v1.15.0
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
+	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/grpc v1.27.0
+	gorm.io/driver/sqlite v1.1.4
+	gorm.io/gorm v1.20.7
 	k8s.io/api v0.17.0
 	k8s.io/apimachinery v0.17.0
 	sigs.k8s.io/controller-runtime v0.4.0

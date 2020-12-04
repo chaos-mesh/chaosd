@@ -11,16 +11,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ptrace
+package crclient
 
-/*
-#define _GNU_SOURCE
-#include <sys/wait.h>
-#include <sys/uio.h>
-#include <errno.h>
-*/
-import "C"
+import "context"
 
-func waitpid(pid int) int {
-	return int(C.waitpid(C.int(pid), nil, C.__WALL))
+func NewNodeCRClient(pid int) *NodeCRClient {
+	return &NodeCRClient{
+		Pid: uint32(pid),
+	}
+}
+
+type NodeCRClient struct {
+	Pid uint32
+}
+
+func (n *NodeCRClient) GetPidFromContainerID(_ context.Context, _ string) (uint32, error) {
+	return n.Pid, nil
+}
+
+func (n *NodeCRClient) ContainerKillByContainerID(_ context.Context, _ string) error {
+	return nil
+}
+
+func (n *NodeCRClient) FormatContainerID(_ context.Context, _ string) (string, error) {
+	return "", nil
 }
