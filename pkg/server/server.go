@@ -14,17 +14,20 @@
 package server
 
 import (
+	"os"
+
 	"go.uber.org/fx"
 
+	"github.com/chaos-mesh/chaos-daemon/pkg/crclient"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/grpcserver"
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
 )
 
 var Module = fx.Options(
 	fx.Provide(
 		chaosd.NewServer,
-		grpcserver.NewServer,
+		crclient.NewNodeCRClient,
+		os.Getpid,
+		chaosdaemon.NewDaemonServerWithCRClient,
 	),
-
-	fx.Invoke(grpcserver.Register),
 )

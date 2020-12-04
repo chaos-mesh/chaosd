@@ -11,24 +11,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package time
+package ctl
 
 import (
-	"errors"
+	"github.com/spf13/cobra"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
+	"github.com/chaos-mesh/chaos-daemon/cmd/chaosd/ctl/command"
 )
 
-// ModifyTime modifies time of target process
-func ModifyTime(pid int, deltaSec int64, deltaNsec int64, clockIdsMask uint64) error {
-	// Mock point to return error in unit test
-	if err := mock.On("ModifyTimeError"); err != nil {
-		if e, ok := err.(error); ok {
-			return e
-		}
-		if ignore, ok := err.(bool); ok && ignore {
-			return nil
-		}
+// CommandFlags are flags that used in all Commands
+var rootCmd = &cobra.Command{
+	Use:   "chaos",
+	Short: "A command line client to run chaos experiment",
+}
+
+func init() {
+	rootCmd.AddCommand(
+		command.NewServerCommand(),
+		command.NewAttackCommand(),
+		command.NewRecoverCommand(),
+	)
+}
+
+// Execute execs Command
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		command.ExitWithError(command.ExitError, err)
 	}
-	return errors.New("darwin is not supported")
 }

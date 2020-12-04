@@ -11,18 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ptrace
+package main
 
-func (p *TracedProgram) Protect() error {
-	panic("unimplemented")
-}
+import (
+	"github.com/chaos-mesh/chaos-daemon/cmd/chaosd/ctl"
+)
 
-// Restore will restore regs and rip from fields
-func (p *TracedProgram) Restore() error {
-	panic("unimplemented")
-}
-
-// Syscall runs a syscall at main thread of process
-func (p *TracedProgram) Syscall(number uint64, args ...uint64) (uint64, error) {
-	panic("unimplemented")
+func main() {
+	ctl.Execute()
 }

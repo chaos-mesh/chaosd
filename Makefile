@@ -45,7 +45,7 @@ $(GOBIN)/goimports:
 
 build: binary
 
-binary: chaosd bin/pause bin/suicide
+binary: chaosd
 
 taily-build:
 	if [ "$(shell docker ps --filter=name=$@ -q)" = "" ]; then \
@@ -67,34 +67,13 @@ image-binary: image-build-base
 endif
 
 chaosd:
-	$(CGOENV) go build -ldflags '$(LDFLAGS)' -o bin/chaosd ./cmd/chaos/main.go
+	$(CGOENV) go build -ldflags '$(LDFLAGS)' -o bin/chaosd ./cmd/chaosd/main.go
 
 image-build-base:
 	DOCKER_BUILDKIT=0 docker build --ulimit nofile=65536:65536 -t pingcap/chaos-build-base ${DOCKER_BUILD_ARGS} images/build-base
 
 image-chaosd: image-binary
 	docker build -t ${DOCKER_REGISTRY_PREFIX}pingcap/chaosd:${IMAGE_TAG} ${DOCKER_BUILD_ARGS} images/chaosd
-
-bin/pause: ./hack/pause.c
-	cc ./hack/pause.c -o bin/pause
-
-bin/suicide: ./hack/suicide.c
-	cc ./hack/suicide.c -o bin/suicide
-
-image-chaos-mesh-protoc:
-	docker build -t pingcap/chaos-daemon-protoc ${DOCKER_BUILD_ARGS} ./images/protoc
-
-ifeq ($(IN_DOCKER),1)
-proto:
-	protoc -I pkg/server/serverpb pkg/server/serverpb/*.proto --go_out=plugins=grpc:pkg/server/serverpb --go_out=./pkg/server/serverpb
-else
-proto: image-chaos-mesh-protoc
-	docker run --rm --workdir /mnt/ --volume $(shell pwd):/mnt \
-		--user $(shell id -u):$(shell id -g) --env IN_DOCKER=1 pingcap/chaos-daemon-protoc \
-		/usr/bin/make proto
-
-	make fmt
-endif
 
 check: fmt vet boilerplate lint tidy
 

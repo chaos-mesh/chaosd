@@ -22,7 +22,8 @@ import (
 
 	"github.com/pingcap/errors"
 
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
+	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+
 	"github.com/chaos-mesh/chaos-daemon/pkg/utils"
 )
 

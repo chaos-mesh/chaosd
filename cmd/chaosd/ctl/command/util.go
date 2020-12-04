@@ -14,12 +14,15 @@
 package command
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/bpm"
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
+
 	"github.com/chaos-mesh/chaos-daemon/pkg/config"
-	"github.com/chaos-mesh/chaos-daemon/pkg/container"
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
+	"github.com/chaos-mesh/chaos-daemon/pkg/crclient"
 	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
 	"github.com/chaos-mesh/chaos-daemon/pkg/store/dbstore"
 	"github.com/chaos-mesh/chaos-daemon/pkg/store/experiment"
@@ -27,19 +30,13 @@ import (
 )
 
 func mustChaosdFromCmd(cmd *cobra.Command, conf *config.Config) *chaosd.Server {
-	cli, err := container.NewCRIClient(conf)
-	if err != nil {
-		ExitWithError(ExitError, err)
-	}
-
 	return chaosd.NewServer(
 		conf,
 		mustExpStoreFromCmd(),
 		mustIPSetRuleStoreFromCmd(),
 		mustIptablesRuleStoreFromCmd(),
 		mustTCRuleStoreFromCmd(),
-		cli,
-		bpm.NewBackgroundProcessManager())
+		chaosdaemon.NewDaemonServerWithCRClient(crclient.NewNodeCRClient(os.Getpid())))
 }
 
 func mustExpStoreFromCmd() core.ExperimentStore {

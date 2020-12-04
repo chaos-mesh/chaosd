@@ -25,8 +25,9 @@ import (
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+
 	"github.com/chaos-mesh/chaos-daemon/pkg/core"
-	pb "github.com/chaos-mesh/chaos-daemon/pkg/server/serverpb"
 )
 
 const (
@@ -93,9 +94,12 @@ func (s *Server) applyIPSet(attack *core.NetworkCommand, uid string) (string, er
 		return "", errors.WithStack(err)
 	}
 
-	if err := flushIPSet(context.Background(), "", ipset); err != nil {
+	if _, err := s.svr.FlushIPSets(context.Background(), &pb.IPSetsRequest{
+		Ipsets: []*pb.IPSet{ipset},
+	}); err != nil {
 		return "", errors.WithStack(err)
 	}
+
 	if err := s.ipsetRule.Set(context.Background(), &core.IPSetRule{
 		Name:       ipset.Name,
 		Cidrs:      strings.Join(ipset.Cidrs, ","),
@@ -119,7 +123,9 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, uid string) error {
 	}
 
 	chains = append(chains, newChain)
-	if err := s.SetNodeIptablesChains(context.Background(), chains); err != nil {
+	if _, err := s.svr.SetIptablesChains(context.Background(), &pb.IptablesChainsRequest{
+		Chains: chains,
+	}); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -152,7 +158,7 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	}
 
 	tcs = append(tcs, newTC)
-	if err := s.SetNodeTcRules(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: attack.Device}); err != nil {
+	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: attack.Device}); err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -239,7 +245,13 @@ func (s *Server) recoverIptables(uid string) error {
 
 	chains := core.IptablesRuleList(iptables).ToChains()
 
-	return errors.WithStack(s.SetNodeIptablesChains(context.Background(), chains))
+	if _, err := s.svr.SetIptablesChains(context.Background(), &pb.IptablesChainsRequest{
+		Chains: chains,
+	}); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
 }
 
 func (s *Server) recoverTC(uid string, device string) error {
@@ -254,5 +266,9 @@ func (s *Server) recoverTC(uid string, device string) error {
 		return errors.WithStack(err)
 	}
 
-	return errors.WithStack(s.SetNodeTcRules(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: device}))
+	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: device}); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
 }
