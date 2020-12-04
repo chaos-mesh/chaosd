@@ -14,7 +14,7 @@
 package main
 
 import (
-	"github.com/chaos-mesh/chaos-daemon/cmd/chaosd/ctl"
+	"github.com/chaos-mesh/chaosd/cmd/chaosd/ctl"
 )
 
 func main() {

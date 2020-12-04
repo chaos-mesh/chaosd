@@ -16,9 +16,9 @@ package store
 import (
 	"go.uber.org/fx"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/store/dbstore"
-	"github.com/chaos-mesh/chaos-daemon/pkg/store/experiment"
-	"github.com/chaos-mesh/chaos-daemon/pkg/store/network"
+	"github.com/chaos-mesh/chaosd/pkg/store/dbstore"
+	"github.com/chaos-mesh/chaosd/pkg/store/experiment"
+	"github.com/chaos-mesh/chaosd/pkg/store/network"
 )
 
 var Module = fx.Options(

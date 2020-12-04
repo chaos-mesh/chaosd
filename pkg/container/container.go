@@ -23,8 +23,8 @@ import (
 	"github.com/docker/docker/api/types"
 	dockerclient "github.com/docker/docker/client"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/config"
-	"github.com/chaos-mesh/chaos-daemon/pkg/mock"
+	"github.com/chaos-mesh/chaosd/pkg/config"
+	"github.com/chaos-mesh/chaosd/pkg/mock"
 )
 
 const (

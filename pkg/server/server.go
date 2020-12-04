@@ -18,9 +18,10 @@ import (
 
 	"go.uber.org/fx"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/crclient"
-	"github.com/chaos-mesh/chaos-daemon/pkg/server/chaosd"
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
+
+	"github.com/chaos-mesh/chaosd/pkg/crclient"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
 var Module = fx.Options(

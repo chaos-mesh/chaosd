@@ -16,8 +16,8 @@ package chaosd
 import (
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
 
-	"github.com/chaos-mesh/chaos-daemon/pkg/config"
-	"github.com/chaos-mesh/chaos-daemon/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/config"
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 type Server struct {
