@@ -182,6 +182,11 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 			Corrupt:     attack.Percent,
 			Correlation: attack.Correlation,
 		}
+	case core.NetworkDuplicateAction:
+		tc.Duplicate = &core.DuplicateSpec{
+			Duplicate:   attack.Percent,
+			Correlation: attack.Correlation,
+		}
 	default:
 		return errors.Errorf("network %s attack not supported", attack.Action)
 	}

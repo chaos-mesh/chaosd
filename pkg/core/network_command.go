@@ -183,13 +183,8 @@ func (n *NetworkCommand) ToDelayNetem() (*pb.Netem, error) {
 	return netem, nil
 }
 
-func (n *NetworkCommand) ToCommonNetem() (*pb.Netem, error) {
-	percent, err := strconv.ParseFloat(n.Percent, 32)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	corr, err := strconv.ParseFloat(n.Correlation, 32)
+func (n *NetworkCommand) ToLossNetem() (*pb.Netem, error) {
+	percent, corr, err := n.parsePercentAndCorr()
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -197,6 +192,43 @@ func (n *NetworkCommand) ToCommonNetem() (*pb.Netem, error) {
 	return &pb.Netem{
 		Loss:     float32(percent),
 		LossCorr: float32(corr),
+	}, nil
+}
+
+func (n *NetworkCommand) parsePercentAndCorr() (percent float64, corr float64, err error) {
+	percent, err = strconv.ParseFloat(n.Percent, 32)
+	if err != nil {
+		return 0, 0, errors.WithStack(err)
+	}
+
+	corr, err = strconv.ParseFloat(n.Correlation, 32)
+	if err != nil {
+		return 0, 0, errors.WithStack(err)
+	}
+	return
+}
+
+func (n *NetworkCommand) ToCorruptNetem() (*pb.Netem, error) {
+	percent, corr, err := n.parsePercentAndCorr()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &pb.Netem{
+		Corrupt:     float32(percent),
+		CorruptCorr: float32(corr),
+	}, nil
+}
+
+func (n *NetworkCommand) ToDuplicateNetem() (*pb.Netem, error) {
+	percent, corr, err := n.parsePercentAndCorr()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &pb.Netem{
+		Duplicate:     float32(percent),
+		DuplicateCorr: float32(corr),
 	}, nil
 }
 
@@ -218,8 +250,16 @@ func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 		if netem, err = n.ToDelayNetem(); err != nil {
 			return nil, errors.WithStack(err)
 		}
-	case NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
-		if netem, err = n.ToCommonNetem(); err != nil {
+	case NetworkLossAction:
+		if netem, err = n.ToLossNetem(); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	case NetworkCorruptAction:
+		if netem, err = n.ToCorruptNetem(); err != nil {
+			return nil, errors.WithStack(err)
+		}
+	case NetworkDuplicateAction:
+		if netem, err = n.ToDuplicateNetem(); err != nil {
 			return nil, errors.WithStack(err)
 		}
 	default:
@@ -271,7 +311,7 @@ func (n *NetworkCommand) NeedApplyIptables() bool {
 
 func (n *NetworkCommand) NeedApplyTC() bool {
 	switch n.Action {
-	case NetworkDelayAction, NetworkLossAction:
+	case NetworkDelayAction, NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
 		return true
 	default:
 		return false
