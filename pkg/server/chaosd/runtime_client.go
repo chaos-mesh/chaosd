@@ -11,21 +11,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package chaosd
 
-import "github.com/spf13/cobra"
+import (
+	"context"
+)
 
-func NewAttackCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
+type physicClient struct {
+	pid uint32
+}
+
+func newPhysicClient(pid int) physicClient {
+	return physicClient{
+		pid: uint32(pid),
 	}
+}
 
-	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-		NewStressAttackCommand(),
-	)
+func (c physicClient) GetPidFromContainerID(ctx context.Context, containerID string) (uint32, error) {
+	return c.pid, nil
+}
 
-	return cmd
+func (c physicClient) ContainerKillByContainerID(ctx context.Context, containerID string) error {
+	return nil
+}
+
+func (c physicClient) FormatContainerID(ctx context.Context, containerID string) (string, error) {
+	return "", nil
 }
