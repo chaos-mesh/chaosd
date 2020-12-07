@@ -20,9 +20,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 	"github.com/pingcap/errors"
-
-	pb "github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
@@ -42,16 +41,18 @@ type NetworkCommand struct {
 }
 
 const (
-	NetworkDelayAction = "delay"
-	NetworkLossAction  = "loss"
+	NetworkDelayAction     = "delay"
+	NetworkLossAction      = "loss"
+	NetworkCorruptAction   = "corrupt"
+	NetworkDuplicateAction = "duplicate"
 )
 
 func (n *NetworkCommand) Validate() error {
 	switch n.Action {
 	case NetworkDelayAction:
 		return n.validNetworkDelay()
-	case NetworkLossAction:
-		return n.validNetworkLoss()
+	case NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
+		return n.validNetworkCommon()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -87,7 +88,7 @@ func (n *NetworkCommand) validNetworkDelay() error {
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
 }
 
-func (n *NetworkCommand) validNetworkLoss() error {
+func (n *NetworkCommand) validNetworkCommon() error {
 	if len(n.Percent) == 0 {
 		return errors.New("percent is required")
 	}
@@ -182,7 +183,7 @@ func (n *NetworkCommand) ToDelayNetem() (*pb.Netem, error) {
 	return netem, nil
 }
 
-func (n *NetworkCommand) ToLossNetem() (*pb.Netem, error) {
+func (n *NetworkCommand) ToCommonNetem() (*pb.Netem, error) {
 	percent, err := strconv.ParseFloat(n.Percent, 32)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -217,8 +218,8 @@ func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 		if netem, err = n.ToDelayNetem(); err != nil {
 			return nil, errors.WithStack(err)
 		}
-	case NetworkLossAction:
-		if netem, err = n.ToLossNetem(); err != nil {
+	case NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
+		if netem, err = n.ToCommonNetem(); err != nil {
 			return nil, errors.WithStack(err)
 		}
 	default:

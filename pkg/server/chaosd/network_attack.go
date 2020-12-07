@@ -177,6 +177,11 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 			Loss:        attack.Percent,
 			Correlation: attack.Correlation,
 		}
+	case core.NetworkCorruptAction:
+		tc.Corrupt = &core.CorruptSpec{
+			Corrupt:     attack.Percent,
+			Correlation: attack.Correlation,
+		}
 	default:
 		return errors.Errorf("network %s attack not supported", attack.Action)
 	}
