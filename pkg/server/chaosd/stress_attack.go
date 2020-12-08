@@ -15,16 +15,11 @@ package chaosd
 
 import (
 	"context"
-	//"strconv"
-	//"syscall"
 
 	"go.uber.org/zap"
-
 	"github.com/google/uuid"
-	//"github.com/mitchellh/go-ps"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
-
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 
@@ -36,13 +31,6 @@ const (
 )
 
 func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
-	/*
-		processes, err := ps.Processes()
-		if err != nil {
-			return "", errors.WithStack(err)
-		}
-	*/
-
 	var err error
 	uid := uuid.New().String()
 
@@ -104,20 +92,6 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 }
 
 func (s *Server) RecoverStressAttack(uid string, attack *core.ProcessCommand) error {
-	/*
-		if attack.Signal != int(syscall.SIGSTOP) {
-			return errors.Errorf("chaos experiment %s not supported to recover", uid)
-		}
-
-		for _, pid := range attack.PIDs {
-			if err := syscall.Kill(pid, syscall.SIGCONT); err != nil {
-				return errors.WithStack(err)
-			}
-		}
-
-		if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
-			return errors.WithStack(err)
-		}
-	*/
+	// TODO
 	return nil
 }

@@ -41,6 +41,12 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdko
 github.com/Rican7/retry v0.1.0/go.mod h1:FgOROf8P5bebcC1DS0PdOQiqGUridaZvikzUmkFW6gg=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 h1:fLjPD/aNc3UIOA6tDi6QXUemppXK3P9BI7mr2hd6gx8=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
+github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201207084002-38773987a8be h1:YY0ThP9K8f9sgbn1MLQWCZGyiO09+nHrQi2HTSh1JFs=
+github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201207084002-38773987a8be/go.mod h1:z/ojXo0QzA62QxrWwuxX8E31SUQ+IBA3RicQz84j/bU=
+github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201208023713-a147dcad3f3e h1:qgAGKk2Yn4lfwa/lTDYP0wXz0v+qw2LeOJm/fm9xIMw=
+github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201208023713-a147dcad3f3e/go.mod h1:z/ojXo0QzA62QxrWwuxX8E31SUQ+IBA3RicQz84j/bU=
+github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201208023924-c2f223f5d6f7 h1:NmJ6YcPTeh5O28W3CM0YvsTFd3YAqW6vSfTQw6dEjNY=
+github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201208023924-c2f223f5d6f7/go.mod h1:z/ojXo0QzA62QxrWwuxX8E31SUQ+IBA3RicQz84j/bU=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
