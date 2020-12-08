@@ -47,6 +47,8 @@ github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201208023713-a147dcad3f3e h1:qgAGKk
 github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201208023713-a147dcad3f3e/go.mod h1:z/ojXo0QzA62QxrWwuxX8E31SUQ+IBA3RicQz84j/bU=
 github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201208023924-c2f223f5d6f7 h1:NmJ6YcPTeh5O28W3CM0YvsTFd3YAqW6vSfTQw6dEjNY=
 github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201208023924-c2f223f5d6f7/go.mod h1:z/ojXo0QzA62QxrWwuxX8E31SUQ+IBA3RicQz84j/bU=
+github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201208025218-4365d40b2c3a h1:V5ryEtfkGmRF0Mi2EcDqrh5lANdbeRpKpwuLWVN2c8Q=
+github.com/WangXiangUSTC/chaos-mesh v0.0.0-20201208025218-4365d40b2c3a/go.mod h1:z/ojXo0QzA62QxrWwuxX8E31SUQ+IBA3RicQz84j/bU=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
