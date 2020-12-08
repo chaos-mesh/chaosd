@@ -15,13 +15,14 @@ package chaosd
 
 import (
 	"context"
+	"time"
 
-	"go.uber.org/zap"
+	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
-	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
-	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -87,6 +88,11 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 		return "", err
 	}
 	log.Info("ExecStressors", zap.Reflect("response", resp))
+
+	c := time.Tick(attack.Duration)
+	for _ = range c {
+		// do nothing
+	}
 
 	return uid, nil
 }

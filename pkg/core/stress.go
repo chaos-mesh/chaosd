@@ -15,6 +15,7 @@ package core
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/pingcap/errors"
 )
@@ -32,6 +33,8 @@ type StressCommand struct {
 	Workers int
 
 	Options []string
+
+	Duration time.Duration
 }
 
 func (s *StressCommand) Validate() error {
