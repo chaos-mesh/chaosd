@@ -45,7 +45,6 @@ func NewStressCPUCommand() *cobra.Command {
 		Run:   stressCPUCommandFunc,
 	}
 
-	sFlag.Action = core.StressCPUAction
 	cmd.Flags().IntVarP(&sFlag.Load, "load", "l", 0, "Load specifies P percent loading per CPU worker. 0 is effectively a sleep (no load) and 100 is full loading.")
 	cmd.Flags().IntVarP(&sFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
 	cmd.Flags().StringSliceVarP(&sFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
@@ -62,7 +61,6 @@ func NewStressMemCommand() *cobra.Command {
 		Run: stressMemCommandFunc,
 	}
 
-	sFlag.Action = core.StressMemAction
 	cmd.Flags().IntVarP(&sFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
 	cmd.Flags().StringSliceVarP(&sFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
 	cmd.Flags().DurationVarP(&sFlag.Duration, "duration", "d", 10*time.Second, "the duration of stress attack")
@@ -71,10 +69,12 @@ func NewStressMemCommand() *cobra.Command {
 }
 
 func stressCPUCommandFunc(cmd *cobra.Command, args []string) {
+	sFlag.Action = core.StressCPUAction
 	stressAttackF(cmd, &sFlag)
 }
 
 func stressMemCommandFunc(cmd *cobra.Command, args []string) {
+	sFlag.Action = core.StressMemAction
 	stressAttackF(cmd, &sFlag)
 }
 
