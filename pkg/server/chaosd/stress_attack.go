@@ -78,26 +78,22 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Info("", zap.Reflect("stressorsStr", stressorsStr))
 
 	resp, err := s.svr.ExecStressors(context.Background(), &pb.ExecStressRequest{
 		Stressors: stressorsStr,
 	})
-
 	if err != nil {
 		return "", err
 	}
 	log.Info("ExecStressors", zap.Reflect("response", resp))
 
-	c := time.Tick(attack.Duration)
-	for _ = range c {
-		// do nothing
-	}
+	// stress attack will stop while exit
+	time.Sleep(attack.Duration)
 
 	return uid, nil
 }
 
 func (s *Server) RecoverStressAttack(uid string, attack *core.ProcessCommand) error {
-	// TODO
+	// stress attack don't need to recover
 	return nil
 }

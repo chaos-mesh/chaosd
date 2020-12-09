@@ -27,7 +27,7 @@ var sFlag core.StressCommand
 func NewStressAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stress <subcommand>",
-		Short: "stress attack related commands",
+		Short: "Stress attack related commands",
 	}
 
 	cmd.AddCommand(
@@ -41,7 +41,7 @@ func NewStressAttackCommand() *cobra.Command {
 func NewStressCPUCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cpu [options]",
-		Short: "kill process, default signal 9",
+		Short: "continuously stress CPU out",
 		Run:   stressCPUCommandFunc,
 	}
 
@@ -57,7 +57,7 @@ func NewStressCPUCommand() *cobra.Command {
 func NewStressMemCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mem [options]",
-		Short: "stop process, this action will stop the process with SIGSTOP",
+		Short: "continuously stress virtual memory out",
 
 		Run: stressMemCommandFunc,
 	}
