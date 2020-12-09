@@ -28,10 +28,6 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-const (
-	ProcessAttack = "process attack"
-)
-
 func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 	processes, err := ps.Processes()
 	if err != nil {
@@ -43,7 +39,8 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 	if err := s.exp.Set(context.Background(), &core.Experiment{
 		Uid:            uid,
 		Status:         core.Created,
-		Kind:           ProcessAttack,
+		Kind:           core.ProcessAttack,
+		Action:         attack.Action,
 		RecoverCommand: attack.String(),
 	}); err != nil {
 		return "", errors.WithStack(err)

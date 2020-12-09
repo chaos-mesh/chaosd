@@ -30,10 +30,6 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-const (
-	NetworkAttack = "network attack"
-)
-
 func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 	var (
 		ipsetName string
@@ -44,7 +40,8 @@ func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
 	if err = s.exp.Set(context.Background(), &core.Experiment{
 		Uid:            uid,
 		Status:         core.Created,
-		Kind:           NetworkAttack,
+		Kind:           core.NetworkAttack,
+		Action:         attack.Action,
 		RecoverCommand: attack.String(),
 	}); err != nil {
 		return "", errors.WithStack(err)

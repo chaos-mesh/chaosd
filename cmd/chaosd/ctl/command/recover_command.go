@@ -23,7 +23,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
-	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
 func NewRecoverCommand() *cobra.Command {
@@ -41,6 +40,9 @@ func NewRecoverCommand() *cobra.Command {
 }
 
 func recoverCommandF(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		ExitWithMsg(ExitBadArgs, "UID is required")
+	}
 	uid := args[0]
 
 	expStore := mustExpStoreFromCmd()
@@ -60,7 +62,7 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
 	switch exp.Kind {
-	case chaosd.ProcessAttack:
+	case core.ProcessAttack:
 		pcmd := &core.ProcessCommand{}
 		if err := json.Unmarshal([]byte(exp.RecoverCommand), pcmd); err != nil {
 			ExitWithError(ExitError, err)
@@ -73,7 +75,7 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 		if err := chaos.RecoverProcessAttack(uid, pcmd); err != nil {
 			ExitWithError(ExitError, errors.Errorf("Recover experiment %s failed, %s", uid, err.Error()))
 		}
-	case chaosd.NetworkAttack:
+	case core.NetworkAttack:
 		ncmd := &core.NetworkCommand{}
 		if err := json.Unmarshal([]byte(exp.RecoverCommand), ncmd); err != nil {
 			ExitWithError(ExitError, err)

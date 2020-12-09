@@ -30,6 +30,7 @@ func init() {
 		command.NewServerCommand(),
 		command.NewAttackCommand(),
 		command.NewRecoverCommand(),
+		command.NewSearchCommand(),
 	)
 }
 

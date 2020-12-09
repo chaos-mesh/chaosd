@@ -41,7 +41,7 @@ var nFlag core.NetworkCommand
 
 func NewNetworkDelayCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delay [option]",
+		Use:   "delay",
 		Short: "delay network",
 
 		Run: networkDelayCommandFunc,
@@ -69,7 +69,7 @@ func NewNetworkDelayCommand() *cobra.Command {
 
 func NewNetworkLossCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "loss [option]",
+		Use:   "loss",
 		Short: "loss network packet",
 
 		Run: networkLossCommandFunc,
@@ -94,7 +94,7 @@ func NewNetworkLossCommand() *cobra.Command {
 
 func NewNetworkCorruptCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "corrupt [option]",
+		Use:   "corrupt",
 		Short: "corrupt network packet",
 
 		Run: networkCorruptCommandFunc,
@@ -119,7 +119,7 @@ func NewNetworkCorruptCommand() *cobra.Command {
 
 func NetworkDuplicateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "duplicate [option]",
+		Use:   "duplicate",
 		Short: "duplicate network packet",
 
 		Run: networkDuplicateCommandFunc,

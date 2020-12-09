@@ -19,17 +19,22 @@ import (
 )
 
 const (
-	Created   = "Created"
-	Success   = "Success"
-	Running   = "Running"
-	Error     = "Error"
-	Destroyed = "Destroyed"
-	Revoked   = "Revoked"
+	Created   = "created"
+	Success   = "success"
+	Error     = "error"
+	Destroyed = "destroyed"
+	Revoked   = "revoked"
+)
+
+const (
+	ProcessAttack = "process"
+	NetworkAttack = "network"
 )
 
 // ExperimentStore defines operations for working with experiments
 type ExperimentStore interface {
 	List(ctx context.Context) ([]*Experiment, error)
+	ListByConditions(ctx context.Context, conds *SearchCommand) ([]*Experiment, error)
 	ListByStatus(ctx context.Context, status string) ([]*Experiment, error)
 	FindByUid(ctx context.Context, uid string) (*Experiment, error)
 	Set(ctx context.Context, exp *Experiment) error
@@ -46,5 +51,6 @@ type Experiment struct {
 	Message   string    `json:"error"`
 	// TODO: need to improve
 	Kind           string `json:"kind"`
+	Action         string `json:"action"`
 	RecoverCommand string `json:"recover_command"`
 }

@@ -62,6 +62,48 @@ func (e *experimentStore) ListByStatus(_ context.Context, status string) ([]*cor
 	return exps, nil
 }
 
+func (e *experimentStore) ListByConditions(_ context.Context, conds *core.SearchCommand) ([]*core.Experiment, error) {
+	if conds == nil {
+		return nil, errors.New("conditions is required")
+	}
+
+	exps := make([]*core.Experiment, 0)
+
+	db := e.db.Model(core.Experiment{})
+
+	if conds.Offset > 0 {
+		db = db.Offset(int(conds.Offset))
+	}
+
+	if conds.Limit > 0 {
+		db = db.Limit(int(conds.Limit))
+	}
+
+	if !conds.All {
+		if len(conds.Type) > 0 {
+			db = db.Where("kind = ?", conds.Type)
+		}
+
+		if len(conds.Status) > 0 {
+			db = db.Where("status = ?", conds.Status)
+		}
+	}
+
+	order := "create_at"
+	if !conds.Asc {
+		order += " DESC"
+	}
+
+	if err := db.
+		Find(&exps).
+		Order(order).
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
+	}
+
+	return exps, nil
+}
+
 func (e *experimentStore) FindByUid(_ context.Context, uid string) (*core.Experiment, error) {
 	exps := make([]*core.Experiment, 0)
 	if err := e.db.

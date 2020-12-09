@@ -40,7 +40,7 @@ func NewProcessAttackCommand() *cobra.Command {
 
 func NewProcessKillCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "kill [options]",
+		Use:   "kill",
 		Short: "kill process, default signal 9",
 		Run:   processKillCommandFunc,
 	}
@@ -53,7 +53,7 @@ func NewProcessKillCommand() *cobra.Command {
 
 func NewProcessStopCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "stop [options]",
+		Use:   "stop",
 		Short: "stop process, this action will stop the process with SIGSTOP",
 
 		Run: processStopCommandFunc,

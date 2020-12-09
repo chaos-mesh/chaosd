@@ -20,8 +20,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 	"github.com/pingcap/errors"
+
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
