@@ -17,8 +17,9 @@ import (
 	"context"
 	"strings"
 	"fmt"
-	"os/exec"
+	"strconv"
 
+	"github.com/shirou/gopsutil/process"
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 	"github.com/google/uuid"
@@ -94,16 +95,36 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 	}
 	log.Info("Start stress-ng process successfully", zap.String("command", cmd.String()))
 
-	recoverCommand = fmt.Sprintf("kill %d", cmd.Process.Pid)
+	//recoverCommand = fmt.Sprintf("kill %d", cmd.Process.Pid)
+	recoverCommand = fmt.Sprintf("%d", cmd.Process.Pid)
 
 	return uid, nil
 }
 
 func (s *Server) RecoverStressAttack(uid string, recoverCommand string) error {
-	// stress attack don't need to recover
-	cmd := exec.Command("/bin/sh", "-c", recoverCommand)
-	if err := cmd.Run(); err != nil {
-		return  err
+	i, err := strconv.Atoi(recoverCommand)
+	if err != nil {
+		return err
+	}
+
+	proc, err := process.NewProcess(int32(i))
+	if err != nil {
+		return err
+	}
+
+	procName, err := proc.Name()
+	if err != nil {
+		return err
+	}
+
+	if !strings.Contains(procName, "stress-ng") {
+		log.Warn("the process is not stress-ng, maybe it is killed by manual")
+		return nil
+	}
+
+	if err := proc.Kill(); err != nil {
+		log.Error("the stress-ng process kill failed", zap.Error(err))
+		return err
 	}
 
 	return nil
