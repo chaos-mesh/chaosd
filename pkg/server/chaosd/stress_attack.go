@@ -15,10 +15,11 @@ package chaosd
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
-	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
@@ -80,13 +81,15 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 	}
 	log.Info("stressors normalize", zap.String("arguments", stressorsStr))
 
-	resp, err := s.svr.ExecStressors(context.Background(), &pb.ExecStressRequest{
-		Stressors: stressorsStr,
-	})
+	cmd := bpm.DefaultProcessBuilder("stress-ng", strings.Fields(stressorsStr)...).
+		Build()
+
+	backgroundProcessManager := bpm.NewBackgroundProcessManager()
+	err = backgroundProcessManager.StartProcess(cmd)
 	if err != nil {
 		return "", err
 	}
-	log.Info("ExecStressors", zap.Reflect("response", resp))
+	log.Info("Start stress-ng process successfully", zap.String("command", cmd.String()))
 
 	// stress attack will stop while exit
 	time.Sleep(attack.Duration)
