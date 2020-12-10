@@ -46,3 +46,7 @@ func NewServer(
 		svr:          svr,
 	}
 }
+
+func (s *Server) Exp() core.ExperimentStore {
+	return s.exp
+}

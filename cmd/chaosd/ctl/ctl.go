@@ -31,6 +31,7 @@ func init() {
 		command.NewAttackCommand(),
 		command.NewRecoverCommand(),
 		command.NewSearchCommand(),
+		command.NewListCommand(),
 	)
 }
 
