@@ -80,8 +80,8 @@ func (e *experimentStore) ListByConditions(_ context.Context, conds *core.Search
 	}
 
 	if !conds.All {
-		if len(conds.Type) > 0 {
-			db = db.Where("kind = ?", conds.Type)
+		if len(conds.Kind) > 0 {
+			db = db.Where("kind = ?", conds.Kind)
 		}
 
 		if len(conds.Status) > 0 {

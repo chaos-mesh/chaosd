@@ -21,7 +21,7 @@ type SearchCommand struct {
 	Asc    bool
 	All    bool
 	Status string
-	Type   string
+	Kind   string
 	Limit  uint32
 	Offset uint32
 	UID    string
@@ -32,12 +32,12 @@ func (s *SearchCommand) Validate() error {
 		return nil
 	}
 
-	if len(s.Type) > 0 {
-		switch s.Type {
+	if len(s.Kind) > 0 {
+		switch s.Kind {
 		case NetworkAttack, ProcessAttack:
 			break
 		default:
-			return errors.Errorf("type %s not supported", s.Type)
+			return errors.Errorf("type %s not supported", s.Kind)
 		}
 	}
 
@@ -48,6 +48,10 @@ func (s *SearchCommand) Validate() error {
 		default:
 			return errors.Errorf("status %s not supported", s.Status)
 		}
+	}
+
+	if len(s.Status) == 0 && len(s.Kind) == 0 && !s.All {
+		return errors.New("UID is required")
 	}
 
 	return nil

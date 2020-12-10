@@ -34,7 +34,7 @@ func NewSearchCommand() *cobra.Command {
 	cmd.Flags().BoolVarP(&sFlag.All, "all", "A", false, "list all chaos attacks")
 	cmd.Flags().StringVarP(&sFlag.Status, "status", "s", "", "attack status, "+
 		"supported value: created, success, error, destroyed, revoked")
-	cmd.Flags().StringVarP(&sFlag.Type, "type", "t", "", "attack type, "+
+	cmd.Flags().StringVarP(&sFlag.Kind, "kind", "k", "", "attack kind, "+
 		"supported value: network, process")
 	cmd.Flags().Uint32VarP(&sFlag.Offset, "offset", "o", 0, "starting to search attacks from offset")
 	cmd.Flags().Uint32VarP(&sFlag.Limit, "limit", "l", 0, "limit the count of attacks")
@@ -45,10 +45,9 @@ func NewSearchCommand() *cobra.Command {
 }
 
 func searchCommandFunc(cmd *cobra.Command, args []string) {
-	if len(args) == 0 {
-		ExitWithMsg(ExitBadArgs, "UID is required")
+	if len(args) > 0 {
+		sFlag.UID = args[0]
 	}
-	sFlag.UID = args[0]
 
 	if err := sFlag.Validate(); err != nil {
 		ExitWithError(ExitBadArgs, err)
