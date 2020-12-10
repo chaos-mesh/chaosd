@@ -16,7 +16,8 @@ package chaosd
 import (
 	"context"
 	"strings"
-	"time"
+	"fmt"
+	"os/exec"
 
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
@@ -45,6 +46,8 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 		return "", errors.WithStack(err)
 	}
 
+	recoverCommand := ""
+
 	defer func() {
 		if err != nil {
 			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), attack.String()); err != nil {
@@ -52,7 +55,7 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 			}
 			return
 		}
-		if err := s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
+		if err := s.exp.Update(context.Background(), uid, core.Success, "", recoverCommand); err != nil {
 			log.Error("failed to update experiment", zap.Error(err))
 		}
 	}()
@@ -91,17 +94,17 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 	}
 	log.Info("Start stress-ng process successfully", zap.String("command", cmd.String()))
 
-	// stress attack will stop while exit
-	time.Sleep(attack.Duration)
-	kerr := cmd.Process.Kill()
-	if kerr != nil {
-		log.Error("stress-ng exit failed, please kill it by manual", zap.Error(kerr), zap.Int("process id", cmd.Process.Pid))
-	}
+	recoverCommand = fmt.Sprintf("kill %d", cmd.Process.Pid)
 
 	return uid, nil
 }
 
-func (s *Server) RecoverStressAttack(uid string, attack *core.ProcessCommand) error {
+func (s *Server) RecoverStressAttack(uid string, recoverCommand string) error {
 	// stress attack don't need to recover
+	cmd := exec.Command("/bin/sh", "-c", recoverCommand)
+	if err := cmd.Run(); err != nil {
+		return  err
+	}
+
 	return nil
 }
