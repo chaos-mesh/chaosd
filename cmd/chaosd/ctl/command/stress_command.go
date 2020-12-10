@@ -15,7 +15,6 @@ package command
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -48,7 +47,6 @@ func NewStressCPUCommand() *cobra.Command {
 	cmd.Flags().IntVarP(&sFlag.Load, "load", "l", 10, "Load specifies P percent loading per CPU worker. 0 is effectively a sleep (no load) and 100 is full loading.")
 	cmd.Flags().IntVarP(&sFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
 	cmd.Flags().StringSliceVarP(&sFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
-	cmd.Flags().DurationVarP(&sFlag.Duration, "duration", "d", 10*time.Second, "the duration of stress attack")
 
 	return cmd
 }
@@ -63,7 +61,6 @@ func NewStressMemCommand() *cobra.Command {
 
 	cmd.Flags().IntVarP(&sFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
 	cmd.Flags().StringSliceVarP(&sFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
-	cmd.Flags().DurationVarP(&sFlag.Duration, "duration", "d", 10*time.Second, "the duration of stress attack")
 
 	return cmd
 }

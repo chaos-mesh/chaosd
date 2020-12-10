@@ -15,16 +15,15 @@ package chaosd
 
 import (
 	"context"
-	"strings"
-	"fmt"
 	"strconv"
+	"strings"
 
-	"github.com/shirou/gopsutil/process"
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
+	"github.com/shirou/gopsutil/process"
 	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
@@ -47,7 +46,7 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 		return "", errors.WithStack(err)
 	}
 
-	recoverCommand := ""
+	stressngPid := ""
 
 	defer func() {
 		if err != nil {
@@ -56,7 +55,9 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 			}
 			return
 		}
-		if err := s.exp.Update(context.Background(), uid, core.Success, "", recoverCommand); err != nil {
+
+		// use the stressngPid as recover command, and will kill the pid when recover
+		if err := s.exp.Update(context.Background(), uid, core.Success, "", stressngPid); err != nil {
 			log.Error("failed to update experiment", zap.Error(err))
 		}
 	}()
@@ -95,19 +96,18 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 	}
 	log.Info("Start stress-ng process successfully", zap.String("command", cmd.String()))
 
-	//recoverCommand = fmt.Sprintf("kill %d", cmd.Process.Pid)
-	recoverCommand = fmt.Sprintf("%d", cmd.Process.Pid)
+	stressngPid = strconv.Itoa(cmd.Process.Pid)
 
 	return uid, nil
 }
 
-func (s *Server) RecoverStressAttack(uid string, recoverCommand string) error {
-	i, err := strconv.Atoi(recoverCommand)
+func (s *Server) RecoverStressAttack(uid string, stressngPid string) error {
+	pid, err := strconv.Atoi(stressngPid)
 	if err != nil {
 		return err
 	}
 
-	proc, err := process.NewProcess(int32(i))
+	proc, err := process.NewProcess(int32(pid))
 	if err != nil {
 		return err
 	}
@@ -126,6 +126,8 @@ func (s *Server) RecoverStressAttack(uid string, recoverCommand string) error {
 		log.Error("the stress-ng process kill failed", zap.Error(err))
 		return err
 	}
+
+	// TODO: delete the experiment from db
 
 	return nil
 }
