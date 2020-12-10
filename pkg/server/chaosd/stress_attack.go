@@ -93,6 +93,10 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 
 	// stress attack will stop while exit
 	time.Sleep(attack.Duration)
+	kerr := cmd.Process.Kill()
+	if kerr != nil {
+		log.Error("stress-ng exit failed, please kill it by manual", zap.Error(kerr), zap.Int("process id", cmd.Process.Pid))
+	}
 
 	return uid, nil
 }
