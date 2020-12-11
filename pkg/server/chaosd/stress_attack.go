@@ -127,7 +127,9 @@ func (s *Server) RecoverStressAttack(uid string, stressngPid string) error {
 		return err
 	}
 
-	// TODO: delete the experiment from db
+	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", stressngPid); err != nil {
+		return errors.WithStack(err)
+	}
 
 	return nil
 }
