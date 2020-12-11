@@ -11,21 +11,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package core
 
-import "github.com/spf13/cobra"
+import (
+	"encoding/json"
+	"time"
 
-func NewAttackCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
+	"github.com/pingcap/errors"
+)
+
+const (
+	StressCPUAction = "cpu"
+	StressMemAction = "mem"
+)
+
+type StressCommand struct {
+	Action string
+
+	Load int
+
+	Workers int
+
+	Options []string
+
+	Duration time.Duration
+
+	StressngPid int32
+}
+
+func (s *StressCommand) Validate() error {
+	if len(s.Action) == 0 {
+		return errors.New("action not provided")
 	}
 
-	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-		NewStressAttackCommand(),
-	)
+	return nil
+}
 
-	return cmd
+func (s *StressCommand) String() string {
+	data, _ := json.Marshal(s)
+
+	return string(data)
 }
