@@ -83,7 +83,12 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 			ExitWithError(ExitError, errors.Errorf("Recover experiment %s failed, %s", uid, err.Error()))
 		}
 	case chaosd.StressAttack:
-		if err := chaos.RecoverStressAttack(uid, exp.RecoverCommand); err != nil {
+		scmd := &core.StressCommand{}
+		if err := json.Unmarshal([]byte(exp.RecoverCommand), scmd); err != nil {
+			ExitWithError(ExitError, err)
+		}
+
+		if err := chaos.RecoverStressAttack(uid, scmd); err != nil {
 			ExitWithError(ExitError, err)
 		}
 	default:

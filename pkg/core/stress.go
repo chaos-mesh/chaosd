@@ -35,6 +35,8 @@ type StressCommand struct {
 	Options []string
 
 	Duration time.Duration
+
+	StressngPid int32
 }
 
 func (s *StressCommand) Validate() error {

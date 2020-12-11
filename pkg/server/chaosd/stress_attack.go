@@ -15,7 +15,6 @@ package chaosd
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
@@ -46,8 +45,6 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 		return "", errors.WithStack(err)
 	}
 
-	stressngPid := ""
-
 	defer func() {
 		if err != nil {
 			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), attack.String()); err != nil {
@@ -57,7 +54,7 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 		}
 
 		// use the stressngPid as recover command, and will kill the pid when recover
-		if err := s.exp.Update(context.Background(), uid, core.Success, "", stressngPid); err != nil {
+		if err := s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
 			log.Error("failed to update experiment", zap.Error(err))
 		}
 	}()
@@ -96,18 +93,13 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 	}
 	log.Info("Start stress-ng process successfully", zap.String("command", cmd.String()))
 
-	stressngPid = strconv.Itoa(cmd.Process.Pid)
+	attack.StressngPid = int32(cmd.Process.Pid)
 
 	return uid, nil
 }
 
-func (s *Server) RecoverStressAttack(uid string, stressngPid string) error {
-	pid, err := strconv.Atoi(stressngPid)
-	if err != nil {
-		return err
-	}
-
-	proc, err := process.NewProcess(int32(pid))
+func (s *Server) RecoverStressAttack(uid string, attack *core.StressCommand) error {
+	proc, err := process.NewProcess(attack.StressngPid)
 	if err != nil {
 		return err
 	}
@@ -127,7 +119,7 @@ func (s *Server) RecoverStressAttack(uid string, stressngPid string) error {
 		return err
 	}
 
-	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", stressngPid); err != nil {
+	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
 		return errors.WithStack(err)
 	}
 
