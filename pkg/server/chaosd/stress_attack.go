@@ -28,10 +28,6 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-const (
-	StressAttack = "stress attack"
-)
-
 func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 	var err error
 	uid := uuid.New().String()
@@ -39,7 +35,7 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 	if err := s.exp.Set(context.Background(), &core.Experiment{
 		Uid:            uid,
 		Status:         core.Created,
-		Kind:           StressAttack,
+		Kind:           core.StressAttack,
 		RecoverCommand: attack.String(),
 	}); err != nil {
 		return "", errors.WithStack(err)

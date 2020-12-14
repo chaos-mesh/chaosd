@@ -21,7 +21,7 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-var sFlag core.StressCommand
+var stFlag core.StressCommand
 
 func NewStressAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -44,9 +44,9 @@ func NewStressCPUCommand() *cobra.Command {
 		Run:   stressCPUCommandFunc,
 	}
 
-	cmd.Flags().IntVarP(&sFlag.Load, "load", "l", 10, "Load specifies P percent loading per CPU worker. 0 is effectively a sleep (no load) and 100 is full loading.")
-	cmd.Flags().IntVarP(&sFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
-	cmd.Flags().StringSliceVarP(&sFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
+	cmd.Flags().IntVarP(&stFlag.Load, "load", "l", 10, "Load specifies P percent loading per CPU worker. 0 is effectively a sleep (no load) and 100 is full loading.")
+	cmd.Flags().IntVarP(&stFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
+	cmd.Flags().StringSliceVarP(&stFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
 
 	return cmd
 }
@@ -59,20 +59,20 @@ func NewStressMemCommand() *cobra.Command {
 		Run: stressMemCommandFunc,
 	}
 
-	cmd.Flags().IntVarP(&sFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
-	cmd.Flags().StringSliceVarP(&sFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
+	cmd.Flags().IntVarP(&stFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
+	cmd.Flags().StringSliceVarP(&stFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
 
 	return cmd
 }
 
 func stressCPUCommandFunc(cmd *cobra.Command, args []string) {
-	sFlag.Action = core.StressCPUAction
-	stressAttackF(cmd, &sFlag)
+	stFlag.Action = core.StressCPUAction
+	stressAttackF(cmd, &stFlag)
 }
 
 func stressMemCommandFunc(cmd *cobra.Command, args []string) {
-	sFlag.Action = core.StressMemAction
-	stressAttackF(cmd, &sFlag)
+	stFlag.Action = core.StressMemAction
+	stressAttackF(cmd, &stFlag)
 }
 
 func stressAttackF(cmd *cobra.Command, s *core.StressCommand) {
