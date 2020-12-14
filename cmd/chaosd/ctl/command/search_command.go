@@ -14,9 +14,10 @@
 package command
 
 import (
-	"fmt"
+	"os"
+	"time"
 
-	"github.com/jedib0t/go-pretty/table"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
@@ -60,16 +61,19 @@ func searchCommandFunc(cmd *cobra.Command, args []string) {
 		ExitWithError(ExitError, err)
 	}
 
-	tw := table.NewWriter()
-	tw.AppendHeader(table.Row{"UID", "Type", "Action", "Status", "Create Time", "Configuration"})
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader([]string{"UID", "Kind", "Action", "Status", "Create Time", "Configuration"})
+	tw.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
+	tw.SetAlignment(3)
+	tw.SetRowSeparator("-")
+	tw.SetCenterSeparator(" ")
+	tw.SetColumnSeparator(" ")
 
 	for _, exp := range exps {
-		tw.AppendRow(table.Row{
-			exp.Uid, exp.Kind, exp.Action, exp.Status, exp.CreatedAt, exp.RecoverCommand,
+		tw.Append([]string{
+			exp.Uid, exp.Kind, exp.Action, exp.Status, exp.CreatedAt.Format(time.RFC3339), exp.RecoverCommand,
 		})
 	}
 
-	tw.Style().Options.SeparateColumns = true
-
-	fmt.Println(tw.Render())
+	tw.Render()
 }

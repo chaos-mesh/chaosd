@@ -95,8 +95,8 @@ func (e *experimentStore) ListByConditions(_ context.Context, conds *core.Search
 	}
 
 	if err := db.
-		Find(&exps).
 		Order(order).
+		Find(&exps).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, perr.WithStack(err)
 	}

@@ -9,6 +9,7 @@ require (
 	github.com/jedib0t/go-pretty v4.3.0+incompatible
 	github.com/joomcode/errorx v1.0.1
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
+	github.com/olekukonko/tablewriter v0.0.4
 	github.com/onsi/gomega v1.9.0
 	github.com/pingcap/errors v0.11.5-0.20190809092503-95897b64e011
 	github.com/pingcap/failpoint v0.0.0-20200210140405-f8f9fb234798
