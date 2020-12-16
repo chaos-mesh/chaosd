@@ -60,7 +60,6 @@ func NewProcessStopCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&pFlag.Process, "process", "p", "", "The process name or the process ID")
-	pFlag.Signal = int(syscall.SIGSTOP)
 
 	return cmd
 }
@@ -70,6 +69,7 @@ func processKillCommandFunc(cmd *cobra.Command, args []string) {
 }
 
 func processStopCommandFunc(cmd *cobra.Command, args []string) {
+	pFlag.Signal = int(syscall.SIGSTOP)
 	processAttackF(cmd, &pFlag)
 }
 
