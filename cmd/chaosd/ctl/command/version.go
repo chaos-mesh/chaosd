@@ -11,33 +11,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ctl
+package command
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/chaos-mesh/chaosd/cmd/chaosd/ctl/command"
+	"github.com/chaos-mesh/chaosd/pkg/version"
 )
 
-// CommandFlags are flags that used in all Commands
-var rootCmd = &cobra.Command{
-	Use:   "chaosd",
-	Short: "A command line client to run chaos experiment",
-}
-
-func init() {
-	rootCmd.AddCommand(
-		command.NewServerCommand(),
-		command.NewAttackCommand(),
-		command.NewRecoverCommand(),
-		command.NewSearchCommand(),
-		command.NewVersionCommand(),
-	)
-}
-
-// Execute execs Command
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		command.ExitWithError(command.ExitError, err)
+func NewVersionCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Prints the version of chaosd",
+		Run:   versionCommandFunc,
 	}
+}
+
+func versionCommandFunc(cmd *cobra.Command, args []string) {
+	version.PrintVersionInfo("Chaosd")
 }
