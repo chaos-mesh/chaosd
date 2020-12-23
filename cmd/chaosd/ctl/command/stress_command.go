@@ -76,7 +76,7 @@ func stressMemCommandFunc(cmd *cobra.Command, args []string) {
 }
 
 func stressAttackF(cmd *cobra.Command, s *core.StressCommand) {
-	if err := sFlag.Validate(); err != nil {
+	if err := stFlag.Validate(); err != nil {
 		ExitWithError(ExitBadArgs, err)
 	}
 
