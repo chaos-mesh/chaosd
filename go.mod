@@ -1,7 +1,7 @@
 module github.com/chaos-mesh/chaosd
 
 require (
-	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201204093407-b4bd6cd95438
+	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223042947-94a19ee14031
 	github.com/containerd/containerd v1.2.3
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0
 	github.com/gin-gonic/gin v1.6.3
@@ -15,7 +15,7 @@ require (
 	github.com/pingcap/log v0.0.0-20200117041106-d28c14d3b1cd
 	github.com/pkg/errors v0.9.1
 	github.com/shirou/gopsutil v0.0.0-20180427012116-c95755e4bcd7
-	github.com/spf13/cobra v0.0.6
+	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
