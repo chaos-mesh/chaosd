@@ -20,22 +20,8 @@ endif
 
 IMAGE_TAG := $(if $(IMAGE_TAG),$(IMAGE_TAG),latest)
 
-FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git|bin)" | xargs $(GOBIN)/failpoint-ctl enable)
-FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git|bin)" | xargs $(GOBIN)/failpoint-ctl disable)
-
 PACKAGE_LIST := go list ./... | grep -vE "chaos-daemon/test|pkg/ptrace|zz_generated|vendor"
 PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/chaos-mesh/chaosd/||'
-
-failpoint-enable: $(GOBIN)/failpoint-ctl
-# Converting gofail failpoints...
-	@$(FAILPOINT_ENABLE)
-
-failpoint-disable: $(GOBIN)/failpoint-ctl
-# Restoring gofail failpoints...
-	@$(FAILPOINT_DISABLE)
-
-$(GOBIN)/failpoint-ctl:
-	$(GO) get github.com/pingcap/failpoint/failpoint-ctl@v0.0.0-20200210140405-f8f9fb234798
 
 $(GOBIN)/revive:
 	$(GO) get github.com/mgechev/revive@v1.0.2-0.20200225072153-6219ca02fffb
@@ -104,6 +90,5 @@ test:
 	rm -rf cover.* cover
 	$(GOTEST) $$($(PACKAGE_LIST)) -coverprofile cover.out.tmp
 	cat cover.out.tmp | grep -v "_generated.deepcopy.go" > cover.out
-	@$(FAILPOINT_DISABLE)
 
 .PHONY: all build check fmt vet lint tidy binary chaosd chaos image-binary image-chaosd
