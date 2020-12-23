@@ -1,7 +1,7 @@
 module github.com/chaos-mesh/chaosd
 
 require (
-	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223042947-94a19ee14031
+	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223081802-ee3d6d987c92
 	github.com/containerd/containerd v1.2.3
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0
 	github.com/gin-gonic/gin v1.6.3

@@ -307,7 +307,7 @@ func (n *NetworkCommand) NeedApplyIPSet() bool {
 }
 
 func (n *NetworkCommand) NeedApplyIptables() bool {
-	return false
+	return true
 }
 
 func (n *NetworkCommand) NeedApplyTC() bool {
