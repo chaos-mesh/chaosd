@@ -91,12 +91,6 @@ github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA
 github.com/cespare/prettybench v0.0.0-20150116022406-03b8cfe5406c/go.mod h1:Xe6ZsFhtM8HrDku0pxJ3/Lr51rwykrzgFwpmTzleatY=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5/go.mod h1:/iP1qXHoty45bqomnu2LM+VVyAEdWN+vtSHGlQgyxbw=
-github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223055844-9e2a3d36610b h1:Opq5O07RUvYRskW9mQTL9tCCIYqLZY+QyFa4WyCfhgw=
-github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223055844-9e2a3d36610b/go.mod h1:y0mS7/Mt+21vHYWXoDlskVeJMH5pAeoVLyvGS9S8iDs=
-github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223071339-6b5fd7c4f294 h1:qcGXZ/w5jzOmQMNxmzrjSvPxFCFng8nOl+iGQ25kDRE=
-github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223071339-6b5fd7c4f294/go.mod h1:y0mS7/Mt+21vHYWXoDlskVeJMH5pAeoVLyvGS9S8iDs=
-github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223075404-c51f53bf44e2 h1:hJxM8sA/lzFocs8YKnPAurZzce4cPTD1NlkjNi7cmlE=
-github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223075404-c51f53bf44e2/go.mod h1:y0mS7/Mt+21vHYWXoDlskVeJMH5pAeoVLyvGS9S8iDs=
 github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223081802-ee3d6d987c92 h1:9w2PFTRWCeRLLAhucXHKKHEQc5eiCEmPTl47Ev+nZBM=
 github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223081802-ee3d6d987c92/go.mod h1:y0mS7/Mt+21vHYWXoDlskVeJMH5pAeoVLyvGS9S8iDs=
 github.com/chaos-mesh/k8s_dns_chaos v0.0.0-20200922120555-7ced93637075/go.mod h1:CB8grXv5pqxLgiI0HSZxyyykmDRekpd5M7fz+NlOdMs=
