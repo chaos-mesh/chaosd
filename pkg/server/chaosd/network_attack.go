@@ -120,7 +120,10 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, uid string) error {
 		return errors.WithStack(err)
 	}
 
-	chains = append(chains, newChain)
+	if newChain != nil {
+		chains = append(chains, newChain)
+	}
+
 	if _, err := s.svr.SetIptablesChains(context.Background(), &pb.IptablesChainsRequest{
 		Chains:    chains,
 		WithoutNS: true,
@@ -128,14 +131,15 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, uid string) error {
 		return errors.WithStack(err)
 	}
 
-	if err := s.iptablesRule.Set(context.Background(), &core.IptablesRule{
-		Name:       newChain.Name,
-		IPSets:     strings.Join(newChain.Ipsets, ","),
-		Direction:  pb.Chain_Direction_name[int32(newChain.Direction)],
-		Experiment: uid,
-	}); err != nil {
-		return errors.WithStack(err)
-	}
+	// TODO: cwen0
+	//if err := s.iptablesRule.Set(context.Background(), &core.IptablesRule{
+	//	Name:       newChain.Name,
+	//	IPSets:     strings.Join(newChain.Ipsets, ","),
+	//	Direction:  pb.Chain_Direction_name[int32(newChain.Direction)],
+	//	Experiment: uid,
+	//}); err != nil {
+	//	return errors.WithStack(err)
+	//}
 
 	return nil
 }
