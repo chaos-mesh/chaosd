@@ -22,11 +22,13 @@ import (
 
 	"github.com/chaos-mesh/chaosd/pkg/crclient"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
+	"github.com/chaos-mesh/chaosd/pkg/server/httpserver"
 )
 
 var Module = fx.Options(
 	fx.Provide(
 		chaosd.NewServer,
+		httpserver.NewServer,
 		crclient.NewNodeCRClient,
 		os.Getpid,
 		chaosdaemon.NewDaemonServerWithCRClient,
