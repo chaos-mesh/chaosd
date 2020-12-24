@@ -77,6 +77,7 @@ func handler(s *httpServer) {
 	{
 		attack.POST("/process", s.createProcessAttack)
 		attack.POST("/stress", s.createStressAttack)
+		attack.POST("/network", s.createNetworkAttack)
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
@@ -90,6 +91,22 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 	}
 
 	uid, err := s.chaos.ProcessAttack(attack)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+func (s *httpServer) createNetworkAttack(c *gin.Context) {
+	attack := &core.NetworkCommand{}
+	if err := c.ShouldBindJSON(attack); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	uid, err := s.chaos.NetworkAttack(attack)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
