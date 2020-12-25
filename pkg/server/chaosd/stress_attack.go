@@ -16,6 +16,7 @@ package chaosd
 import (
 	"context"
 	"strings"
+	"syscall"
 
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
@@ -81,6 +82,10 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 
 	cmd := bpm.DefaultProcessBuilder("stress-ng", strings.Fields(stressorsStr)...).
 		Build()
+
+	// Build will set SysProcAttr.Pdeathsig = syscall.SIGTERM, and so stress-ng will exit while chaosd exit
+	// so reset it here
+	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
 
 	backgroundProcessManager := bpm.NewBackgroundProcessManager()
 	err = backgroundProcessManager.StartProcess(cmd)
