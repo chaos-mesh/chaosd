@@ -91,8 +91,8 @@ github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA
 github.com/cespare/prettybench v0.0.0-20150116022406-03b8cfe5406c/go.mod h1:Xe6ZsFhtM8HrDku0pxJ3/Lr51rwykrzgFwpmTzleatY=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5/go.mod h1:/iP1qXHoty45bqomnu2LM+VVyAEdWN+vtSHGlQgyxbw=
-github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223081802-ee3d6d987c92 h1:9w2PFTRWCeRLLAhucXHKKHEQc5eiCEmPTl47Ev+nZBM=
-github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201223081802-ee3d6d987c92/go.mod h1:y0mS7/Mt+21vHYWXoDlskVeJMH5pAeoVLyvGS9S8iDs=
+github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201225074538-d531882d632a h1:EM4On3ixpR0UMy4lwgBwk4Zf/a89L4IDm+uHTXfajaA=
+github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201225074538-d531882d632a/go.mod h1:y0mS7/Mt+21vHYWXoDlskVeJMH5pAeoVLyvGS9S8iDs=
 github.com/chaos-mesh/k8s_dns_chaos v0.0.0-20200922120555-7ced93637075/go.mod h1:CB8grXv5pqxLgiI0HSZxyyykmDRekpd5M7fz+NlOdMs=
 github.com/checkpoint-restore/go-criu v0.0.0-20190109184317-bdb7599cd87b/go.mod h1:TrMrLQfeENAPYPRsJuq3jsqdlRh3lvi6trTZJG8+tho=
 github.com/cheekybits/genny v0.0.0-20170328200008-9127e812e1e9/go.mod h1:+tQajlRqAUrPI7DOSpB0XAqZYtQakVtB7wXkRAgjxjQ=
