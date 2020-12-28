@@ -18,28 +18,47 @@ set -eu
 cur=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd $cur
 
+bin_path=../../../bin
+
 # test cpu stress
-./bin/chaosd attack stress cpu -l 10 -w 1 > cpu.out
+${bin_path}/chaosd attack stress cpu -l 10 -w 1 > cpu.out
 
-uid=`cat cpu.out | grep "successfully" | awk -F: '{print $2}'`
+stress_ng_num=`ps aux > temp && grep "stress-ng" temp | wc -l && rm temp`
+echo ${stress_ng_num}
 
-num=`ps aux | grep stress-ng`
-echo num
+if [ ${stress_ng_num} -lt 1 ]; then
+    echo "stress-ng is not run when executing stress cpu attack"
+    exit 1
+fi
 
-./bin/chaosd recover ${uid}
+uid=`cat cpu.out | grep "Attack stress cpu successfully" | awk -F: '{print $2}'`
+${bin_path}/chaosd recover ${uid}
 
-num=`ps aux | grep stress-ng`
-echo num
+sleep 1
+
+stress_ng_num=`ps aux > temp && grep "stress-ng" temp | wc -l && rm temp`
+if [ ${stress_ng_num} -ne 0 ]; then
+    echo "stress-ng is not stop when recovering stress mem attack"
+    exit 1
+fi
 
 # test mem stress
-./bin/chaosd attack stress mem -w 1 > mem.out
+${bin_path}/chaosd attack stress mem -w 1 > mem.out
 
-uid=`cat cpu.out | grep "successfully" | awk -F: '{print $2}'`
+stress_ng_num=`ps aux > temp && grep "stress-ng" temp | wc -l && rm temp`
+echo ${stress_ng_num}
+if [ ${stress_ng_num} -lt 1 ]; then
+    echo "stress-ng is not run when executing stress mem attack"
+    exit 1
+fi
 
-num=`ps aux | grep stress-ng`
-echo num
+uid=`cat mem.out | grep "Attack stress mem successfully" | awk -F: '{print $2}'`
+${bin_path}/chaosd recover ${uid}
 
-./bin/chaosd recover ${uid}
+sleep 1
 
-num=`ps aux | grep stress-ng`
-echo num
+stress_ng_num=`ps aux > temp && grep "stress-ng" temp | wc -l && rm temp`
+if [ ${stress_ng_num} -ne 0 ]; then
+    echo "stress-ng is not stop when recovering stress mem attack"
+    exit 1
+fi
