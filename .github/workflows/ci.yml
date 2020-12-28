@@ -14,7 +14,9 @@ jobs:
         job:
           - verify
           - build
-          - test
+          - unit-test
+          - integration-test
+
     steps:
       - name: Set up Go 1.14
         uses: actions/setup-go@v1
@@ -41,8 +43,10 @@ jobs:
             git diff --quiet -- . || (git diff | cat && false)
           elif [[ "$job" == "build" ]]; then
             make build
-          elif [[ "$job" == "test" ]]; then
+          elif [[ "$job" == "unit-test" ]]; then
             make test
+          elif [[ "$job" == "integration-test" ]]; then
+            make integration-test
           else
             make $job
           fi
