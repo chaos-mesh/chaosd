@@ -16,8 +16,6 @@ package utils
 import (
 	"context"
 	"encoding/json"
-
-	//"fmt"
 	"syscall"
 
 	"github.com/pkg/errors"
