@@ -18,8 +18,8 @@ import (
 	"go.uber.org/fx"
 
 	"github.com/chaos-mesh/chaosd/pkg/config"
-	"github.com/chaos-mesh/chaosd/pkg/container"
 	"github.com/chaos-mesh/chaosd/pkg/server"
+	"github.com/chaos-mesh/chaosd/pkg/server/httpserver"
 	"github.com/chaos-mesh/chaosd/pkg/store"
 	"github.com/chaos-mesh/chaosd/pkg/version"
 )
@@ -58,10 +58,10 @@ func serverCommandFunc(cmd *cobra.Command, args []string) {
 			func() *config.Config {
 				return &conf
 			},
-			container.NewCRIClient,
 		),
 		store.Module,
 		server.Module,
+		fx.Invoke(httpserver.Register),
 	)
 	app.Run()
 }

@@ -14,15 +14,11 @@
 package command
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"syscall"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 )
 
 func NewRecoverCommand() *cobra.Command {
@@ -46,55 +42,11 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 	uid := args[0]
 
 	expStore := mustExpStoreFromCmd()
-	exp, err := expStore.FindByUid(context.Background(), uid)
-	if err != nil {
-		ExitWithError(ExitError, err)
-	}
-
-	if exp == nil {
-		ExitWithMsg(ExitError, fmt.Sprintf("experiment %s not found", uid))
-	}
-
-	if exp.Status != core.Success {
-		ExitWithMsg(ExitError, fmt.Sprintf("can not recover %s experiment", exp.Status))
-	}
-
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	switch exp.Kind {
-	case core.ProcessAttack:
-		pcmd := &core.ProcessCommand{}
-		if err := json.Unmarshal([]byte(exp.RecoverCommand), pcmd); err != nil {
-			ExitWithError(ExitError, err)
-		}
-
-		if pcmd.Signal != int(syscall.SIGSTOP) {
-			ExitWithMsg(ExitError, fmt.Sprintf("process attack %s not support to recover", uid))
-		}
-
-		if err := chaos.RecoverProcessAttack(uid, pcmd); err != nil {
-			ExitWithError(ExitError, errors.Errorf("Recover experiment %s failed, %s", uid, err.Error()))
-		}
-	case core.NetworkAttack:
-		ncmd := &core.NetworkCommand{}
-		if err := json.Unmarshal([]byte(exp.RecoverCommand), ncmd); err != nil {
-			ExitWithError(ExitError, err)
-		}
-
-		if err := chaos.RecoverNetworkAttack(uid, ncmd); err != nil {
-			ExitWithError(ExitError, errors.Errorf("Recover experiment %s failed, %s", uid, err.Error()))
-		}
-	case core.StressAttack:
-		scmd := &core.StressCommand{}
-		if err := json.Unmarshal([]byte(exp.RecoverCommand), scmd); err != nil {
-			ExitWithError(ExitError, err)
-		}
-
-		if err := chaos.RecoverStressAttack(uid, scmd); err != nil {
-			ExitWithError(ExitError, err)
-		}
-	default:
-		ExitWithMsg(ExitError, fmt.Sprintf("chaos experiment kind %s not found", exp.Kind))
+	err := utils.RecoverExp(expStore, chaos, uid)
+	if err != nil {
+		ExitWithError(ExitError, err)
 	}
 
 	NormalExit(fmt.Sprintf("Recover %s successfully", uid))

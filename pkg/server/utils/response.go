@@ -26,3 +26,11 @@ func AttackSuccessResponse(uid string) *Response {
 		UID:     uid,
 	}
 }
+
+func RecoverSuccessResponse(uid string) *Response {
+	return &Response{
+		Status:  200,
+		Message: "attack recover successfully",
+		UID:     uid,
+	}
+}

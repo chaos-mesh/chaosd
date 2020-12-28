@@ -76,7 +76,10 @@ func handler(s *httpServer) {
 	attack := api.Group("/attack")
 	{
 		attack.POST("/process", s.createProcessAttack)
-		attack.DELETE("/process", s.cancelProcessAttack)
+		attack.POST("/stress", s.createStressAttack)
+		attack.POST("/network", s.createNetworkAttack)
+
+		attack.DELETE("/:uid", s.recoverAttack)
 	}
 }
 
@@ -96,4 +99,45 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
 }
 
-func (s *httpServer) cancelProcessAttack(c *gin.Context) {}
+func (s *httpServer) createNetworkAttack(c *gin.Context) {
+	attack := &core.NetworkCommand{}
+	if err := c.ShouldBindJSON(attack); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	uid, err := s.chaos.NetworkAttack(attack)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+func (s *httpServer) createStressAttack(c *gin.Context) {
+	attack := &core.StressCommand{}
+	if err := c.ShouldBindJSON(attack); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	uid, err := s.chaos.StressAttack(attack)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+func (s *httpServer) recoverAttack(c *gin.Context) {
+	uid := c.Param("uid")
+	err := utils.RecoverExp(s.exp, s.chaos, uid)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.RecoverSuccessResponse(uid))
+}

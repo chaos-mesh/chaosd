@@ -13,9 +13,13 @@
 
 package crclient
 
-import "context"
+import (
+	"context"
 
-func NewNodeCRClient(pid int) *NodeCRClient {
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
+)
+
+func NewNodeCRClient(pid int) chaosdaemon.ContainerRuntimeInfoClient {
 	return &NodeCRClient{
 		Pid: uint32(pid),
 	}
