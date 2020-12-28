@@ -24,8 +24,6 @@ bin_path=../../../bin
 ${bin_path}/chaosd attack stress cpu -l 10 -w 1 > cpu.out
 
 stress_ng_num=`ps aux > test.temp && grep "stress-ng" test.temp | wc -l && rm test.temp`
-echo ${stress_ng_num}
-
 if [ ${stress_ng_num} -lt 1 ]; then
     echo "stress-ng is not run when executing stress cpu attack"
     exit 1
@@ -46,7 +44,6 @@ fi
 ${bin_path}/chaosd attack stress mem -w 1 > mem.out
 
 stress_ng_num=`ps aux > test.temp && grep "stress-ng" test.temp | wc -l && rm test.temp`
-echo ${stress_ng_num}
 if [ ${stress_ng_num} -lt 1 ]; then
     echo "stress-ng is not run when executing stress mem attack"
     exit 1
