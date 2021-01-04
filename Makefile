@@ -91,4 +91,7 @@ test:
 	$(GOTEST) $$($(PACKAGE_LIST)) -coverprofile cover.out.tmp
 	cat cover.out.tmp | grep -v "_generated.deepcopy.go" > cover.out
 
+integration-test: build
+	bash test/integration_test/run.sh
+
 .PHONY: all build check fmt vet lint tidy binary chaosd chaos image-binary image-chaosd
