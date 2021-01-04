@@ -20,8 +20,15 @@ import (
 
 // IPToCidr converts from an ip to a full mask cidr
 func IPToCidr(ip string) string {
-	// TODO: support IPv6
-	return ip + "/32"
+	// TODO: support IPv6 correctly
+
+	// distinguish is IPv4 or IPv6 address
+	// no error checking here!
+	if net.ParseIP(ip).To4() != nil {
+		return ip + "/32"
+	} else {
+		return ip + "/128"
+	}
 }
 
 // ResolveCidrs converts multiple cidrs/ips/domains into cidr
@@ -47,6 +54,7 @@ func ResolveCidr(name string) ([]string, error) {
 		return []string{ipnet.String()}, nil
 	}
 
+	// name is not CIDR, check if it is invalid IP address
 	if net.ParseIP(name) != nil {
 		return []string{IPToCidr(name)}, nil
 	}

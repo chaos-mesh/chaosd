@@ -87,13 +87,87 @@ func TestCheckIPs(t *testing.T) {
 			expectedValue: false,
 		},
 		{
+			name:          "overflow ip",
+			ips:           "172.16.4.256",
+			expectedValue: false,
+		},
+		{
 			name:          "rang ips",
 			ips:           "172.16.4.0/16",
+			expectedValue: true,
+		},
+		{
+			name: "multi mixed ips",
+			// mix rang ip and normal ip together
+			ips:           "172.16.4.0/16,172.16.4.4,172.16.4.5",
 			expectedValue: true,
 		},
 	}
 
 	for _, tc := range tcs {
 		g.Expect(CheckIPs(tc.ips)).To(Equal(tc.expectedValue), tc.name)
+	}
+}
+
+func TestCheckIPProtocols(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	type TestCase struct {
+		name          string
+		protocol      string
+		expectedValue bool
+	}
+
+	tcs := []TestCase{
+		{
+			name:          "supported protocol",
+			protocol:      "tcp",
+			expectedValue: true,
+		},
+		{
+			name:          "wrong protocol",
+			protocol:      "ictp",
+			expectedValue: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		g.Expect(CheckIPProtocols(tc.protocol)).To(Equal(tc.expectedValue))
+	}
+}
+
+func TestCheckPercent(t *testing.T) {
+	g := NewGomegaWithT(t)
+
+	type TestCase struct {
+		name          string
+		percent       string
+		expectedValue bool
+	}
+
+	tcs := []TestCase{
+		{
+			name:          "valid percent",
+			percent:       "1.048596",
+			expectedValue: true,
+		},
+		{
+			name:          "too big percent",
+			percent:       "7355608",
+			expectedValue: false,
+		},
+		{
+			name:          "invalid percent",
+			percent:       "-1/12",
+			expectedValue: false,
+		},
+		{
+			name:          "negative percent",
+			percent:       "-0.618",
+			expectedValue: false,
+		},
+	}
+	for _, tc := range tcs {
+		g.Expect(CheckPercent(tc.percent)).To(Equal(tc.expectedValue))
 	}
 }
