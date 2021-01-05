@@ -27,7 +27,6 @@ func IPToCidr(ip string) string {
 	if net.ParseIP(ip).To4() != nil {
 		return ip + "/32"
 	}
-
 	return ip + "/128"
 }
 
