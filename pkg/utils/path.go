@@ -27,14 +27,14 @@ import (
 func GetProgramPath() string {
 	dir, err := exec.LookPath(os.Args[0])
 	if err != nil {
-		log.Fatal("can get the process path", zap.Error(err))
+		log.Fatal("can not get the process path", zap.Error(err))
 	}
 	if p, err := os.Readlink(dir); err == nil {
 		dir = p
 	}
 	proPath, err := filepath.Abs(filepath.Dir(dir))
 	if err != nil {
-		log.Fatal("can get the full process path", zap.Error(err))
+		log.Fatal("can not get the full process path", zap.Error(err))
 	}
 	return proPath
 }
