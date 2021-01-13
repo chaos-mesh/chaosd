@@ -14,10 +14,14 @@
 package ctl
 
 import (
+	"github.com/pingcap/log"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/cmd/chaosd/ctl/command"
 )
+
+var logLevel string
 
 // CommandFlags are flags that used in all Commands
 var rootCmd = &cobra.Command{
@@ -26,6 +30,9 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	cobra.OnInitialize(setLogLevel)
+	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", "", "the log level of chaosd")
+
 	rootCmd.AddCommand(
 		command.NewServerCommand(),
 		command.NewAttackCommand(),
@@ -40,4 +47,14 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		command.ExitWithError(command.ExitError, err)
 	}
+}
+
+func setLogLevel() {
+	conf := &log.Config{Level: logLevel}
+	lg, r, err := log.InitLogger(conf)
+	if err != nil {
+		log.Error("fail to init log", zap.Error(err))
+		return
+	}
+	log.ReplaceGlobals(lg, r)
 }
