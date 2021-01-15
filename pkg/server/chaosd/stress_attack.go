@@ -37,6 +37,7 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 		Uid:            uid,
 		Status:         core.Created,
 		Kind:           core.StressAttack,
+		Action:         attack.Action,
 		RecoverCommand: attack.String(),
 	}); err != nil {
 		return "", errors.WithStack(err)

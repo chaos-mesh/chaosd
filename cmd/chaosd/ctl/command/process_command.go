@@ -65,11 +65,13 @@ func NewProcessStopCommand() *cobra.Command {
 }
 
 func processKillCommandFunc(cmd *cobra.Command, args []string) {
+	pFlag.Action = core.ProcessKillAction
 	processAttackF(cmd, &pFlag)
 }
 
 func processStopCommandFunc(cmd *cobra.Command, args []string) {
 	pFlag.Signal = int(syscall.SIGSTOP)
+	pFlag.Action = core.ProcessStopAction
 	processAttackF(cmd, &pFlag)
 }
 
