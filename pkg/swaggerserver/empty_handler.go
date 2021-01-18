@@ -17,7 +17,8 @@ package swaggerserver
 
 import (
 	"net/http"
-
+	_ "github.com/alecthomas/template"
+	_ "github.com/swaggo/swag"
 	"github.com/gin-gonic/gin"
 )
 
