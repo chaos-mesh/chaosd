@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	cobra.OnInitialize(setLogLevel)
-	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", "", "the log level of chaosd")
+	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", "", "the log level of chaosd, the value can be 'debug', 'info', 'warn' and 'error'")
 
 	rootCmd.AddCommand(
 		command.NewServerCommand(),
