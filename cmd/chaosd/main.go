@@ -14,6 +14,9 @@
 package main
 
 import (
+	_ "github.com/alecthomas/template"
+	_ "github.com/swaggo/swag"
+
 	"github.com/chaos-mesh/chaosd/cmd/chaosd/ctl"
 )
 

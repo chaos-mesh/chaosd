@@ -20,6 +20,12 @@ endif
 
 IMAGE_TAG := $(if $(IMAGE_TAG),$(IMAGE_TAG),latest)
 
+BUILD_TAGS ?=
+
+ifeq ($(SWAGGER),1)
+	BUILD_TAGS += swagger_server
+endif
+
 PACKAGE_LIST := go list ./... | grep -vE "chaos-daemon/test|pkg/ptrace|zz_generated|vendor"
 PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/chaos-mesh/chaosd/||'
 
@@ -31,7 +37,7 @@ $(GOBIN)/goimports:
 
 build: binary
 
-binary: chaosd
+binary: swagger_spec chaosd
 
 taily-build:
 	if [ "$(shell docker ps --filter=name=$@ -q)" = "" ]; then \
@@ -53,7 +59,13 @@ image-binary: image-build-base
 endif
 
 chaosd:
-	$(CGOENV) go build -ldflags '$(LDFLAGS)' -o bin/chaosd ./cmd/chaosd/main.go
+	$(CGOENV) go build -ldflags '$(LDFLAGS)' -tags "${BUILD_TAGS}" -o bin/chaosd ./cmd/chaosd/main.go
+
+
+swagger_spec:
+ifeq ($(SWAGGER),1)
+	hack/generate_swagger_spec.sh
+endif
 
 image-build-base:
 	DOCKER_BUILDKIT=0 docker build --ulimit nofile=65536:65536 -t pingcap/chaos-build-base ${DOCKER_BUILD_ARGS} images/build-base

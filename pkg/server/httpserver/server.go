@@ -83,6 +83,15 @@ func handler(s *httpServer) {
 	}
 }
 
+// @Summary Create process attack.
+// @Description Create process attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.ProcessCommand true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/process [post]
 func (s *httpServer) createProcessAttack(c *gin.Context) {
 	attack := &core.ProcessCommand{}
 	if err := c.ShouldBindJSON(attack); err != nil {
@@ -99,6 +108,15 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
 }
 
+// @Summary Create network attack.
+// @Description Create network attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.NetworkCommand true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/network [post]
 func (s *httpServer) createNetworkAttack(c *gin.Context) {
 	attack := &core.NetworkCommand{}
 	if err := c.ShouldBindJSON(attack); err != nil {
@@ -115,6 +133,15 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
 }
 
+// @Summary Create stress attack.
+// @Description Create stress attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.StressCommand true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/stress [post]
 func (s *httpServer) createStressAttack(c *gin.Context) {
 	attack := &core.StressCommand{}
 	if err := c.ShouldBindJSON(attack); err != nil {
@@ -131,6 +158,14 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
 }
 
+// @Summary Create recover attack.
+// @Description Create recover attack.
+// @Tags attack
+// @Produce json
+// @Param uid path string true "uid"
+// @Success 200 {object} utils.Response
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/{uid} [delete]
 func (s *httpServer) recoverAttack(c *gin.Context) {
 	uid := c.Param("uid")
 	err := utils.RecoverExp(s.exp, s.chaos, uid)
