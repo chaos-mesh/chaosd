@@ -36,13 +36,26 @@ type DB struct {
 
 // NewDBStore returns a new DB
 func NewDBStore() (*DB, error) {
-	gormDB, err := gorm.Open(sqlite.Open(path.Join(utils.GetProgramPath(), dataFile)), &gorm.Config{
+	dsn := path.Join(utils.GetProgramPath(), dataFile)
+
+	// fix error `database is locked`, refer to https://github.com/mattn/go-sqlite3/blob/master/README.md#faq
+	dsn += "?cache=shared"
+
+	gormDB, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
 		log.Error("failed to open DB", zap.Error(err))
 		return nil, err
 	}
+
+	tempDB, err := gormDB.DB()
+	if err != nil {
+		log.Error("failed to get DB", zap.Error(err))
+		return nil, err
+	}
+	// fix error `database is locked`, refer to https://github.com/mattn/go-sqlite3/blob/master/README.md#faq
+	tempDB.SetMaxOpenConns(1)
 
 	db := &DB{
 		gormDB,
