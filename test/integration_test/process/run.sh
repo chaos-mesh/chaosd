@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -u
+set -xu
 
 cur=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd $cur
@@ -26,8 +26,6 @@ sleep 1
 
 pid=$(cat dummy.out)
 
-echo ${pid}
-
 # test stop attack
 ${bin_path}/chaosd attack process stop -p ${pid} > proc.out
 
@@ -37,7 +35,7 @@ uid=$(cat proc.out | grep "Attack process ${pid} successfully" | awk -F: '{print
 
 stat=$(ps o pid,s | grep ${pid} | awk '{print $2}')
 
-if [[ ${stat} != "T" ]]; then
+if [[ ${stat} != "T" && ${stat} != "t" ]]; then
     echo "target process is not stopped by processed stop attack"
     exit 1
 fi

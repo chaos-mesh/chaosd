@@ -21,5 +21,8 @@ import (
 func main() {
 	fmt.Println(os.Getpid())
 	for {
+		// Need to bypass revive
+		a := 1
+		a = a + a
 	}
 }
