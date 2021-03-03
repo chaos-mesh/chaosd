@@ -8,7 +8,6 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/google/uuid v1.1.1
 	github.com/joomcode/errorx v1.0.1
-	github.com/mgechev/revive v1.0.2-0.20200225072153-6219ca02fffb // indirect
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/onsi/gomega v1.9.0

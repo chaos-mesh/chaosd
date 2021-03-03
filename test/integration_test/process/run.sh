@@ -33,7 +33,7 @@ sleep 1
 
 uid=$(cat proc.out | grep "Attack process ${pid} successfully" | awk -F: '{print $2}')
 
-stat=$(ps o pid,s | grep ${pid} | awk '{print $2}')
+stat=$(ps axo pid,s | grep ${pid} | awk '{print $2}')
 
 if [[ ${stat} != "T" && ${stat} != "t" ]]; then
     echo "target process is not stopped by processed stop attack"
@@ -45,7 +45,7 @@ ${bin_path}/chaosd recover ${uid}
 
 sleep 1
 
-stat=$(ps o pid,s | grep ${pid} | awk '{print $2}')
+stat=$(ps axo pid,s | grep ${pid} | awk '{print $2}')
 
 if [[ ${stat} != "R" ]]; then
     echo "target process is not resumed by recovering from process stop attack"
@@ -57,7 +57,7 @@ ${bin_path}/chaosd attack process kill -p ${pid} > proc.out
 
 sleep 1
 
-stat=$(ps o pid | grep ${pid})
+stat=$(ps axo pid | grep ${pid})
 
 if [[ -n ${stat} ]]; then
     echo "target process is not killed by processed kill attack"
