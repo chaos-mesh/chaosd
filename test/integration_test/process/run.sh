@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -xu
+set -u
 
 cur=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd $cur
@@ -67,4 +67,6 @@ fi
 rm dummy.out
 rm proc.out
 
-kill -- -0
+kill ${pid}
+
+exit 0
