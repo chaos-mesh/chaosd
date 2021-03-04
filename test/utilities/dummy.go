@@ -16,13 +16,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 func main() {
 	fmt.Println(os.Getpid())
-	for {
-		// Need to bypass revive
-		a := 1
-		a = a + a
-	}
+	time.Sleep(time.Hour)
 }

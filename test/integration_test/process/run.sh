@@ -35,7 +35,8 @@ uid=$(cat proc.out | grep "Attack process ${pid} successfully" | awk -F: '{print
 
 stat=$(ps axo pid,s | grep ${pid} | awk '{print $2}')
 
-if [[ ${stat} != "T" && ${stat} != "t" ]]; then
+# T for stopped
+if [[ ${stat} != "T" ]]; then
     echo "target process is not stopped by processed stop attack"
     exit 1
 fi
@@ -47,7 +48,8 @@ sleep 1
 
 stat=$(ps axo pid,s | grep ${pid} | awk '{print $2}')
 
-if [[ ${stat} != "R" ]]; then
+# S for sleeping
+if [[ ${stat} != "S" ]]; then
     echo "target process is not resumed by recovering from process stop attack"
     exit 1
 fi
