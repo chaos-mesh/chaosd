@@ -1,3 +1,5 @@
+// +build aix darwin dragonfly freebsd js,wasm linux nacl netbsd openbsd solaris
+
 // Copyright 2020 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,22 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package chaosd
 
-import "github.com/spf13/cobra"
+import (
+	"os/exec"
+)
 
-func NewAttackCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
-	}
+type UnixHost struct{}
 
-	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-		NewStressAttackCommand(),
-		NewHostAttackCommand(),
-	)
+var Host HostManager = UnixHost{}
 
-	return cmd
+const CmdShutdown = "shutdown"
+
+func (h UnixHost) Name() string {
+	return "unix"
+}
+
+func (h UnixHost) Shutdown() error {
+	cmd := exec.Command(CmdShutdown)
+	return cmd.Run()
 }
