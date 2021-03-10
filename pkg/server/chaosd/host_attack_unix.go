@@ -17,6 +17,9 @@ package chaosd
 
 import (
 	"os/exec"
+
+	"github.com/pingcap/log"
+	"go.uber.org/zap"
 )
 
 type UnixHost struct{}
@@ -31,5 +34,9 @@ func (h UnixHost) Name() string {
 
 func (h UnixHost) Shutdown() error {
 	cmd := exec.Command(CmdShutdown)
-	return cmd.Run()
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Error(string(output), zap.Error(err))
+	}
+	return err
 }
