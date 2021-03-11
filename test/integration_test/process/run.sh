@@ -38,6 +38,8 @@ stat=$(ps axo pid,s | grep ${pid} | awk '{print $2}')
 # T for stopped
 if [[ ${stat} != "T" ]]; then
     echo "target process is not stopped by processed stop attack"
+    rm dummy.out
+    rm proc.out
     exit 1
 fi
 
@@ -51,6 +53,8 @@ stat=$(ps axo pid,s | grep ${pid} | awk '{print $2}')
 # S for sleeping
 if [[ ${stat} != "S" ]]; then
     echo "target process is not resumed by recovering from process stop attack"
+    rm dummy.out
+    rm proc.out
     exit 1
 fi
 
@@ -63,6 +67,8 @@ stat=$(ps axo pid | grep ${pid})
 
 if [[ -n ${stat} ]]; then
     echo "target process is not killed by processed kill attack"
+    rm dummy.out
+    rm proc.out
     exit 1
 fi
 
