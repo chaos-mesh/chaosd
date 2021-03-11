@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,22 +11,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package core
 
-import "github.com/spf13/cobra"
+import "encoding/json"
 
-func NewAttackCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
-	}
+const (
+	HostShutdownAction = "shutdown"
+)
 
-	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-		NewStressAttackCommand(),
-		NewHostAttackCommand(),
-	)
+type HostCommand struct {
+	Action string
+}
 
-	return cmd
+func (h *HostCommand) Validate() error {
+	return nil
+}
+
+func (h *HostCommand) String() string {
+	data, _ := json.Marshal(h)
+
+	return string(data)
 }
