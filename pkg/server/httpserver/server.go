@@ -83,6 +83,12 @@ func handler(s *httpServer) {
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
+
+	system := api.Group("/system")
+	{
+		system.GET("/health", s.healthcheck)
+		system.GET("/version", s.version)
+	}
 }
 
 // @Summary Create process attack.
