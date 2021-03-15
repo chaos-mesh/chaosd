@@ -84,6 +84,11 @@ func handler(s *httpServer) {
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
 
+	experiments := api.Group("/experiments")
+	{
+		experiments.GET("/", s.listExperiments)
+	}
+
 	system := api.Group("/system")
 	{
 		system.GET("/health", s.healthcheck)
