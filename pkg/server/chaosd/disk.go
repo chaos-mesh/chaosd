@@ -92,6 +92,7 @@ func (s *Server) DiskPayload(fill *core.DiskCommand) (uid string, err error) {
 }
 
 const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock"
+const DDFallocateCommand = "fallocate -l %sM %s"
 
 func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 	uid = uuid.New().String()
@@ -128,6 +129,7 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 					return uid, err
 				}
 				fill.Path = wd + tempFilename
+
 				f, err := os.Create(fill.Path)
 				if err != nil {
 					log.Error("unexpected err when creating temp file", zap.Error(err))
@@ -148,7 +150,13 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 
 	}
 
-	cmd := exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
+	var cmd *exec.Cmd
+	if fill.FillByFallocate {
+		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFallocateCommand, strconv.FormatUint(fill.Size, 10), fill.Path))
+	} else {
+		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
+	}
+
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {

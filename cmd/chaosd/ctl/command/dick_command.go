@@ -116,12 +116,13 @@ func NewDiskFillCommand() *cobra.Command {
 		Run:   DiskFillCommandFunc,
 	}
 
+	dFlag.FillByFallocate = true
 	cmd.Flags().Uint64VarP(&dFlag.Size, "size", "s", 0,
 		"'size' specifies how many data will fill in the file path with unit MB.")
 	cmd.Flags().StringVarP(&dFlag.Path, "path", "p", "",
 		"'path' specifies the location to fill data in.\n"+
-			"If path not provided, a temp file will be generated and delete after data filled in")
-
+			"If path not provided, a temp file will be generated and deleted immediately after data filled in or allocated")
+	cmd.Flags().BoolVarP(&dFlag.FillByFallocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
 	return cmd
 }
 
