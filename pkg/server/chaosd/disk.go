@@ -3,10 +3,11 @@ package chaosd
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/rand"
 	"os"
 	"os/exec"
 	"strconv"
+
+	"k8s.io/apimachinery/pkg/util/rand"
 
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
@@ -46,17 +47,29 @@ func (s *Server) DiskPayload(fill *core.DiskCommand) (uid string, err error) {
 
 	switch fill.Action {
 	case core.DiskWritePayloadAction:
-		cmd := exec.Command(fmt.Sprintf(DDWritePayloadCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
+		if fill.Path == "" {
+			fill.Path = "/dev/null"
+		}
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDWritePayloadCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
 		output, err := cmd.CombinedOutput()
+
 		if err != nil {
 			log.Error(string(output), zap.Error(err))
+		} else {
+			log.Info(string(output))
 		}
 		return uid, err
-	case DDReadPayloadCommand:
-		cmd := exec.Command(fmt.Sprintf(DDReadPayloadCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
+	case core.DiskReadPayloadAction:
+		if fill.Path == "" {
+			fill.Path = "/dev/sda"
+		}
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
 		output, err := cmd.CombinedOutput()
+
 		if err != nil {
 			log.Error(string(output), zap.Error(err))
+		} else {
+			log.Info(string(output))
 		}
 		return uid, err
 	default:
@@ -97,8 +110,14 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 		for {
 			tempFilename := rand.String(128) + "temp-data"
 			if _, err := os.Stat(tempFilename); os.IsNotExist(err) {
-				fill.Path = tempFilename
-				_, err = os.Create(fill.Path)
+				wd, err := os.Getwd()
+				if err != nil {
+					log.Error("unexpected err when get wd", zap.Error(err))
+					return uid, err
+				}
+				fill.Path = wd + tempFilename
+				f, err := os.Create(fill.Path)
+				f.Close()
 				if err != nil {
 					log.Error("unexpected err when creating temp file", zap.Error(err))
 					return uid, err
@@ -115,11 +134,13 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 
 	}
 
-	cmd := exec.Command(fmt.Sprintf(DDFillCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
+	cmd := exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
 		log.Error(string(output), zap.Error(err))
+	} else {
+		log.Info(string(output))
 	}
 
 	return uid, err
