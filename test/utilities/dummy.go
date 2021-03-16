@@ -11,23 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package main
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+	"os"
+	"time"
+)
 
-func NewAttackCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
-	}
-
-	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-		NewStressAttackCommand(),
-		NewDiskAttackCommand(),
-		NewHostAttackCommand(),
-	)
-
-	return cmd
+func main() {
+	fmt.Println(os.Getpid())
+	time.Sleep(time.Hour)
 }
