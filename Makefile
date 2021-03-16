@@ -103,7 +103,10 @@ test:
 	$(GOTEST) $$($(PACKAGE_LIST)) -coverprofile cover.out.tmp
 	cat cover.out.tmp | grep -v "_generated.deepcopy.go" > cover.out
 
-integration-test: build
+dummy:
+	$(CGOENV) go build -ldflags '$(LDFLAGS)' -tags "${BUILD_TAGS}" -o bin/dummy ./test/utilities/dummy.go
+
+integration-test: build dummy
 	bash test/integration_test/run.sh
 
 .PHONY: all build check fmt vet lint tidy binary chaosd chaos image-binary image-chaosd
