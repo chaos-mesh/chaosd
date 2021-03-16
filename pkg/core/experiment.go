@@ -30,6 +30,7 @@ const (
 	ProcessAttack = "process"
 	NetworkAttack = "network"
 	StressAttack  = "stress"
+	DiskAttack    = "disk"
 )
 
 // ExperimentStore defines operations for working with experiments
