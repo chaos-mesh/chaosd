@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ func WriteDiskPayloadCommandFunc(cmd *cobra.Command, args []string) {
 		ExitWithError(ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Fill file %s successfully, uid: %s", dFlag.Path, uid))
+	NormalExit(fmt.Sprintf("Write file %s successfully, uid: %s", dFlag.Path, uid))
 }
 
 func NewDiskReadPayloadCommand() *cobra.Command {
@@ -90,7 +90,7 @@ func NewDiskReadPayloadCommand() *cobra.Command {
 		"'size' specifies how many data will read from the file path with unit MB.")
 	cmd.Flags().StringVarP(&dFlag.Path, "path", "p", "",
 		"'path' specifies the location to read data.\n"+
-			"If path not provided, payload will read from /dev/sda (a disk device)")
+			"If path not provided, payload will raise an error")
 	return cmd
 }
 
@@ -106,7 +106,7 @@ func ReadDiskPayloadCommandFunc(cmd *cobra.Command, args []string) {
 		ExitWithError(ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Fill file %s successfully, uid: %s", dFlag.Path, uid))
+	NormalExit(fmt.Sprintf("Read file %s successfully, uid: %s", dFlag.Path, uid))
 }
 
 func NewDiskFillCommand() *cobra.Command {
