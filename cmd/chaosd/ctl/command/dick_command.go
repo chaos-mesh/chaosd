@@ -88,7 +88,7 @@ func NewDiskReadPayloadCommand() *cobra.Command {
 
 	cmd.Flags().Uint64VarP(&dFlag.Size, "size", "s", 0,
 		"'size' specifies how many data will read from the file path with unit MB.")
-	cmd.Flags().StringVarP(&dFlag.Path, "path", "p", "/dev/sda",
+	cmd.Flags().StringVarP(&dFlag.Path, "path", "p", "",
 		"'path' specifies the location to read data.\n"+
 			"If path not provided, payload will read from /dev/sda (a disk device)")
 	return cmd
