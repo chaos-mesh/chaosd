@@ -26,6 +26,7 @@ func NewAttackCommand() *cobra.Command {
 		NewNetworkAttackCommand(),
 		NewStressAttackCommand(),
 		NewHostAttackCommand(),
+		NewJVMAttackCommand(),
 	)
 
 	return cmd

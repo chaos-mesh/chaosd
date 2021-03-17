@@ -31,6 +31,7 @@ const (
 	NetworkAttack = "network"
 	StressAttack  = "stress"
 	HostAttack    = "host"
+	JVMAttack     = "jvm"
 )
 
 // ExperimentStore defines operations for working with experiments
