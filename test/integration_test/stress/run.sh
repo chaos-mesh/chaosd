@@ -32,11 +32,11 @@ fi
 uid=`cat cpu.out | grep "Attack stress cpu successfully" | awk -F: '{print $2}'`
 ${bin_path}/chaosd recover ${uid}
 
-sleep 1
+sleep 2
 
 stress_ng_num=`ps aux > test.temp && grep "stress-ng" test.temp | wc -l && rm test.temp`
 if [ ${stress_ng_num} -ne 0 ]; then
-    echo "stress-ng is not stop when recovering stress mem attack"
+    echo "stress-ng is not stop when recovering stress cpu attack"
     exit 1
 fi
 
@@ -52,7 +52,7 @@ fi
 uid=`cat mem.out | grep "Attack stress mem successfully" | awk -F: '{print $2}'`
 ${bin_path}/chaosd recover ${uid}
 
-sleep 1
+sleep 2
 
 stress_ng_num=`ps aux > test.temp && grep "stress-ng" test.temp | wc -l && rm test.temp`
 if [ ${stress_ng_num} -ne 0 ]; then
