@@ -24,8 +24,11 @@ const (
 	ProcessStopAction = "stop"
 )
 
+var _ AttackConfig = ProcessCommand{}
+
 type ProcessCommand struct {
-	Action string
+	CommonAttackConfig
+
 	// Process defines the process name or the process ID.
 	Process string
 	Signal  int
@@ -38,7 +41,7 @@ type ProcessCommand struct {
 	// User         string
 }
 
-func (p *ProcessCommand) Validate() error {
+func (p ProcessCommand) Validate() error {
 	if len(p.Process) == 0 {
 		return errors.New("process not provided")
 	}
@@ -48,7 +51,7 @@ func (p *ProcessCommand) Validate() error {
 	return nil
 }
 
-func (p *ProcessCommand) String() string {
+func (p ProcessCommand) RecoverData() string {
 	data, _ := json.Marshal(p)
 
 	return string(data)

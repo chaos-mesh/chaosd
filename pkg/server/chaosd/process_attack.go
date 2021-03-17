@@ -14,49 +14,28 @@
 package chaosd
 
 import (
-	"context"
+	"encoding/json"
 	"strconv"
 	"syscall"
 
-	"go.uber.org/zap"
-
-	"github.com/google/uuid"
 	"github.com/mitchellh/go-ps"
 	"github.com/pingcap/errors"
-	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 )
 
-func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
+type processAttack struct{}
+
+var ProcessAttack AttackType = processAttack{}
+
+func (_ processAttack) Attack(options core.AttackConfig, _ Environment) error {
+	attack := options.(core.ProcessCommand)
+
 	processes, err := ps.Processes()
 	if err != nil {
-		return "", errors.WithStack(err)
+		return errors.WithStack(err)
 	}
-
-	uid := uuid.New().String()
-
-	if err := s.exp.Set(context.Background(), &core.Experiment{
-		Uid:            uid,
-		Status:         core.Created,
-		Kind:           core.ProcessAttack,
-		Action:         attack.Action,
-		RecoverCommand: attack.String(),
-	}); err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	defer func() {
-		if err != nil {
-			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), attack.String()); err != nil {
-				log.Error("failed to update experiment", zap.Error(err))
-			}
-			return
-		}
-		if err := s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
-			log.Error("failed to update experiment", zap.Error(err))
-		}
-	}()
 
 	notFound := true
 	for _, p := range processes {
@@ -70,11 +49,11 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 			case int(syscall.SIGSTOP):
 				err = syscall.Kill(p.Pid(), syscall.SIGSTOP)
 			default:
-				return "", errors.Errorf("signal %d is not supported", attack.Signal)
+				return errors.Errorf("signal %d is not supported", attack.Signal)
 			}
 
 			if err != nil {
-				return "", errors.WithStack(err)
+				return errors.WithStack(err)
 			}
 			attack.PIDs = append(attack.PIDs, p.Pid())
 		}
@@ -82,25 +61,25 @@ func (s *Server) ProcessAttack(attack *core.ProcessCommand) (string, error) {
 
 	if notFound {
 		err = errors.Errorf("process %s not found", attack.Process)
-		return "", errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
-	return uid, nil
+	return nil
 }
 
-func (s *Server) RecoverProcessAttack(uid string, attack *core.ProcessCommand) error {
-	if attack.Signal != int(syscall.SIGSTOP) {
-		return errors.Errorf("chaos experiment %s not supported to recover", uid)
+func (_ processAttack) Recover(exp core.Experiment, _ Environment) error {
+	pcmd := &core.ProcessCommand{}
+	if err := json.Unmarshal([]byte(exp.RecoverCommand), pcmd); err != nil {
+		return err
+	}
+	if pcmd.Signal != int(syscall.SIGSTOP) {
+		return utils.ErrNonRecoverable(exp.Uid)
 	}
 
-	for _, pid := range attack.PIDs {
+	for _, pid := range pcmd.PIDs {
 		if err := syscall.Kill(pid, syscall.SIGCONT); err != nil {
 			return errors.WithStack(err)
 		}
-	}
-
-	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
-		return errors.WithStack(err)
 	}
 
 	return nil

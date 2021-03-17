@@ -28,7 +28,8 @@ import (
 )
 
 type NetworkCommand struct {
-	Action      string
+	CommonAttackConfig
+
 	Latency     string
 	Jitter      string
 	Correlation string
@@ -41,6 +42,8 @@ type NetworkCommand struct {
 	Hostname    string
 }
 
+var _ AttackConfig = NetworkCommand{}
+
 const (
 	NetworkDelayAction     = "delay"
 	NetworkLossAction      = "loss"
@@ -48,7 +51,7 @@ const (
 	NetworkDuplicateAction = "duplicate"
 )
 
-func (n *NetworkCommand) Validate() error {
+func (n NetworkCommand) Validate() error {
 	switch n.Action {
 	case NetworkDelayAction:
 		return n.validNetworkDelay()
@@ -153,7 +156,7 @@ func checkProtocolAndPorts(p string, sports string, dports string) error {
 	return nil
 }
 
-func (n *NetworkCommand) String() string {
+func (n NetworkCommand) RecoverData() string {
 	data, _ := json.Marshal(n)
 
 	return string(data)

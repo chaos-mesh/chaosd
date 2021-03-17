@@ -11,31 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package chaosd
+package command
 
 import (
-	perr "github.com/pkg/errors"
+	"github.com/spf13/cobra"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
-	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 )
 
-type HostManager interface {
-	Name() string
-	Shutdown() error
-}
-
-type hostAttack struct{}
-
-var HostAttack AttackType = hostAttack{}
-
-func (_ hostAttack) Attack(options core.AttackConfig, _ Environment) error {
-	if err := Host.Shutdown(); err != nil {
-		return perr.WithStack(err)
-	}
-	return nil
-}
-
-func (_ hostAttack) Recover(exp core.Experiment, _ Environment) error {
-	return utils.ErrNonRecoverable(exp.Uid)
+func commonFlags(cmd *cobra.Command, flag *core.CommonAttackConfig) {
+	// TODO: what should be a unique shorthand????
+	cmd.Flags().StringVarP(&flag.Schedule, "cron", "", "", "Specify crontab-compatible expression to schedule the attack")
 }

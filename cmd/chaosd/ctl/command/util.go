@@ -23,6 +23,7 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/config"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/crclient"
+	"github.com/chaos-mesh/chaosd/pkg/scheduler"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 	"github.com/chaos-mesh/chaosd/pkg/store/dbstore"
 	"github.com/chaos-mesh/chaosd/pkg/store/experiment"
@@ -37,7 +38,9 @@ func mustChaosdFromCmd(cmd *cobra.Command, conf *config.Config) *chaosd.Server {
 		mustIPSetRuleStoreFromCmd(),
 		mustIptablesRuleStoreFromCmd(),
 		mustTCRuleStoreFromCmd(),
-		chaosdaemon.NewDaemonServerWithCRClient(crclient.NewNodeCRClient(os.Getpid())))
+		chaosdaemon.NewDaemonServerWithCRClient(crclient.NewNodeCRClient(os.Getpid())),
+		scheduler.NewScheduler(),
+	)
 }
 
 func mustExpStoreFromCmd() core.ExperimentStore {

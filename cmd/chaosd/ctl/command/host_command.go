@@ -19,6 +19,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
 var hFlag core.HostCommand
@@ -41,6 +42,7 @@ func NewHostShutdownCommand() *cobra.Command {
 
 		Run: processShutdownCommandFunc,
 	}
+	commonFlags(cmd, &hFlag.CommonAttackConfig)
 
 	return cmd
 }
@@ -57,7 +59,7 @@ func hostAttackF(cmd *cobra.Command, f *core.HostCommand) {
 
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.HostAttack(f)
+	uid, err := chaos.ProcessAttack(chaosd.HostAttack, *f)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}

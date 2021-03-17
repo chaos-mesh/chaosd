@@ -29,6 +29,10 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
+type diskAttack struct{}
+
+var DiskAttack AttackType = diskAttack{}
+
 const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
 const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync,direct,fullblock"
 

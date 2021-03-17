@@ -112,7 +112,7 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ProcessAttack(attack)
+	uid, err := s.chaos.ProcessAttack(chaosd.ProcessAttack, *attack)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
@@ -137,7 +137,7 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.NetworkAttack(attack)
+	uid, err := s.chaos.ProcessAttack(chaosd.NetworkAttack, *attack)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
@@ -162,7 +162,7 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.StressAttack(attack)
+	uid, err := s.chaos.ProcessAttack(chaosd.StressAttack, *attack)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
@@ -220,7 +220,7 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 // @Router /api/attack/{uid} [delete]
 func (s *httpServer) recoverAttack(c *gin.Context) {
 	uid := c.Param("uid")
-	err := utils.RecoverExp(s.exp, s.chaos, uid)
+	err := s.chaos.RecoverAttack(uid)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return

@@ -19,6 +19,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
 func NewNetworkAttackCommand() *cobra.Command {
@@ -138,6 +139,7 @@ func NetworkDuplicateCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	commonFlags(cmd, &nFlag.CommonAttackConfig)
 
 	return cmd
 }
@@ -175,7 +177,7 @@ func commonNetworkAttackFunc(cmd *cobra.Command) {
 
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.NetworkAttack(&nFlag)
+	uid, err := chaos.ProcessAttack(chaosd.NetworkAttack, nFlag)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}

@@ -13,24 +13,29 @@
 
 package core
 
-import "encoding/json"
-
-const (
-	HostShutdownAction = "shutdown"
-)
-
-type HostCommand struct {
-	CommonAttackConfig
+type AttackConfig interface {
+	Validate() error
+	Cron() string
+	// String is replacement of .Action
+	String() string
+	// RecoverData is replacement of earlier .String()
+	RecoverData() string
 }
 
-var _ AttackConfig = HostCommand{}
-
-func (h HostCommand) Validate() error {
-	return nil
+type SchedulerConfig struct {
+	Schedule string
 }
 
-func (h HostCommand) RecoverData() string {
-	data, _ := json.Marshal(h)
+func (config SchedulerConfig) Cron() string {
+	return config.Schedule
+}
 
-	return string(data)
+type CommonAttackConfig struct {
+	SchedulerConfig
+
+	Action string
+}
+
+func (config CommonAttackConfig) String() string {
+	return config.Action
 }

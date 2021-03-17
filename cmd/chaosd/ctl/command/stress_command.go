@@ -19,6 +19,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
 var stFlag core.StressCommand
@@ -47,6 +48,7 @@ func NewStressCPUCommand() *cobra.Command {
 	cmd.Flags().IntVarP(&stFlag.Load, "load", "l", 10, "Load specifies P percent loading per CPU worker. 0 is effectively a sleep (no load) and 100 is full loading.")
 	cmd.Flags().IntVarP(&stFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
 	cmd.Flags().StringSliceVarP(&stFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
+	commonFlags(cmd, &stFlag.CommonAttackConfig)
 
 	return cmd
 }
@@ -83,7 +85,7 @@ func stressAttackF(cmd *cobra.Command, s *core.StressCommand) {
 
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.StressAttack(s)
+	uid, err := chaos.ProcessAttack(chaosd.StressAttack, *s)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}

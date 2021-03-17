@@ -17,8 +17,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-
-	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 )
 
 func NewRecoverCommand() *cobra.Command {
@@ -41,10 +39,9 @@ func recoverCommandF(cmd *cobra.Command, args []string) {
 	}
 	uid := args[0]
 
-	expStore := mustExpStoreFromCmd()
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	err := utils.RecoverExp(expStore, chaos, uid)
+	err := chaos.RecoverAttack(uid)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}

@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
 var pFlag core.ProcessCommand
@@ -47,6 +48,7 @@ func NewProcessKillCommand() *cobra.Command {
 
 	cmd.Flags().StringVarP(&pFlag.Process, "process", "p", "", "The process name or the process ID")
 	cmd.Flags().IntVarP(&pFlag.Signal, "signal", "s", 9, "The signal number to send")
+	commonFlags(cmd, &pFlag.CommonAttackConfig)
 
 	return cmd
 }
@@ -82,7 +84,7 @@ func processAttackF(cmd *cobra.Command, f *core.ProcessCommand) {
 
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.ProcessAttack(f)
+	uid, err := chaos.ProcessAttack(chaosd.ProcessAttack, *f)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}

@@ -16,9 +16,41 @@ package scheduler
 import (
 	"time"
 
-	"github.com/go-co-op/gocron"
+	cron "github.com/robfig/cron/v3"
+
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-func NewScheduler() *gocron.Scheduler {
-	return gocron.NewScheduler(time.UTC)
+type Scheduler struct {
+	*cron.Cron
+}
+
+type CronJob struct {
+	experiment core.Experiment
+	run        func()
+}
+
+func (cj CronJob) Run() {
+	cj.run()
+}
+
+func NewScheduler() Scheduler {
+	return Scheduler{cron.New(
+		cron.WithLocation(time.UTC),
+		cron.WithChain(cron.SkipIfStillRunning(cron.DiscardLogger)),
+	)}
+}
+
+func (scheduler Scheduler) Schedule(exp core.Experiment, spec string, task func()) error {
+	cj := CronJob{experiment: exp, run: task}
+	entryId, err := scheduler.AddJob(spec, cj)
+	if err != nil {
+		return err
+	}
+	cronStore.entry[exp.ID] = entryId
+	return nil
+}
+
+func (scheduler Scheduler) Remove(expId uint) error {
+	return nil
 }
