@@ -25,6 +25,7 @@ var Module = fx.Options(
 	fx.Provide(
 		dbstore.NewDBStore,
 		experiment.NewStore,
+		experiment.NewRunStore,
 		network.NewIPSetRuleStore,
 		network.NewIptablesRuleStore,
 		network.NewTCRuleStore,

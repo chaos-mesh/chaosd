@@ -11,20 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package httpserver
+package scheduler
 
 import (
-	"context"
-	"net/http"
+	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/go-co-op/gocron"
 )
 
-func (s *httpServer) listExperiments(c *gin.Context) {
-	chaosList, err := s.exp.List(context.Background())
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-	c.JSON(http.StatusOK, chaosList)
+func NewScheduler() *gocron.Scheduler {
+	return gocron.NewScheduler(time.UTC)
 }

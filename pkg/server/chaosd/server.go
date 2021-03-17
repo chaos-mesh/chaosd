@@ -22,6 +22,7 @@ import (
 
 type Server struct {
 	exp          core.ExperimentStore
+	ExpRun       core.ExperimentRunStore
 	ipsetRule    core.IPSetRuleStore
 	iptablesRule core.IptablesRuleStore
 	tcRule       core.TCRuleStore
@@ -32,6 +33,7 @@ type Server struct {
 func NewServer(
 	conf *config.Config,
 	exp core.ExperimentStore,
+	expRun core.ExperimentRunStore,
 	ipset core.IPSetRuleStore,
 	iptables core.IptablesRuleStore,
 	tc core.TCRuleStore,
@@ -40,6 +42,7 @@ func NewServer(
 	return &Server{
 		conf:         conf,
 		exp:          exp,
+		ExpRun:       expRun,
 		ipsetRule:    ipset,
 		iptablesRule: iptables,
 		tcRule:       tc,

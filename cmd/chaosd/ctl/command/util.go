@@ -33,6 +33,7 @@ func mustChaosdFromCmd(cmd *cobra.Command, conf *config.Config) *chaosd.Server {
 	return chaosd.NewServer(
 		conf,
 		mustExpStoreFromCmd(),
+		mustExpRunStoreFromCmd(),
 		mustIPSetRuleStoreFromCmd(),
 		mustIptablesRuleStoreFromCmd(),
 		mustTCRuleStoreFromCmd(),
@@ -46,6 +47,15 @@ func mustExpStoreFromCmd() core.ExperimentStore {
 	}
 
 	return experiment.NewStore(db)
+}
+
+func mustExpRunStoreFromCmd() core.ExperimentRunStore {
+	db, err := dbstore.NewDBStore()
+	if err != nil {
+		ExitWithError(ExitError, err)
+	}
+
+	return experiment.NewRunStore(db)
 }
 
 func mustTCRuleStoreFromCmd() core.TCRuleStore {
