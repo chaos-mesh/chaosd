@@ -116,7 +116,6 @@ func NewDiskFillCommand() *cobra.Command {
 		Run:   DiskFillCommandFunc,
 	}
 
-	dFlag.FillByFallocate = true
 	cmd.Flags().Uint64VarP(&dFlag.Size, "size", "s", 0,
 		"'size' specifies how many data will fill in the file path with unit MB.")
 	cmd.Flags().StringVarP(&dFlag.Path, "path", "p", "",
