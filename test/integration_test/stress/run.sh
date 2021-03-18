@@ -34,7 +34,7 @@ fi
 uid=`cat cpu.out | grep "Attack stress cpu successfully" | awk -F: '{print $2}'`
 ${bin_path}/chaosd recover ${uid}
 
-echo "wait stress-ng $PID exit after recovering stress mem attack"
+echo "wait stress-ng $PID exit after recovering stress cpu attack"
 timeout 5s tail --pid=$PID -f /dev/null
 
 ps aux | grep stress-ng
@@ -47,12 +47,11 @@ PID=`cat mem.out | grep "stress-ng" | sed 's/.*Pid=\([0-9]*\).*/\1/g'`
 stress_ng_num=`ps aux > test.temp && grep "stress-ng" test.temp | wc -l && rm test.temp`
 if [ ${stress_ng_num} -lt 1 ]; then
     echo "stress-ng is not run when executing stress mem attack"
-    ps aux | grep stress-ng
     exit 1
 fi
 
 uid=`cat mem.out | grep "Attack stress mem successfully" | awk -F: '{print $2}'`
-#${bin_path}/chaosd recover ${uid}
+${bin_path}/chaosd recover ${uid}
 
 echo "wait stress-ng $PID exit after recovering stress mem attack"
 timeout 5s tail --pid=$PID -f /dev/null
