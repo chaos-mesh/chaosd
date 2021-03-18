@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,23 +11,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package core
 
-import "github.com/spf13/cobra"
+import "encoding/json"
 
-func NewAttackCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
-	}
+const (
+	DiskFillAction         = "fill"
+	DiskWritePayloadAction = "write-payload"
+	DiskReadPayloadAction  = "read-payload"
+)
 
-	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-		NewStressAttackCommand(),
-		NewDiskAttackCommand(),
-		NewHostAttackCommand(),
-	)
+type DiskCommand struct {
+	Action          string
+	Size            uint64
+	Path            string
+	FillByFallocate bool
+}
 
-	return cmd
+func (d *DiskCommand) Validate() error {
+	return nil
+}
+
+func (d *DiskCommand) String() string {
+	data, _ := json.Marshal(d)
+
+	return string(data)
 }

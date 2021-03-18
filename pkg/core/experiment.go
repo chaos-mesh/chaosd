@@ -30,6 +30,7 @@ const (
 	ProcessAttack = "process"
 	NetworkAttack = "network"
 	StressAttack  = "stress"
+	DiskAttack    = "disk"
 	HostAttack    = "host"
 )
 
