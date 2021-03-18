@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,37 +31,37 @@ import (
 const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
 const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync,direct,fullblock"
 
-func (s *Server) DiskPayload(fill *core.DiskCommand) (uid string, err error) {
+func (s *Server) DiskPayload(payload *core.DiskCommand) (uid string, err error) {
 	uid = uuid.New().String()
 
 	if err = s.exp.Set(context.Background(), &core.Experiment{
 		Uid:            uid,
 		Status:         core.Created,
 		Kind:           core.DiskAttack,
-		Action:         fill.Action,
-		RecoverCommand: fill.String(),
+		Action:         payload.Action,
+		RecoverCommand: payload.String(),
 	}); err != nil {
 		err = errors.WithStack(err)
 		return
 	}
 	defer func() {
 		if err != nil {
-			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), fill.String()); err != nil {
+			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), payload.String()); err != nil {
 				log.Error("failed to update experiment", zap.Error(err))
 			}
 			return
 		}
-		if err := s.exp.Update(context.Background(), uid, core.Success, "", fill.String()); err != nil {
+		if err := s.exp.Update(context.Background(), uid, core.Success, "", payload.String()); err != nil {
 			log.Error("failed to update experiment", zap.Error(err))
 		}
 	}()
 
-	switch fill.Action {
+	switch payload.Action {
 	case core.DiskWritePayloadAction:
-		if fill.Path == "" {
-			fill.Path = "/dev/null"
+		if payload.Path == "" {
+			payload.Path = "/dev/null"
 		}
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDWritePayloadCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDWritePayloadCommand, payload.Path, "1M", strconv.FormatUint(payload.Size, 10)))
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
@@ -71,10 +71,12 @@ func (s *Server) DiskPayload(fill *core.DiskCommand) (uid string, err error) {
 		}
 		return uid, err
 	case core.DiskReadPayloadAction:
-		if fill.Path == "" {
-			fill.Path = "/dev/sda"
+		if payload.Path == "" {
+			err := errors.Errorf("empty read payload path")
+			log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
+			return uid, err
 		}
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, payload.Path, "1M", strconv.FormatUint(payload.Size, 10)))
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
@@ -84,8 +86,8 @@ func (s *Server) DiskPayload(fill *core.DiskCommand) (uid string, err error) {
 		}
 		return uid, err
 	default:
-		err := errors.Errorf("invalid fill action")
-		log.Error(fmt.Sprintf("fill action: %s", fill.Action), zap.Error(err))
+		err := errors.Errorf("invalid payload action")
+		log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
 		return uid, err
 	}
 }
@@ -145,6 +147,7 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 	if fill.FillByFallocate {
 		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFallocateCommand, strconv.FormatUint(fill.Size, 10), fill.Path))
 	} else {
+		//1M means the block size. The bytes size dd read | write is (block size) * (size).
 		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
 	}
 
