@@ -93,9 +93,9 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Info("Start stress-ng process successfully", zap.String("command", cmd.String()))
 
 	attack.StressngPid = int32(cmd.Process.Pid)
+	log.Info("Start stress-ng process successfully", zap.String("command", cmd.String()), zap.Int32("Pid", attack.StressngPid))
 
 	return uid, nil
 }
