@@ -77,9 +77,9 @@ func (s *Server) JVMPrepare(attack *core.JVMCommand) (string, error) {
 	if err != nil {
 		log.Error(string(output), zap.Error(err))
 		return "", err
-	} else {
-		log.Info(string(output))
 	}
+
+	log.Info(string(output))
 	return uid, err
 }
 
@@ -157,10 +157,9 @@ func (s *Server) JVMAttack(attack *core.JVMCommand) (string, error) {
 	if err != nil {
 		log.Error(string(output), zap.Error(err))
 		return "", err
-	} else {
-		log.Info(string(output))
 	}
 
+	log.Info(string(output))
 	return uid, nil
 }
 
@@ -198,9 +197,9 @@ func (s *Server) RecoverJVMAttack(uid string, attack *core.JVMCommand) error {
 	if err != nil {
 		log.Error(string(output), zap.Error(err))
 		return err
-	} else {
-		log.Info(string(output))
 	}
+
+	log.Info(string(output))
 
 	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
 		return errors.WithStack(err)
