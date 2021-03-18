@@ -46,6 +46,7 @@ ${bin_path}/chaosd attack stress mem -w 1 > mem.out
 stress_ng_num=`ps aux > test.temp && grep "stress-ng" test.temp | wc -l && rm test.temp`
 if [ ${stress_ng_num} -lt 1 ]; then
     echo "stress-ng is not run when executing stress mem attack"
+    ps aux | grep stress-ng
     exit 1
 fi
 
@@ -57,6 +58,7 @@ sleep 2
 stress_ng_num=`ps aux > test.temp && grep "stress-ng" test.temp | wc -l && rm test.temp`
 if [ ${stress_ng_num} -ne 0 ]; then
     echo "stress-ng is not stop when recovering stress mem attack"
+    ps aux | grep stress-ng
     exit 1
 fi
 
