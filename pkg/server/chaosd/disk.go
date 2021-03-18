@@ -21,11 +21,12 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
+
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
