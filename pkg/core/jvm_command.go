@@ -79,8 +79,8 @@ func (j *JVMCommand) Validate() error {
 	return nil
 }
 
-func (s *JVMCommand) String() string {
-	data, _ := json.Marshal(s)
+func (j *JVMCommand) String() string {
+	data, _ := json.Marshal(j)
 
 	return string(data)
 }
