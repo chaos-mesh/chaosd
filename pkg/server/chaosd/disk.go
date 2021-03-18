@@ -134,7 +134,12 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 				log.Error("unexpected err when close temp file", zap.Error(err))
 				return uid, err
 			}
+		} else {
+			err := errors.Errorf("unexpected err : file get from ioutil.TempFile is nil")
+			log.Error(fmt.Sprintf("payload action: %s", fill.Action), zap.Error(err))
+			return uid, err
 		}
+
 		fill.Path = tempFile.Name()
 		defer func() {
 			err := os.Remove(fill.Path)
