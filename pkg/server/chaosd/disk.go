@@ -16,17 +16,16 @@ package chaosd
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
 
+	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/google/uuid"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/util/rand"
-
-	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
@@ -120,34 +119,26 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 	}()
 
 	if fill.Path == "" {
-		for {
-			tempFilename := rand.String(128) + "temp-data"
-			if _, err := os.Stat(tempFilename); os.IsNotExist(err) {
-				wd, err := os.Getwd()
-				if err != nil {
-					log.Error("unexpected err when get wd", zap.Error(err))
-					return uid, err
-				}
-				fill.Path = wd + tempFilename
+		tempFile, err := ioutil.TempFile("", "example")
+		if err != nil {
+			log.Error("unexpected err when open temp file", zap.Error(err))
+			return uid, err
+		}
 
-				f, err := os.Create(fill.Path)
-				if err != nil {
-					log.Error("unexpected err when creating temp file", zap.Error(err))
-					return uid, err
-				}
-				if f != nil {
-					_ = f.Close()
-				}
-				break
+		if tempFile != nil {
+			err = tempFile.Close()
+			if err != nil {
+				log.Error("unexpected err when close temp file", zap.Error(err))
+				return uid, err
 			}
 		}
+
 		defer func() {
-			err := os.Remove(fill.Path)
+			err := os.Remove(tempFile.Name())
 			if err != nil {
 				log.Error(fmt.Sprintf("unexpected err when removing temp file %s", fill.Path), zap.Error(err))
 			}
 		}()
-
 	}
 
 	var cmd *exec.Cmd
