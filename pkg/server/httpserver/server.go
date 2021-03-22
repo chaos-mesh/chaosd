@@ -14,6 +14,7 @@
 package httpserver
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -78,6 +79,7 @@ func handler(s *httpServer) {
 		attack.POST("/process", s.createProcessAttack)
 		attack.POST("/stress", s.createStressAttack)
 		attack.POST("/network", s.createNetworkAttack)
+		attack.POST("/disk", s.createDiskAttack)
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
@@ -152,6 +154,45 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 	uid, err := s.chaos.StressAttack(attack)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+// @Summary Create disk attack.
+// @Description Create disk attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.DiskCommand true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/disk [post]
+func (s *httpServer) createDiskAttack(c *gin.Context) {
+	attack := &core.DiskCommand{}
+	if err := c.ShouldBindJSON(attack); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	var uid string
+	var err error
+	switch attack.Action {
+	case core.DiskFillAction:
+		uid, err = s.chaos.DiskFill(attack)
+	case core.DiskReadPayloadAction:
+		uid, err = s.chaos.DiskPayload(attack)
+	case core.DiskWritePayloadAction:
+		uid, err = s.chaos.DiskPayload(attack)
+	default:
+		c.AbortWithError(http.StatusBadRequest,
+			utils.ErrInvalidRequest.WrapWithNoMessage(fmt.Errorf("invalid disk attack action %v", attack.Action)))
+		return
+	}
+
+	if err != nil {
+		_ = c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 

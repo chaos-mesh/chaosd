@@ -167,3 +167,34 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 
 	return uid, err
 }
+
+const RecoverDisk = "truncate --size=-%sM %s"
+
+func (s *Server) RecoverDiskAttack(uid string, attack *core.DiskCommand) error {
+	switch attack.Action {
+	case core.DiskFillAction:
+		cmd := exec.Command("bash", "-c",
+			fmt.Sprintf(RecoverDisk, strconv.FormatUint(attack.Size, 10), attack.Path))
+		output, err := cmd.CombinedOutput()
+
+		if err != nil {
+			log.Error(string(output), zap.Error(err))
+		} else {
+			log.Info(string(output))
+		}
+		return err
+	case DDWritePayloadCommand:
+		cmd := exec.Command("bash", "-c",
+			fmt.Sprintf(RecoverDisk, strconv.FormatUint(attack.Size, 10), attack.Path))
+		output, err := cmd.CombinedOutput()
+
+		if err != nil {
+			log.Error(string(output), zap.Error(err))
+		} else {
+			log.Info(string(output))
+		}
+		return err
+	default:
+		return nil
+	}
+}

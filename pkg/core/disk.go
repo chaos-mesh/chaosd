@@ -22,10 +22,10 @@ const (
 )
 
 type DiskCommand struct {
-	Action          string
-	Size            uint64
-	Path            string
-	FillByFallocate bool
+	Action          string `json:"action"`
+	Size            uint64 `json:"size"`
+	Path            string `json:"path"`
+	FillByFallocate bool   `json:"fill_by_fallocate"`
 }
 
 func (d *DiskCommand) Validate() error {
