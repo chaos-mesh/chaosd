@@ -29,7 +29,7 @@ chmod +x chaosd && mv chaosd /usr/local/bin/chaosd
 
 ## Usage
 
-You can use Chaosd to inject failures with [Command mode](#comamnd-mode) or [Server mode](#server-mode).
+You can use Chaosd to inject failures with [Command mode](#command-mode) or [Server mode](#server-mode).
 
 ### Command mode
 
@@ -132,25 +132,25 @@ curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/
 * delay network packet
 
 ```bash
-$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "ens33", "ipaddress": "172.16.4.4", "action": "delay", "latency": "10ms", "jitter": "10ms", "correlation": "0"}'
+$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "delay", "latency": "10ms", "jitter": "10ms", "correlation": "0"}'
 ```
 
 * loss network packet
 
 ```bash
-$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "ens33", "ipaddress": "172.16.4.4", "action": "loss", "percent": "50", "correlation": "0"}'
+$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "loss", "percent": "50", "correlation": "0"}'
 ```
 
 * corrupt network packet
 
 ```bash
-$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "ens33", "ipaddress": "172.16.4.4", "action": "corrupt", "percent": "50",  "correlation": "0"}'
+$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "corrupt", "percent": "50",  "correlation": "0"}'
 ```
 
 * duplicate network packet
 
 ```bash
-$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "ens33", "ipaddress": "172.16.4.4", "action": "duplicate", "percent": "50", "correlation": "0"}'
+$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "duplicate", "percent": "50", "correlation": "0"}'
 ```
 
 #### Stress attack
