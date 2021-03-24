@@ -29,7 +29,21 @@ chmod +x chaosd && mv chaosd /usr/local/bin/chaosd
 
 ## Usage
 
-You can use Chaosd to inject failures with [Command mode](#command-mode) or [Server mode](#server-mode).
+You can use Chaosd to inject failures with `Command mode` or `Server mode`:
+
+- [Command mode](#command-mode)
+    - [Process attack](#process-attack)
+    - [Network attack](#network-attack)
+    - [Stress attack](#stress-attack)
+    - [Disk attack](#disk-attack)
+    - [Host attack](#host-attack)
+    - [Recover attack](#recover-attack)
+- [Server mode](#server-mode)
+    - [Process attack](#process-attack-1)
+    - [Network attack](#network-attack-1)
+    - [Stress attack](#stress-attack-1)
+    - [Disk attack](#disk-attack-1)
+    - [Recover attack](#recover-attack-1)
 
 ### Command mode
 
