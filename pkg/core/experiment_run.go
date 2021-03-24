@@ -23,6 +23,8 @@ type ExperimentRunStore interface {
 	ListByExperimentID(ctx context.Context, id uint) ([]*ExperimentRun, error)
 	ListByExperimentUID(ctx context.Context, uid string) ([]*ExperimentRun, error)
 	LatestRun(ctx context.Context, id uint) (*ExperimentRun, error)
+
+	// TODO: experiment run creation and updation
 }
 
 // ExperimentRun represents a run of an experiment

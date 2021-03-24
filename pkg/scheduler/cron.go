@@ -30,6 +30,8 @@ type CronJob struct {
 	run        func()
 }
 
+// TODO: on running, create new experiment run
+// TODO: write tests for it
 func (cj CronJob) Run() {
 	cj.run()
 }
