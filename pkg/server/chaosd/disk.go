@@ -167,3 +167,11 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 
 	return uid, err
 }
+
+func (s *Server) RecoverDiskAttack(uid string, attack *core.DiskCommand) error {
+	log.Info("Recover disk attack will do nothing, because delete | truncate data is too dangerous.")
+	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}

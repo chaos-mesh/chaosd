@@ -70,6 +70,15 @@ func RecoverExp(expStore core.ExperimentStore, chaos *chaosd.Server, uid string)
 		if err := chaos.RecoverStressAttack(uid, scmd); err != nil {
 			return err
 		}
+	case core.DiskAttack:
+		scmd := &core.DiskCommand{}
+		if err := json.Unmarshal([]byte(exp.RecoverCommand), scmd); err != nil {
+			return err
+		}
+
+		if err := chaos.RecoverDiskAttack(uid, scmd); err != nil {
+			return err
+		}
 	default:
 		return errors.Errorf("chaos experiment kind %s not found", exp.Kind)
 	}
