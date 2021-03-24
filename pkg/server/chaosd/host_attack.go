@@ -29,13 +29,13 @@ type hostAttack struct{}
 
 var HostAttack AttackType = hostAttack{}
 
-func (_ hostAttack) Attack(options core.AttackConfig, _ Environment) error {
+func (hostAttack) Attack(options core.AttackConfig, _ Environment) error {
 	if err := Host.Shutdown(); err != nil {
 		return perr.WithStack(err)
 	}
 	return nil
 }
 
-func (_ hostAttack) Recover(exp core.Experiment, _ Environment) error {
+func (hostAttack) Recover(exp core.Experiment, _ Environment) error {
 	return utils.ErrNonRecoverable(exp.Uid)
 }

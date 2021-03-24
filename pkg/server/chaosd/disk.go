@@ -39,12 +39,11 @@ func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err e
 
 	if options.String() == core.DiskFillAction {
 		return disk.attackDiskFill(env.AttackUid, &attack)
-	} else {
-		return disk.attackDiskPayload(env.AttackUid, &attack)
 	}
+	return disk.attackDiskPayload(env.AttackUid, &attack)
 }
 
-func (_ diskAttack) attackDiskPayload(uid string, payload *core.DiskCommand) error {
+func (diskAttack) attackDiskPayload(uid string, payload *core.DiskCommand) error {
 	switch payload.Action {
 	case core.DiskWritePayloadAction:
 		if payload.Path == "" {
@@ -84,7 +83,7 @@ func (_ diskAttack) attackDiskPayload(uid string, payload *core.DiskCommand) err
 const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock"
 const DDFallocateCommand = "fallocate -l %sM %s"
 
-func (_ diskAttack) attackDiskFill(uid string, fill *core.DiskCommand) error {
+func (diskAttack) attackDiskFill(uid string, fill *core.DiskCommand) error {
 	if fill.Path == "" {
 		tempFile, err := ioutil.TempFile("", "example")
 		if err != nil {
@@ -132,7 +131,7 @@ func (_ diskAttack) attackDiskFill(uid string, fill *core.DiskCommand) error {
 	return err
 }
 
-func (_ diskAttack) Recover(exp core.Experiment, _ Environment) error {
+func (diskAttack) Recover(exp core.Experiment, _ Environment) error {
 	log.Info("Recover disk attack will do nothing, because delete | truncate data is too dangerous.")
 	return nil
 }

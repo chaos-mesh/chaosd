@@ -41,8 +41,8 @@ func (d DiskCommand) Validate() error {
 	return fmt.Errorf("invalid disk attack action %v", d.Action)
 }
 
-func (s DiskCommand) RecoverData() string {
-	data, _ := json.Marshal(s)
+func (d DiskCommand) RecoverData() string {
+	data, _ := json.Marshal(d)
 
 	return string(data)
 }

@@ -29,7 +29,7 @@ type processAttack struct{}
 
 var ProcessAttack AttackType = processAttack{}
 
-func (_ processAttack) Attack(options core.AttackConfig, _ Environment) error {
+func (processAttack) Attack(options core.AttackConfig, _ Environment) error {
 	attack := options.(core.ProcessCommand)
 
 	processes, err := ps.Processes()
@@ -67,7 +67,7 @@ func (_ processAttack) Attack(options core.AttackConfig, _ Environment) error {
 	return nil
 }
 
-func (_ processAttack) Recover(exp core.Experiment, _ Environment) error {
+func (processAttack) Recover(exp core.Experiment, _ Environment) error {
 	pcmd := &core.ProcessCommand{}
 	if err := json.Unmarshal([]byte(exp.RecoverCommand), pcmd); err != nil {
 		return err

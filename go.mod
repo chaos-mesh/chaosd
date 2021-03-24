@@ -16,8 +16,7 @@ require (
 	github.com/pingcap/failpoint v0.0.0-20200210140405-f8f9fb234798
 	github.com/pingcap/log v0.0.0-20200117041106-d28c14d3b1cd
 	github.com/pkg/errors v0.9.1
-	github.com/robfig/cron v1.1.0
-	github.com/robfig/cron/v3 v3.0.1 // indirect
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil v0.0.0-20180427012116-c95755e4bcd7
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5

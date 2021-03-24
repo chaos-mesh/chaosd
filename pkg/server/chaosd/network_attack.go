@@ -30,7 +30,7 @@ type networkAttack struct{}
 
 var NetworkAttack AttackType = networkAttack{}
 
-func (_ networkAttack) Attack(options core.AttackConfig, env Environment) (err error) {
+func (networkAttack) Attack(options core.AttackConfig, env Environment) (err error) {
 	attack := options.(core.NetworkCommand)
 	var (
 		ipsetName string
@@ -187,7 +187,7 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	return nil
 }
 
-func (_ networkAttack) Recover(exp core.Experiment, env Environment) error {
+func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 	attack := &core.NetworkCommand{}
 	if err := json.Unmarshal([]byte(exp.RecoverCommand), attack); err != nil {
 		return err

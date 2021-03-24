@@ -32,7 +32,7 @@ type stressAttack struct{}
 
 var StressAttack AttackType = stressAttack{}
 
-func (_ stressAttack) Attack(options core.AttackConfig, _ Environment) (err error) {
+func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error) {
 	attack := options.(core.StressCommand)
 	stressors := &v1alpha1.Stressors{}
 	if attack.Action == core.StressCPUAction {
@@ -83,7 +83,7 @@ func (_ stressAttack) Attack(options core.AttackConfig, _ Environment) (err erro
 	return nil
 }
 
-func (_ stressAttack) Recover(exp core.Experiment, _ Environment) error {
+func (stressAttack) Recover(exp core.Experiment, _ Environment) error {
 	attack := &core.StressCommand{}
 	if err := json.Unmarshal([]byte(exp.RecoverCommand), attack); err != nil {
 		return err
