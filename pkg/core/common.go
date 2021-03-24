@@ -24,6 +24,9 @@ type AttackConfig interface {
 	String() string
 	// RecoverData is replacement of earlier .String()
 	RecoverData() string
+
+	// AttackKind returns the kind of attack
+	AttackKind() string
 }
 
 type SchedulerConfig struct {
@@ -38,10 +41,15 @@ type CommonAttackConfig struct {
 	SchedulerConfig
 
 	Action string `json:"action"`
+	Kind   string `json:"kind"`
 }
 
 func (config CommonAttackConfig) String() string {
 	return config.Action
+}
+
+func (config CommonAttackConfig) AttackKind() string {
+	return config.Kind
 }
 
 type ValidationError struct {

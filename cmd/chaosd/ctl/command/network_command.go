@@ -38,7 +38,11 @@ func NewNetworkAttackCommand() *cobra.Command {
 	return cmd
 }
 
-var nFlag core.NetworkCommand
+var nFlag = core.NetworkCommand{
+	CommonAttackConfig: core.CommonAttackConfig{
+		Kind: core.NetworkAttack,
+	},
+}
 
 func NewNetworkDelayCommand() *cobra.Command {
 	cmd := &cobra.Command{

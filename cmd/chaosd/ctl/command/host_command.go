@@ -22,7 +22,11 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
-var hFlag core.HostCommand
+var hFlag = core.HostCommand{
+	CommonAttackConfig: core.CommonAttackConfig{
+		Kind: core.HostAttack,
+	},
+}
 
 func NewHostAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{

@@ -23,7 +23,11 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
-var pFlag core.ProcessCommand
+var pFlag = core.ProcessCommand{
+	CommonAttackConfig: core.CommonAttackConfig{
+		Kind: core.ProcessAttack,
+	},
+}
 
 func NewProcessAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{

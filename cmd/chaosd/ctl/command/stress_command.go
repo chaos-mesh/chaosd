@@ -22,7 +22,11 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
-var stFlag core.StressCommand
+var stFlag = core.StressCommand{
+	CommonAttackConfig: core.CommonAttackConfig{
+		Kind: core.StressAttack,
+	},
+}
 
 func NewStressAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{

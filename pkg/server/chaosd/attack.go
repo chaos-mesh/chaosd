@@ -52,7 +52,7 @@ func (s *Server) ProcessAttack(attackType AttackType, options core.AttackConfig)
 	exp := &core.Experiment{
 		Uid:            uid,
 		Status:         core.Created,
-		Kind:           core.ProcessAttack,
+		Kind:           options.AttackKind(),
 		Action:         options.String(),
 		RecoverCommand: options.RecoverData(),
 	}

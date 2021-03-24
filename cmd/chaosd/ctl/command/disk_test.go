@@ -33,6 +33,7 @@ func TestServer_DiskFill(t *testing.T) {
 			fill: &core.DiskCommand{
 				CommonAttackConfig: core.CommonAttackConfig{
 					Action: core.DiskFillAction,
+					Kind:   core.DiskAttack,
 				},
 				Size:            1024,
 				Path:            "temp",
@@ -44,6 +45,7 @@ func TestServer_DiskFill(t *testing.T) {
 			fill: &core.DiskCommand{
 				CommonAttackConfig: core.CommonAttackConfig{
 					Action: core.DiskFillAction,
+					Kind:   core.DiskAttack,
 				},
 				Size:            24,
 				Path:            "temp",
@@ -93,6 +95,7 @@ func TestServer_DiskPayload(t *testing.T) {
 			command: &core.DiskCommand{
 				CommonAttackConfig: core.CommonAttackConfig{
 					Action: core.DiskWritePayloadAction,
+					Kind:   core.DiskAttack,
 				},
 				Size: 24,
 				Path: "temp",
@@ -103,6 +106,7 @@ func TestServer_DiskPayload(t *testing.T) {
 			command: &core.DiskCommand{
 				CommonAttackConfig: core.CommonAttackConfig{
 					Action: core.DiskReadPayloadAction,
+					Kind:   core.DiskAttack,
 				},
 				Size: 24,
 				Path: "temp",
@@ -124,6 +128,7 @@ func TestServer_DiskPayload(t *testing.T) {
 			_, err = s.ProcessAttack(chaosd.DiskAttack, &core.DiskCommand{
 				CommonAttackConfig: core.CommonAttackConfig{
 					Action: core.DiskFillAction,
+					Kind:   core.DiskAttack,
 				},
 				Size:            tt.command.Size,
 				Path:            "temp",

@@ -22,7 +22,11 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
-var dFlag core.DiskCommand
+var dFlag = core.DiskCommand{
+	CommonAttackConfig: core.CommonAttackConfig{
+		Kind: core.DiskAttack,
+	},
+}
 
 func NewDiskAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{

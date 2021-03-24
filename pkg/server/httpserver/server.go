@@ -105,7 +105,11 @@ func handler(s *httpServer) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/process [post]
 func (s *httpServer) createProcessAttack(c *gin.Context) {
-	attack := &core.ProcessCommand{}
+	attack := &core.ProcessCommand{
+		CommonAttackConfig: core.CommonAttackConfig{
+			Kind: core.ProcessAttack,
+		},
+	}
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
@@ -130,7 +134,11 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/network [post]
 func (s *httpServer) createNetworkAttack(c *gin.Context) {
-	attack := &core.NetworkCommand{}
+	attack := &core.NetworkCommand{
+		CommonAttackConfig: core.CommonAttackConfig{
+			Kind: core.ProcessAttack,
+		},
+	}
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
@@ -155,7 +163,11 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/stress [post]
 func (s *httpServer) createStressAttack(c *gin.Context) {
-	attack := &core.StressCommand{}
+	attack := &core.StressCommand{
+		CommonAttackConfig: core.CommonAttackConfig{
+			Kind: core.ProcessAttack,
+		},
+	}
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
@@ -180,7 +192,11 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/disk [post]
 func (s *httpServer) createDiskAttack(c *gin.Context) {
-	attack := &core.DiskCommand{}
+	attack := &core.DiskCommand{
+		CommonAttackConfig: core.CommonAttackConfig{
+			Kind: core.ProcessAttack,
+		},
+	}
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
