@@ -121,6 +121,18 @@ Fill disk by write data to file:
 ./bin/chaosd attack disk fill --fallocate false --path /tmp/temp --size 100
 ```
 
+#### Host attack
+
+Shutdown the host:
+
+```bash
+./bin/chaosd attack host shutdown
+```
+
+> **Note:**
+>
+> This command will shutdown the host, make sure you know what the command means before you execute it.
+
 #### Recover attack
 
 ```bash
