@@ -43,6 +43,7 @@ func (s *Server) newEnvironment(uid string) Environment {
 
 func (s *Server) ProcessAttack(attackType AttackType, options core.AttackConfig) (uid string, err error) {
 	if err = options.Validate(); err != nil {
+		err = core.ErrConfigValidation(err)
 		return
 	}
 

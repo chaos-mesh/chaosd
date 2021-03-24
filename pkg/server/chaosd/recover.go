@@ -31,7 +31,7 @@ func (s *Server) RecoverAttack(uid string) error {
 		return perr.Errorf("experiment %s not found", uid)
 	}
 
-	if exp.Status != core.Success || exp.Status != core.Scheduled {
+	if exp.Status != core.Success && exp.Status != core.Scheduled {
 		return perr.Errorf("can not recover %s experiment", exp.Status)
 	}
 
@@ -59,7 +59,7 @@ func (s *Server) RecoverAttack(uid string) error {
 
 	env := s.newEnvironment(uid)
 	if err = attackType.Recover(*exp, env); err != nil {
-		return perr.WithMessagef(err, "Recover experiment %s failed, %s", uid)
+		return perr.WithMessagef(err, "Recover experiment %s failed", uid)
 	}
 
 	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", exp.RecoverCommand); err != nil {

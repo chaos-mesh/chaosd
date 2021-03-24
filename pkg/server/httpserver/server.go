@@ -14,7 +14,6 @@
 package httpserver
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -187,23 +186,14 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 		return
 	}
 
-	var uid string
-	var err error
-	switch attack.Action {
-	case core.DiskFillAction:
-		uid, err = s.chaos.DiskFill(attack)
-	case core.DiskReadPayloadAction:
-		uid, err = s.chaos.DiskPayload(attack)
-	case core.DiskWritePayloadAction:
-		uid, err = s.chaos.DiskPayload(attack)
-	default:
-		c.AbortWithError(http.StatusBadRequest,
-			utils.ErrInvalidRequest.WrapWithNoMessage(fmt.Errorf("invalid disk attack action %v", attack.Action)))
-		return
-	}
+	uid, err := s.chaos.ProcessAttack(chaosd.DiskAttack, *attack)
 
 	if err != nil {
-		_ = c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		if _, ok := err.(core.ValidationError); ok {
+			_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInvalidRequest.WrapWithNoMessage(err))
+		} else {
+			_ = c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		}
 		return
 	}
 

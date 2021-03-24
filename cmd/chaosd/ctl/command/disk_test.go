@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
 func TestServer_DiskFill(t *testing.T) {
@@ -30,7 +31,9 @@ func TestServer_DiskFill(t *testing.T) {
 		{
 			name: "0",
 			fill: &core.DiskCommand{
-				Action:          core.DiskFillAction,
+				CommonAttackConfig: core.CommonAttackConfig{
+					Action: core.DiskFillAction,
+				},
 				Size:            1024,
 				Path:            "temp",
 				FillByFallocate: true,
@@ -39,7 +42,9 @@ func TestServer_DiskFill(t *testing.T) {
 		}, {
 			name: "1",
 			fill: &core.DiskCommand{
-				Action:          core.DiskFillAction,
+				CommonAttackConfig: core.CommonAttackConfig{
+					Action: core.DiskFillAction,
+				},
 				Size:            24,
 				Path:            "temp",
 				FillByFallocate: false,
@@ -57,7 +62,7 @@ func TestServer_DiskFill(t *testing.T) {
 			if f != nil {
 				_ = f.Close()
 			}
-			_, err = s.DiskFill(tt.fill)
+			_, err = s.ProcessAttack(chaosd.DiskAttack, *tt.fill)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DiskFill() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -86,17 +91,21 @@ func TestServer_DiskPayload(t *testing.T) {
 		{
 			name: "0",
 			command: &core.DiskCommand{
-				Action: core.DiskWritePayloadAction,
-				Size:   24,
-				Path:   "temp",
+				CommonAttackConfig: core.CommonAttackConfig{
+					Action: core.DiskWritePayloadAction,
+				},
+				Size: 24,
+				Path: "temp",
 			},
 			wantErr: false,
 		}, {
 			name: "1",
 			command: &core.DiskCommand{
-				Action: core.DiskReadPayloadAction,
-				Size:   24,
-				Path:   "temp",
+				CommonAttackConfig: core.CommonAttackConfig{
+					Action: core.DiskReadPayloadAction,
+				},
+				Size: 24,
+				Path: "temp",
 			},
 			wantErr: false,
 		},
@@ -112,13 +121,15 @@ func TestServer_DiskPayload(t *testing.T) {
 				_ = f.Close()
 			}
 
-			_, err = s.DiskFill(&core.DiskCommand{
-				Action:          core.DiskFillAction,
+			_, err = s.ProcessAttack(chaosd.DiskAttack, core.DiskCommand{
+				CommonAttackConfig: core.CommonAttackConfig{
+					Action: core.DiskFillAction,
+				},
 				Size:            tt.command.Size,
 				Path:            "temp",
 				FillByFallocate: true,
 			})
-			_, err = s.DiskPayload(tt.command)
+			_, err = s.ProcessAttack(chaosd.DiskAttack, *tt.command)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DiskPayload() error = %v, wantErr %v", err, tt.wantErr)
 				return

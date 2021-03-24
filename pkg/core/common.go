@@ -13,6 +13,10 @@
 
 package core
 
+import (
+	perr "github.com/pkg/errors"
+)
+
 type AttackConfig interface {
 	Validate() error
 	Cron() string
@@ -23,7 +27,7 @@ type AttackConfig interface {
 }
 
 type SchedulerConfig struct {
-	Schedule string
+	Schedule string `json:"schedule"`
 }
 
 func (config SchedulerConfig) Cron() string {
@@ -33,9 +37,21 @@ func (config SchedulerConfig) Cron() string {
 type CommonAttackConfig struct {
 	SchedulerConfig
 
-	Action string
+	Action string `json:"action"`
 }
 
 func (config CommonAttackConfig) String() string {
 	return config.Action
+}
+
+type ValidationError struct {
+	err error
+}
+
+func (e ValidationError) Error() string {
+	return perr.WithMessage(e.err, "Validation failed").Error()
+}
+
+func ErrConfigValidation(err error) error {
+	return ValidationError{err: err}
 }
