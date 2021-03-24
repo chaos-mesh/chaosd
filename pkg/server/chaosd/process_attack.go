@@ -30,7 +30,7 @@ type processAttack struct{}
 var ProcessAttack AttackType = processAttack{}
 
 func (processAttack) Attack(options core.AttackConfig, _ Environment) error {
-	attack := options.(core.ProcessCommand)
+	attack := options.(*core.ProcessCommand)
 
 	processes, err := ps.Processes()
 	if err != nil {

@@ -31,26 +31,26 @@ type networkAttack struct{}
 var NetworkAttack AttackType = networkAttack{}
 
 func (networkAttack) Attack(options core.AttackConfig, env Environment) (err error) {
-	attack := options.(core.NetworkCommand)
+	attack := options.(*core.NetworkCommand)
 	var (
 		ipsetName string
 	)
 
 	if attack.NeedApplyIPSet() {
-		ipsetName, err = env.Chaos.applyIPSet(&attack, env.AttackUid)
+		ipsetName, err = env.Chaos.applyIPSet(attack, env.AttackUid)
 		if err != nil {
 			return errors.WithStack(err)
 		}
 	}
 
 	if attack.NeedApplyIptables() {
-		if err = env.Chaos.applyIptables(&attack, env.AttackUid); err != nil {
+		if err = env.Chaos.applyIptables(attack, env.AttackUid); err != nil {
 			return errors.WithStack(err)
 		}
 	}
 
 	if attack.NeedApplyTC() {
-		if err = env.Chaos.applyTC(&attack, ipsetName, env.AttackUid); err != nil {
+		if err = env.Chaos.applyTC(attack, ipsetName, env.AttackUid); err != nil {
 			return errors.WithStack(err)
 		}
 	}

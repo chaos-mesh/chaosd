@@ -35,12 +35,12 @@ const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
 const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync,direct,fullblock"
 
 func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err error) {
-	attack := options.(core.DiskCommand)
+	attack := options.(*core.DiskCommand)
 
 	if options.String() == core.DiskFillAction {
-		return disk.attackDiskFill(env.AttackUid, &attack)
+		return disk.attackDiskFill(env.AttackUid, attack)
 	}
-	return disk.attackDiskPayload(env.AttackUid, &attack)
+	return disk.attackDiskPayload(env.AttackUid, attack)
 }
 
 func (diskAttack) attackDiskPayload(uid string, payload *core.DiskCommand) error {

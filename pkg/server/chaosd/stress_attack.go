@@ -33,7 +33,7 @@ type stressAttack struct{}
 var StressAttack AttackType = stressAttack{}
 
 func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error) {
-	attack := options.(core.StressCommand)
+	attack := options.(*core.StressCommand)
 	stressors := &v1alpha1.Stressors{}
 	if attack.Action == core.StressCPUAction {
 		stressors.CPUStressor = &v1alpha1.CPUStressor{

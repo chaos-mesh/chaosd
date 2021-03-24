@@ -84,7 +84,7 @@ func processAttackF(cmd *cobra.Command, f *core.ProcessCommand) {
 
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.ProcessAttack(chaosd.ProcessAttack, *f)
+	uid, err := chaos.ProcessAttack(chaosd.ProcessAttack, f)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}

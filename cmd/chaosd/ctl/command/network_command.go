@@ -177,7 +177,7 @@ func commonNetworkAttackFunc(cmd *cobra.Command) {
 
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.ProcessAttack(chaosd.NetworkAttack, nFlag)
+	uid, err := chaos.ProcessAttack(chaosd.NetworkAttack, &nFlag)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}

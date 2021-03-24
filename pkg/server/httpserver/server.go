@@ -111,7 +111,7 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ProcessAttack(chaosd.ProcessAttack, *attack)
+	uid, err := s.chaos.ProcessAttack(chaosd.ProcessAttack, attack)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
@@ -136,7 +136,7 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ProcessAttack(chaosd.NetworkAttack, *attack)
+	uid, err := s.chaos.ProcessAttack(chaosd.NetworkAttack, attack)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
@@ -161,7 +161,7 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ProcessAttack(chaosd.StressAttack, *attack)
+	uid, err := s.chaos.ProcessAttack(chaosd.StressAttack, attack)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
@@ -186,7 +186,7 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ProcessAttack(chaosd.DiskAttack, *attack)
+	uid, err := s.chaos.ProcessAttack(chaosd.DiskAttack, attack)
 
 	if err != nil {
 		if _, ok := err.(core.ValidationError); ok {
