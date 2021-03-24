@@ -91,6 +91,36 @@ $ chaosd attack stress cpu -l 100 -w 2
 $ chaosd attack stress mem -w 2 # stress 2 CPU and each cpu loads 100%
 ```
 
+#### Disk attack
+
+* Add payload
+
+Add read payload:
+
+```bash
+./bin/chaosd attack disk add-payload read --path /tmp/temp --size 100
+```
+
+Add write payload:
+
+```bash
+./bin/chaosd attack disk add-payload write --path /tmp/temp --size 100
+```
+
+* Fill disk
+
+Fill disk by fallocate:
+
+```bash
+./bin/chaosd attack disk fill --fallocate true --path /tmp/temp --size 100
+```
+
+Fill disk by write data to file:
+
+```bash
+./bin/chaosd attack disk fill --fallocate false --path /tmp/temp --size 100
+```
+
 #### Recover attack
 
 ```bash
@@ -165,6 +195,36 @@ $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/js
 
 ```bash
 $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"mem", "worker": 2}'
+```
+
+#### Disk attack
+
+* Add payload
+
+Add read payload:
+
+```bash
+curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"read-payload","size":1024,"path":"temp"}'
+```
+
+Add write payload:
+
+```bash
+curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"write-payload","size":1024,"path":"temp"}'
+```
+
+* Fill disk
+
+Fill disk by fallocate:
+
+```bash
+curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill_by_fallocate": true}'
+```
+
+Fill disk by write data to file:
+
+```bash
+curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill_by_fallocate": false}'
 ```
 
 #### Recover attack
