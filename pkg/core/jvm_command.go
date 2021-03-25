@@ -15,8 +15,11 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/pingcap/errors"
+
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 const (
@@ -42,24 +45,29 @@ type JVMCommand struct {
 	// fault action, values can be latency, exception, return
 	Action string
 
-	Value string
+	// the return value for action 'return'
+	ReturnValue string
+
+	// the exception which needs to throw dor action `exception`
+	ThrowException string
+
+	// the latency duration for action 'latency'
+	LatencyDuration string
 
 	// attach or agent
 	Type string
 
-	// port
+	// the port of agent server
 	Port int
 
+	// the pid of Java process which need to attach
 	Pid int
 
+	// what need to do
 	Do string
 }
 
 func (j *JVMCommand) Validate() error {
-	if len(j.Name) == 0 {
-		return errors.New("name not provided")
-	}
-
 	if len(j.Class) == 0 {
 		return errors.New("class not provided")
 	}
@@ -74,6 +82,10 @@ func (j *JVMCommand) Validate() error {
 
 	if len(j.Type) == 0 {
 		return errors.New("type not provided, type can be 'latency', 'exception' or 'return'")
+	}
+
+	if len(j.Name) == 0 {
+		j.Name = fmt.Sprintf("%s-%s-%s-%s-%s", j.Class, j.Method, j.Action, j.Type, utils.RandomStringWithCharset(5))
 	}
 
 	return nil

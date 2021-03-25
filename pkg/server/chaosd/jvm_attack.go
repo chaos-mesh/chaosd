@@ -114,11 +114,11 @@ func (s *Server) JVMAttack(attack *core.JVMCommand) (string, error) {
 	if len(attack.Do) == 0 {
 		switch attack.Action {
 		case core.JVMLatencyAction:
-			attack.Do = fmt.Sprintf("Thread.sleep(%s)", attack.Value)
+			attack.Do = fmt.Sprintf("Thread.sleep(%s)", attack.LatencyDuration)
 		case core.JVMExceptionAction:
-			attack.Do = fmt.Sprintf("throw new %s", attack.Value)
+			attack.Do = fmt.Sprintf("throw new %s", attack.ThrowException)
 		case core.JVMReturnAction:
-			attack.Do = fmt.Sprintf("return %s", attack.Value)
+			attack.Do = fmt.Sprintf("return %s", attack.ReturnValue)
 		}
 	}
 

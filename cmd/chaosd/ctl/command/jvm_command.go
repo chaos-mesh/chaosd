@@ -45,8 +45,8 @@ func NewJVMPrepareCommand() *cobra.Command {
 		Run:   jvmPrepareCommandFunc,
 	}
 
-	cmd.Flags().IntVarP(&jvmFlag.Port, "port", "", 0, "")
-	cmd.Flags().IntVarP(&jvmFlag.Pid, "pid", "", 0, "")
+	cmd.Flags().IntVarP(&jvmFlag.Port, "port", "", 9288, "the port of agent server")
+	cmd.Flags().IntVarP(&jvmFlag.Pid, "pid", "", 0, "the pid of Java process which need to attach")
 	jvmFlag.Type = core.JVMPrepareType
 
 	return cmd
@@ -59,12 +59,14 @@ func NewJVMAttachCommand() *cobra.Command {
 		Run:   jvmAttachCommandFunc,
 	}
 
-	cmd.Flags().StringVarP(&jvmFlag.Name, "name", "n", "", "rule name, should be unique.")
+	cmd.Flags().StringVarP(&jvmFlag.Name, "name", "n", "", "rule name, should be unique, and will generate one automatically if it is empty")
 	cmd.Flags().StringVarP(&jvmFlag.Class, "class", "c", "", "Java class name")
 	cmd.Flags().StringVarP(&jvmFlag.Method, "method", "m", "", "the method name in Java class")
 	cmd.Flags().StringVarP(&jvmFlag.Action, "action", "a", "", "fault action, values can be latency, exception, return")
-	cmd.Flags().IntVarP(&jvmFlag.Port, "port", "", 0, "port")
-	cmd.Flags().StringVarP(&jvmFlag.Value, "value", "v", "", "value")
+	cmd.Flags().IntVarP(&jvmFlag.Port, "port", "", 9288, "the port of agent server")
+	cmd.Flags().StringVarP(&jvmFlag.ReturnValue, "value", "", "", "the return value for action 'return'")
+	cmd.Flags().StringVarP(&jvmFlag.ThrowException, "exception", "", "", "the exception which needs to throw dor action `exception`")
+	cmd.Flags().StringVarP(&jvmFlag.LatencyDuration, "latency", "", "", "the latency duration for action 'latency'")
 
 	jvmFlag.Type = core.JVMAttachType
 
