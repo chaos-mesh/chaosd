@@ -23,9 +23,8 @@ import (
 )
 
 const (
-	JVMPrepareType = "prepare"
-	JVMAttachType  = "attach"
-	JVMAgentType   = "agent"
+	JVMAttachType      = "attach"
+	JVMInstallRuleType = "install_rule"
 
 	JVMLatencyAction   = "latency"
 	JVMExceptionAction = "exception"

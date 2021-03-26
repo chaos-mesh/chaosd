@@ -43,7 +43,7 @@ ENDRULE
 const bmInstallCommand = "bminstall.sh -b -Dorg.jboss.byteman.transform.all -Dorg.jboss.byteman.verbose -p %d %d"
 const bmSubmitCommand = "bmsubmit.sh -p %d -%s %s"
 
-func (s *Server) JVMPrepare(attack *core.JVMCommand) (string, error) {
+func (s *Server) JVMAttach(attack *core.JVMCommand) (string, error) {
 	var err error
 	uid := uuid.New().String()
 
@@ -83,7 +83,7 @@ func (s *Server) JVMPrepare(attack *core.JVMCommand) (string, error) {
 	return uid, err
 }
 
-func (s *Server) JVMAttack(attack *core.JVMCommand) (string, error) {
+func (s *Server) JVMInstallRule(attack *core.JVMCommand) (string, error) {
 	var err error
 	uid := uuid.New().String()
 
