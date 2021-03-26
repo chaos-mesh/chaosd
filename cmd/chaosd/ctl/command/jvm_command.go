@@ -85,6 +85,10 @@ func jvmPrepareCommandFunc(cmd *cobra.Command, args []string) {
 }
 
 func jvmAttachCommandFunc(cmd *cobra.Command, args []string) {
+	if err := jvmFlag.Validate(); err != nil {
+		ExitWithError(ExitBadArgs, err)
+	}
+
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
 	uid, err := chaos.JVMAttack(&jvmFlag)
