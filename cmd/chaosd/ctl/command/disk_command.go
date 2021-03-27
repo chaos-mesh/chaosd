@@ -66,6 +66,7 @@ func NewDiskWritePayloadCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&dFlag.Path, "path", "p", "/dev/null",
 		"'path' specifies the location to fill data in.\n"+
 			"If path not provided, payload will write into /dev/null")
+	commonFlags(cmd, &dFlag.CommonAttackConfig)
 	return cmd
 }
 
@@ -96,6 +97,7 @@ func NewDiskReadPayloadCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&dFlag.Path, "path", "p", "",
 		"'path' specifies the location to read data.\n"+
 			"If path not provided, payload will raise an error")
+	commonFlags(cmd, &dFlag.CommonAttackConfig)
 	return cmd
 }
 
@@ -127,6 +129,7 @@ func NewDiskFillCommand() *cobra.Command {
 		"'path' specifies the location to fill data in.\n"+
 			"If path not provided, a temp file will be generated and deleted immediately after data filled in or allocated")
 	cmd.Flags().BoolVarP(&dFlag.FillByFallocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
+	commonFlags(cmd, &dFlag.CommonAttackConfig)
 	return cmd
 }
 

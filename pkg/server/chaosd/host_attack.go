@@ -17,7 +17,6 @@ import (
 	perr "github.com/pkg/errors"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
-	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 )
 
 type HostManager interface {
@@ -37,5 +36,5 @@ func (hostAttack) Attack(options core.AttackConfig, _ Environment) error {
 }
 
 func (hostAttack) Recover(exp core.Experiment, _ Environment) error {
-	return utils.ErrNonRecoverable(exp.Uid)
+	return core.ErrNonRecoverableAttack.New("host attack not supported to recover")
 }

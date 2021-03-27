@@ -22,7 +22,6 @@ import (
 	"github.com/pingcap/errors"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
-	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 )
 
 type processAttack struct{}
@@ -73,7 +72,7 @@ func (processAttack) Recover(exp core.Experiment, _ Environment) error {
 		return err
 	}
 	if pcmd.Signal != int(syscall.SIGSTOP) {
-		return utils.ErrNonRecoverable(exp.Uid)
+		return core.ErrNonRecoverableAttack.New("only SIGSTOP process attack is supported to recover")
 	}
 
 	for _, pid := range pcmd.PIDs {

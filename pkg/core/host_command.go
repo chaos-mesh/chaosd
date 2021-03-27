@@ -13,7 +13,9 @@
 
 package core
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 const (
 	HostShutdownAction = "shutdown"

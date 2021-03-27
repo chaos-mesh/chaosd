@@ -68,6 +68,7 @@ func NewNetworkDelayCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	commonFlags(cmd, &nFlag.CommonAttackConfig)
 
 	return cmd
 }
@@ -93,6 +94,7 @@ func NewNetworkLossCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	commonFlags(cmd, &nFlag.CommonAttackConfig)
 
 	return cmd
 }
@@ -118,6 +120,7 @@ func NewNetworkCorruptCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	commonFlags(cmd, &nFlag.CommonAttackConfig)
 
 	return cmd
 }

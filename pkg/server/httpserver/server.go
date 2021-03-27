@@ -17,6 +17,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joomcode/errorx"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
 
@@ -117,7 +118,7 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 
 	uid, err := s.chaos.ProcessAttack(chaosd.ProcessAttack, attack)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		handleError(c, err)
 		return
 	}
 
@@ -146,7 +147,7 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 
 	uid, err := s.chaos.ProcessAttack(chaosd.NetworkAttack, attack)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		handleError(c, err)
 		return
 	}
 
@@ -175,7 +176,7 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 
 	uid, err := s.chaos.ProcessAttack(chaosd.StressAttack, attack)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		handleError(c, err)
 		return
 	}
 
@@ -205,11 +206,7 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 	uid, err := s.chaos.ProcessAttack(chaosd.DiskAttack, attack)
 
 	if err != nil {
-		if _, ok := err.(core.ValidationError); ok {
-			_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInvalidRequest.WrapWithNoMessage(err))
-		} else {
-			_ = c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
-		}
+		handleError(c, err)
 		return
 	}
 
@@ -228,9 +225,17 @@ func (s *httpServer) recoverAttack(c *gin.Context) {
 	uid := c.Param("uid")
 	err := s.chaos.RecoverAttack(uid)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		handleError(c, err)
 		return
 	}
 
 	c.JSON(http.StatusOK, utils.RecoverSuccessResponse(uid))
+}
+
+func handleError(c *gin.Context, err error) {
+	if errorx.IsOfType(err, core.ErrAttackConfigValidation) {
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInvalidRequest.WrapWithNoMessage(err))
+	} else {
+		_ = c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+	}
 }

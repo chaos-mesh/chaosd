@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,12 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package core
 
-import (
-	"github.com/pkg/errors"
+import "github.com/joomcode/errorx"
+
+var (
+	ErrNs                     = errorx.NewNamespace("error.core")
+	ErrAttackConfigValidation = ErrNs.NewType("attack_config_validation_error")
+	ErrNonRecoverableAttack   = ErrNs.NewType("non_recoverable_attack")
 )
-
-func ErrNonRecoverable(uid string) error {
-	return errors.Errorf("chaos experiment %s not supported to recover", uid)
-}

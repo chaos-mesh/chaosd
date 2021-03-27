@@ -20,6 +20,6 @@ import (
 )
 
 func commonFlags(cmd *cobra.Command, flag *core.CommonAttackConfig) {
-	// TODO: what should be a unique shorthand????
 	cmd.Flags().StringVarP(&flag.Schedule, "cron", "", "", "Specify crontab-compatible expression to schedule the attack")
+	cmd.Flags().StringVarP(&flag.Duration, "duration", "", "", "Specify how long the experiment run every scheduled run")
 }

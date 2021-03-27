@@ -66,6 +66,7 @@ func NewProcessStopCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&pFlag.Process, "process", "p", "", "The process name or the process ID")
+	commonFlags(cmd, &pFlag.CommonAttackConfig)
 
 	return cmd
 }
