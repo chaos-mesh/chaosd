@@ -37,6 +37,7 @@ require (
 )
 
 replace (
+	// github.com/chaos-mesh/chaos-mesh require /api/v1alpha1 v0.0.0, but v0.0.0 can not be found, so use replace here
 	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 => github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0-20210329070828-9be168b2b489
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.17.0
@@ -62,7 +63,5 @@ replace (
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.17.0
 	vbom.ml/util => github.com/fvbommel/util v0.0.2
 )
-
-exclude #github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0
 
 go 1.14
