@@ -71,6 +71,7 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 			Stressor: v1alpha1.Stressor{
 				Workers: attack.Workers,
 			},
+			Size:    attack.Size,
 			Options: attack.Options,
 		}
 	}
