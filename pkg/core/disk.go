@@ -13,7 +13,9 @@
 
 package core
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 const (
 	DiskFillAction         = "fill"
@@ -23,8 +25,9 @@ const (
 
 type DiskCommand struct {
 	Action          string `json:"action"`
-	Size            uint64 `json:"size"`
+	Size            string `json:"size"`
 	Path            string `json:"path"`
+	Percent         string `json:"percent"`
 	FillByFallocate bool   `json:"fill_by_fallocate"`
 }
 

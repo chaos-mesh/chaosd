@@ -15,6 +15,7 @@ package command
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
@@ -31,7 +32,7 @@ func TestServer_DiskFill(t *testing.T) {
 			name: "0",
 			fill: &core.DiskCommand{
 				Action:          core.DiskFillAction,
-				Size:            1024,
+				Size:            "1024",
 				Path:            "temp",
 				FillByFallocate: true,
 			},
@@ -40,7 +41,7 @@ func TestServer_DiskFill(t *testing.T) {
 			name: "1",
 			fill: &core.DiskCommand{
 				Action:          core.DiskFillAction,
-				Size:            24,
+				Size:            "24",
 				Path:            "temp",
 				FillByFallocate: false,
 			},
@@ -67,8 +68,9 @@ func TestServer_DiskFill(t *testing.T) {
 				t.Errorf("unexpected err %v when stat temp file", err)
 			}
 
-			if uint64(stat.Size()) != tt.fill.Size*1024*1024 {
-				t.Errorf("DiskFill() size %v, expect %d", stat.Size(), tt.fill.Size*1024*1024)
+			size, _ := strconv.ParseUint(tt.fill.Size, 10, 0)
+			if uint64(stat.Size()) != size*1024*1024 {
+				t.Errorf("DiskFill() size %v, expect %d", stat.Size(), size*1024*1024)
 				return
 			}
 			os.Remove(tt.fill.Path)
@@ -87,7 +89,7 @@ func TestServer_DiskPayload(t *testing.T) {
 			name: "0",
 			command: &core.DiskCommand{
 				Action: core.DiskWritePayloadAction,
-				Size:   24,
+				Size:   "24",
 				Path:   "temp",
 			},
 			wantErr: false,
@@ -95,7 +97,7 @@ func TestServer_DiskPayload(t *testing.T) {
 			name: "1",
 			command: &core.DiskCommand{
 				Action: core.DiskReadPayloadAction,
-				Size:   24,
+				Size:   "24",
 				Path:   "temp",
 			},
 			wantErr: false,
