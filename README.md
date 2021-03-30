@@ -1,6 +1,6 @@
 # chaosd
 
-Chaosd is an easy-to-use Chaos Engineering tool. This tool is used to inject failures to the physic node, such as kill process, network failure, CPU burn, memory burn, etc.
+Chaosd is an easy-to-use Chaos Engineering tool used to inject failures to a physical node.
 
 ## Prerequisites
 
@@ -29,7 +29,10 @@ chmod +x chaosd && mv chaosd /usr/local/bin/chaosd
 
 ## Usage
 
-You can use Chaosd to inject failures with `Command mode` or `Server mode`:
+Chaosd supports two modes of failure injection:
+
+-  **Command mode** - using Chaosd in the command line mode
+-  **Server mode** - running Chaosd as a daemon server
 
 - [Command mode](#command-mode)
     - [Process attack](#process-attack)
@@ -51,7 +54,11 @@ Using Chaosd as a command-line tool.
 
 #### Process attack
 
+Attack a process according to the PID or process name.
+
 * kill process
+
+Kill a process by sending `SIGKILL` signal:
 
 ```bash
 $ chaosd attack process kill -p [pid] # set pid or pod name
@@ -61,13 +68,19 @@ Attack network successfully, uid: 2c865e6f-299f-4adf-ab37-94dc4fb8fea6
 
 * stop process
 
+Stop a process by sending `SIGSTOP` signal:
+
 ```bash
 $ chaosd attack process stop -p [pid] # set pid or pod name
 ```
 
 #### Network attack
 
+Attack the network by set the `iptables`, `ipset` and `tc`.
+
 * delay network packet
+
+Send message with specified latency:
 
 ```bash
 $ chaosd attack network delay -d eth0 -i 172.16.4.4 -l 10ms
@@ -75,11 +88,15 @@ $ chaosd attack network delay -d eth0 -i 172.16.4.4 -l 10ms
 
 * loss network packet
 
+Drop network packets randomly:
+
 ```bash
 $ chaosd attack network loss -d eth0 -i 172.16.4.4 --percent 50%
 ```
 
 * corrupt network packet
+
+Make packet corruption:
 
 ```bash
 $ chaosd attack network corrupt -d eth0 -i 172.16.4.4 --percent 50%
@@ -87,13 +104,19 @@ $ chaosd attack network corrupt -d eth0 -i 172.16.4.4 --percent 50%
 
 * duplicate network packet
 
+Send packet duplicated:
+
 ```bash
 $ chaosd attack network duplicate -d eth0 -i 172.16.4.4 --percent 50%
 ```
 
 #### Stress attack
 
+Generate plenty of stresses on the host:
+
 * CPU stress
+
+Generate CPU stresses on the host:
 
 ```bash
 $ chaosd attack stress cpu -l 100 -w 2
@@ -101,11 +124,15 @@ $ chaosd attack stress cpu -l 100 -w 2
 
 * Memory stress
 
+Generate memory stresses on the host:
+
 ```bash
 $ chaosd attack stress mem -w 2 # stress 2 CPU and each cpu loads 100%
 ```
 
 #### Disk attack
+
+Attack the disk by increasing write/read payload, or filling the disk.
 
 * Add payload
 
@@ -149,6 +176,8 @@ Shutdown the host:
 
 #### Recover attack
 
+Recover a attack:
+
 ```bash
 $ chaosd recover 2c865e6f-299f-4adf-ab37-94dc4fb8fea6
 ```
@@ -169,7 +198,11 @@ And then you can inject failures by sending HTTP requests.
 
 #### Process attack
 
+Attack a process according to the PID or process name.
+
 * kill process
+
+Kill a process by sending `SIGKILL` signal:
 
 ```bash
 curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/json"  -d '{"process": "{pid}", "signal": 9}' # set pid or pod name
@@ -178,6 +211,8 @@ curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/
 
 * stop process
 
+Stop a process by sending `SIGSTOP` signal:
+
 ```bash
 curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/json"  -d '{"process": "{pid}", "signal": 15}' # set pid or pod name
 {"status":200,"message":"attack successfully","uid":"ecf3f564-c4c0-4aaf-83c6-4b511a6e3a85"}
@@ -185,7 +220,11 @@ curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/
 
 #### Network attack
 
+Attack the network by set the `iptables`, `ipset` and `tc`.
+
 * delay network packet
+
+Send message with specified latency:
 
 ```bash
 $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "delay", "latency": "10ms", "jitter": "10ms", "correlation": "0"}'
@@ -193,11 +232,15 @@ $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: applicatio
 
 * loss network packet
 
+Drop network packets randomly:
+
 ```bash
 $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "loss", "percent": "50", "correlation": "0"}'
 ```
 
 * corrupt network packet
+
+Make packet corruption:
 
 ```bash
 $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "corrupt", "percent": "50",  "correlation": "0"}'
@@ -205,13 +248,19 @@ $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: applicatio
 
 * duplicate network packet
 
+Send packet duplicated:
+
 ```bash
 $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "duplicate", "percent": "50", "correlation": "0"}'
 ```
 
 #### Stress attack
 
+Generate plenty of stresses on the host:
+
 * CPU stress
+
+Generate CPU stresses on the host:
 
 ```bash
 $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"cpu", "load": 100, "worker": 2}'
@@ -219,11 +268,15 @@ $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/js
 
 * Memory stress
 
+Generate memory stresses on the host:
+
 ```bash
 $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"mem", "worker": 2}'
 ```
 
 #### Disk attack
+
+Attack the disk by increasing write/read payload, or filling the disk.
 
 * Add payload
 
@@ -254,6 +307,8 @@ curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/jso
 ```
 
 #### Recover attack
+
+Recover a attack:
 
 ```bash
 $ curl -X DELETE "127.0.0.1:31767/api/attack/20df86e9-96e7-47db-88ce-dd31bc70c4f0"
