@@ -40,6 +40,14 @@ DO
 	{{.Do}};
 ENDRULE
 `
+
+const stressRuleTemplate = `
+RULE {{.Name}}
+STRESS {{.StressType}}
+{{.StressValueName}} {{.StressValue}}
+ENDRULE
+`
+
 const bmInstallCommand = "bminstall.sh -b -Dorg.jboss.byteman.transform.all -Dorg.jboss.byteman.verbose -p %d %d"
 const bmSubmitCommand = "bmsubmit.sh -p %d -%s %s"
 
@@ -119,14 +127,30 @@ func (s *Server) JVMInstallRule(attack *core.JVMCommand) (string, error) {
 			attack.Do = fmt.Sprintf("throw new %s", attack.ThrowException)
 		case core.JVMReturnAction:
 			attack.Do = fmt.Sprintf("return %s", attack.ReturnValue)
+		case core.JVMStressAction:
+			if attack.CPUCount > 0 {
+				attack.StressType = "CPU"
+				attack.StressValueName = "CPUCOUNT"
+				attack.StressValue = attack.CPUCount
+			} else {
+				attack.StressType = "MEMORY"
+				attack.StressValueName = "MEMORYSIZE"
+				attack.StressValue = attack.MemorySize
+			}
+
 		}
 	}
 
-	// Create a new template and parse the letter into it.
-	t := template.Must(template.New("byteman rule").Parse(ruleTemplate))
-
 	buf := new(bytes.Buffer)
-	err = t.Execute(buf, attack)
+	if attack.Action != core.JVMStressAction {
+		t := template.Must(template.New("byteman rule").Parse(ruleTemplate))
+		err = t.Execute(buf, attack)
+
+	} else {
+		t := template.Must(template.New("byteman rule").Parse(stressRuleTemplate))
+		err = t.Execute(buf, attack)
+	}
+
 	if err != nil {
 		log.Error("executing template", zap.Error(err))
 		return "", err

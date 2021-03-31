@@ -29,6 +29,7 @@ const (
 	JVMLatencyAction   = "latency"
 	JVMExceptionAction = "exception"
 	JVMReturnAction    = "return"
+	JVMStressAction    = "stress"
 )
 
 type JVMCommand struct {
@@ -41,7 +42,7 @@ type JVMCommand struct {
 	// the method in Java class
 	Method string
 
-	// fault action, values can be latency, exception, return
+	// fault action, values can be latency, exception, return, stress
 	Action string
 
 	// the return value for action 'return'
@@ -53,6 +54,12 @@ type JVMCommand struct {
 	// the latency duration for action 'latency'
 	LatencyDuration string
 
+	// the CPU core number need to use, only set it when action is stress
+	CPUCount int
+
+	// the memory size need to locate, only set it whern action is stress
+	MemorySize int
+
 	// attach or agent
 	Type string
 
@@ -62,25 +69,42 @@ type JVMCommand struct {
 	// the pid of Java process which need to attach
 	Pid int
 
-	// what need to do
+	// below is only used for template
 	Do string
+
+	StressType string
+
+	StressValueName string
+
+	StressValue int
 }
 
 func (j *JVMCommand) Validate() error {
-	if len(j.Class) == 0 {
-		return errors.New("class not provided")
-	}
-
-	if len(j.Method) == 0 {
-		return errors.New("method not provided")
-	}
-
 	if len(j.Action) == 0 {
-		return errors.New("action not provided, action can be 'attach' or 'agent'")
+		return errors.New("action not provided, action can be 'latency', 'exception', 'return' or 'stress'")
+	}
+
+	if j.Action == JVMStressAction {
+		if j.CPUCount == 0 && j.MemorySize == 0 {
+			return errors.New("must set one of cpu-count and mem-size when action is 'stress'")
+		}
+
+		if j.CPUCount > 0 && j.MemorySize > 0 {
+			return errors.New("inject stress on both CPU and memory is not support now")
+		}
+	} else {
+		if len(j.Class) == 0 {
+			return errors.New("class not provided")
+		}
+
+		if len(j.Method) == 0 {
+			return errors.New("method not provided")
+		}
+
 	}
 
 	if len(j.Type) == 0 {
-		return errors.New("type not provided, type can be 'latency', 'exception' or 'return'")
+		return errors.New("type not provided, type can be 'install' or 'attach'")
 	}
 
 	if len(j.Name) == 0 {
