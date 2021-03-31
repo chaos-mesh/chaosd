@@ -1,10 +1,26 @@
 # chaosd
 
-Chaosd is an easy-to-use Chaos Engineering tool used to inject failures to a physical node.
+chaosd is an easy-to-use Chaos Engineering tool used to inject failures to a physical node. chaosd supports the following two modes to inject failures:
+
+- **Command mode** - Using chaosd as a command-line tool. Supported failure types are:
+  
+    - [Process attack](#process-attack)
+    - [Network attack](#network-attack)
+    - [Stress attack](#stress-attack)
+    - [Disk attack](#disk-attack)
+    - [Host attack](#host-attack)
+    - [Recover attack](#recover-attack)
+
+- **Server mode** - Running chaosd as a daemon server. Supported failure types are:
+    - [Process attack](#process-attack-1)
+    - [Network attack](#network-attack-1)
+    - [Stress attack](#stress-attack-1)
+    - [Disk attack](#disk-attack-1)
+    - [Recover attack](#recover-attack-1)
 
 ## Prerequisites
 
-Before deploying Chaosd, make sure the following items have been installed:
+Before deploying chaosd, make sure the following items have been installed:
 
 * [tc](https://linux.die.net/man/8/tc)
 * [ipset](https://linux.die.net/man/8/ipset)
@@ -13,158 +29,158 @@ Before deploying Chaosd, make sure the following items have been installed:
 
 ## Install
 
-### Build from source code
+You can either build directly from the source or download the binary to finish the installation.
 
-```bash
-make chaosd
-chmod +x chaosd && mv chaosd /usr/local/bin/chaosd
-```
+- Build from source code
 
-### Download binary
+    ```bash
+    make chaosd
+    chmod +x chaosd && mv chaosd /usr/local/bin/chaosd
+    ```
 
-```bash
-curl -fsSL -o chaosd https://mirrors.chaos-mesh.org/latest/chaosd
-chmod +x chaosd && mv chaosd /usr/local/bin/chaosd
-```
+- Download binary
 
-## Usage
+    ```bash
+    curl -fsSL -o chaosd https://mirrors.chaos-mesh.org/latest/chaosd
+    chmod +x chaosd && mv chaosd /usr/local/bin/chaosd
+    ```
 
-Chaosd supports two modes of failure injection:
-
--  **Command mode** - using Chaosd in the command line mode
--  **Server mode** - running Chaosd as a daemon server
-
-- [Command mode](#command-mode)
-    - [Process attack](#process-attack)
-    - [Network attack](#network-attack)
-    - [Stress attack](#stress-attack)
-    - [Disk attack](#disk-attack)
-    - [Host attack](#host-attack)
-    - [Recover attack](#recover-attack)
-- [Server mode](#server-mode)
-    - [Process attack](#process-attack-1)
-    - [Network attack](#network-attack-1)
-    - [Stress attack](#stress-attack-1)
-    - [Disk attack](#disk-attack-1)
-    - [Recover attack](#recover-attack-1)
+## Usages
 
 ### Command mode
 
-Using Chaosd as a command-line tool.
-
 #### Process attack
 
-Attack a process according to the PID or process name.
+Attacks a process according to the PID or process name. Supported tasks are:
 
-* kill process
+- **kill process** 
+  
+    Description: Kills a process by sending `SIGKILL` signal
+  
+    Sample usage:
 
-Kill a process by sending `SIGKILL` signal:
+    ```bash
+    $ chaosd attack process kill -p [pid] # set pid or pod name
+    # the generated uid is used to recover chaos attack
+    Attack network successfully, uid: 2c865e6f-299f-4adf-ab37-94dc4fb8fea6
+    ```
 
-```bash
-$ chaosd attack process kill -p [pid] # set pid or pod name
-# remember the generated uid, we need this uid to recover chaos attack
-Attack network successfully, uid: 2c865e6f-299f-4adf-ab37-94dc4fb8fea6
-```
+- **stop process**
 
-* stop process
+    Description: Kills a process by sending `SIGKILL` signal
 
-Stop a process by sending `SIGSTOP` signal:
+    Sample usage:
 
-```bash
-$ chaosd attack process stop -p [pid] # set pid or pod name
-```
+    ```bash
+    $ chaosd attack process stop -p [pid] # set pid or pod name
+    ```
 
 #### Network attack
 
-Attack the network by set the `iptables`, `ipset` and `tc`.
+Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
 
-* delay network packet
+- **delay network packet**
 
-Send message with specified latency:
+    Description: Sends messages with the specified latency:
 
-```bash
-$ chaosd attack network delay -d eth0 -i 172.16.4.4 -l 10ms
-```
+    Sample usage:
 
-* loss network packet
+    ```bash
+    $ chaosd attack network delay -d eth0 -i 172.16.4.4 -l 10ms
+    ```
 
-Drop network packets randomly:
+- **loss network packet**
 
-```bash
-$ chaosd attack network loss -d eth0 -i 172.16.4.4 --percent 50%
-```
+    Description: Drops network packets randomly
 
-* corrupt network packet
+    Sample usage:
 
-Make packet corruption:
+    ```bash
+    $ chaosd attack network loss -d eth0 -i 172.16.4.4 --percent 50%
+    ```
 
-```bash
-$ chaosd attack network corrupt -d eth0 -i 172.16.4.4 --percent 50%
-```
+- **corrupt network packet**
 
-* duplicate network packet
+    Description: Causes packet corruption
 
-Send packet duplicated:
+    Sample usage:
 
-```bash
-$ chaosd attack network duplicate -d eth0 -i 172.16.4.4 --percent 50%
-```
+    ```bash
+    $ chaosd attack network corrupt -d eth0 -i 172.16.4.4 --percent 50%
+    ```
+
+- **duplicate network packet**
+
+    Description: Sends duplicated packets
+
+    Sample usage:
+
+    ```bash
+    $ chaosd attack network duplicate -d eth0 -i 172.16.4.4 --percent 50%
+    ```
 
 #### Stress attack
 
-Generate plenty of stresses on the host:
+Generates stress on the host. Supported tasks are:
 
-* CPU stress
+- **CPU stress**
 
-Generate CPU stresses on the host:
+   Description: Generates stress on the host CPU
 
-```bash
-$ chaosd attack stress cpu -l 100 -w 2
-```
+   Sample usage:
 
-* Memory stress
+    ```bash
+    $ chaosd attack stress cpu -l 100 -w 2
+    ```
 
-Generate memory stresses on the host:
+- **Memory stress**
 
-```bash
-$ chaosd attack stress mem -w 2 # stress 2 CPU and each cpu loads 100%
-```
+   Description: Generates stress on the host memory
+
+   Sample usage:
+
+    ```bash
+    $ chaosd attack stress mem -w 2 # stress 2 CPU and each cpu loads 100%
+    ```
 
 #### Disk attack
 
-Attack the disk by increasing write/read payload, or filling the disk.
+Attacks the disk by increasing write/read payload, or filling up the disk. Supported tasks are:
 
-* Add payload
+- **add payload**
 
-Add read payload:
+    Description: Add read/write payload
 
-```bash
-./bin/chaosd attack disk add-payload read --path /tmp/temp --size 100
-```
+    Sample usage:
 
-Add write payload:
+    ```bash
+    ./bin/chaosd attack disk add-payload read --path /tmp/temp --size 100
+    ```
 
-```bash
-./bin/chaosd attack disk add-payload write --path /tmp/temp --size 100
-```
+    ```bash
+    ./bin/chaosd attack disk add-payload write --path /tmp/temp --size 100
+    ```
 
-* Fill disk
+- **fill disk**
 
-Fill disk by fallocate:
+    Description: Fills up the disk
 
-```bash
-./bin/chaosd attack disk fill --fallocate true --path /tmp/temp --size 100
-```
+    Sample usage:
 
-Fill disk by write data to file:
 
-```bash
-./bin/chaosd attack disk fill --fallocate false --path /tmp/temp --size 100
-```
+    ```bash
+    ./bin/chaosd attack disk fill --fallocate true --path /tmp/temp --size 100   //filling using fallocate
+    ```
+
+    ```bash
+    ./bin/chaosd attack disk fill --fallocate false --path /tmp/temp --size 100  //filling by writing data to files
+    ```
 
 #### Host attack
 
-Shutdown the host:
+Shuts down the host
+
+Sample usage:
 
 ```bash
 ./bin/chaosd attack host shutdown
@@ -172,11 +188,13 @@ Shutdown the host:
 
 > **Note:**
 >
-> This command will shutdown the host, make sure you know what the command means before you execute it.
+> This command will shut down the host. Be cautious when you execute it.
 
 #### Recover attack
 
-Recover a attack:
+Recovers an attack
+
+Sample usage:
 
 ```bash
 $ chaosd recover 2c865e6f-299f-4adf-ab37-94dc4fb8fea6
@@ -184,7 +202,7 @@ $ chaosd recover 2c865e6f-299f-4adf-ab37-94dc4fb8fea6
 
 ### Server Mode
 
-Run Chaosd as a daemon server:
+To enter server mode, execute the following:
 
 ```bash
 nohup ./bin/chaosd server > chaosd.log 2>&1 &
@@ -194,121 +212,138 @@ And then you can inject failures by sending HTTP requests.
 
 > **Note**:
 >
-> Make sure the user has the privileges to run iptables, ipset, etc. Or you can run chaosd with `sudo`.
+> Make sure you are operating with the privileges to run iptables, ipset, etc. Or you can run chaosd with `sudo`.
 
 #### Process attack
 
-Attack a process according to the PID or process name.
+Attacks a process according to the PID or process name. Supported tasks are:
 
-* kill process
+- **kill process**
 
-Kill a process by sending `SIGKILL` signal:
+    Description: Kills a process by sending `SIGKILL` signal
+  
+    Sample usage:
 
-```bash
-curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/json"  -d '{"process": "{pid}", "signal": 9}' # set pid or pod name
-{"status":200,"message":"attack successfully","uid":"e6d01a30-4528-4c70-b4fb-4dc47c4d39be"}
-```
+    ```bash
+    curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/json"  -d '{"process": "{pid}", "signal": 9}' # set pid or pod name
+    {"status":200,"message":"attack successfully","uid":"e6d01a30-4528-4c70-b4fb-4dc47c4d39be"}
+    ```
 
-* stop process
+- **stop process**
 
-Stop a process by sending `SIGSTOP` signal:
+    Description: Kills a process by sending `SIGKILL` signal
 
-```bash
-curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/json"  -d '{"process": "{pid}", "signal": 15}' # set pid or pod name
-{"status":200,"message":"attack successfully","uid":"ecf3f564-c4c0-4aaf-83c6-4b511a6e3a85"}
-```
+    Sample usage:
+
+    ```bash
+    curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/json"  -d '{"process": "{pid}", "signal": 15}' # set pid or pod name
+    {"status":200,"message":"attack successfully","uid":"ecf3f564-c4c0-4aaf-83c6-4b511a6e3a85"}
+    ```
 
 #### Network attack
 
-Attack the network by set the `iptables`, `ipset` and `tc`.
+Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
 
-* delay network packet
+- **delay network packet**
 
-Send message with specified latency:
+    Description: Sends messages with the specified latency
 
-```bash
-$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "delay", "latency": "10ms", "jitter": "10ms", "correlation": "0"}'
-```
+    Sample usage:
 
-* loss network packet
+    ```bash
+    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "delay", "latency": "10ms", "jitter": "10ms", "correlation": "0"}'
+    ```
 
-Drop network packets randomly:
+- **loss network packet**
 
-```bash
-$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "loss", "percent": "50", "correlation": "0"}'
-```
+    Description: Drops network packets randomly
 
-* corrupt network packet
+    Sample usage:
 
-Make packet corruption:
+    ```bash
+    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "loss", "percent": "50", "correlation": "0"}'
+    ```
 
-```bash
-$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "corrupt", "percent": "50",  "correlation": "0"}'
-```
+- **corrupt network packet**
 
-* duplicate network packet
+    Description: Causes packet corruption
 
-Send packet duplicated:
+    Sample usage:
 
-```bash
-$ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "duplicate", "percent": "50", "correlation": "0"}'
-```
+    ```bash
+    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "corrupt", "percent": "50",  "correlation": "0"}'
+    ```
+
+- **duplicate network packet**
+
+    Description: Sends duplicated packets
+
+    Sample usage:
+
+    ```bash
+    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "duplicate", "percent": "50", "correlation": "0"}'
+    ```
 
 #### Stress attack
 
-Generate plenty of stresses on the host:
+Generates stress on the host. Supported tasks are:
 
-* CPU stress
+- **CPU stress**
 
-Generate CPU stresses on the host:
+   Description: Generates stress on the host CPU
 
-```bash
-$ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"cpu", "load": 100, "worker": 2}'
-```
+   Sample usage:
 
-* Memory stress
+    ```bash
+    $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"cpu", "load": 100, "worker": 2}'
+    ```
 
-Generate memory stresses on the host:
+- **Memory stress**
 
-```bash
-$ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"mem", "worker": 2}'
-```
+   Description: Generates stress on the host memory
+
+   Sample usage:
+
+    ```bash
+    $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"mem", "worker": 2}'
+    ```
 
 #### Disk attack
 
-Attack the disk by increasing write/read payload, or filling the disk.
+Attacks the disk by increasing write/read payload, or filling up the disk. Supported tasks are:
 
-* Add payload
+- Add payload
 
-Add read payload:
+    Description: Add read/write payload
 
-```bash
-curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"read-payload","size":1024,"path":"temp"}'
-```
+    Sample usage:
 
-Add write payload:
+    ```bash
+    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"read-payload","size":1024,"path":"temp"}'
 
-```bash
-curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"write-payload","size":1024,"path":"temp"}'
-```
+    ```bash
+    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"write-payload","size":1024,"path":"temp"}'
+    ```
 
-* Fill disk
+- Fill disk
 
-Fill disk by fallocate:
+    Description: Fills up the disk
 
-```bash
-curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill_by_fallocate": true}'
-```
+    Sample usage:
 
-Fill disk by write data to file:
+    ```bash
+    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill_by_fallocate": true}' //filling using fallocate
+    ```
 
-```bash
-curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill_by_fallocate": false}'
-```
+    ```bash
+    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill_by_fallocate": false}' //filling by writing data to files
+    ```
 
 #### Recover attack
 
-Recover a attack:
+Recovers an attack
+
+Sample usage:
 
 ```bash
 $ curl -X DELETE "127.0.0.1:31767/api/attack/20df86e9-96e7-47db-88ce-dd31bc70c4f0"
