@@ -61,7 +61,7 @@ func NewJVMInstallRuleCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&jvmFlag.Name, "name", "n", "", "rule name, should be unique, and will generate one automatically if it is empty")
 	cmd.Flags().StringVarP(&jvmFlag.Class, "class", "c", "", "Java class name")
 	cmd.Flags().StringVarP(&jvmFlag.Method, "method", "m", "", "the method name in Java class")
-	cmd.Flags().StringVarP(&jvmFlag.Action, "action", "a", "", "fault action, values can be latency, exception, return")
+	cmd.Flags().StringVarP(&jvmFlag.Action, "action", "a", "", "fault action, values can be latency, exception, return or stress")
 	cmd.Flags().IntVarP(&jvmFlag.Port, "port", "", 9288, "the port of agent server")
 	cmd.Flags().StringVarP(&jvmFlag.ReturnValue, "value", "", "", "the return value for action 'return'")
 	cmd.Flags().StringVarP(&jvmFlag.ThrowException, "exception", "", "", "the exception which needs to throw for action 'exception'")
