@@ -67,7 +67,7 @@ Attacks a process according to the PID or process name. Supported tasks are:
 
 - **stop process**
 
-    Description: Kills a process by sending `SIGKILL` signal
+    Description: Kills a process by sending the `SIGKILL` signal
 
     Sample usage:
 
