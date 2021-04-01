@@ -46,7 +46,7 @@ func NewProcessKillCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&pFlag.Process, "process", "p", "", "The process name or the process ID")
-	cmd.Flags().IntVarP(&pFlag.Signal, "single", "s", 9, "The signal number to send")
+	cmd.Flags().IntVarP(&pFlag.Signal, "signal", "s", 9, "The signal number to send")
 
 	return cmd
 }
