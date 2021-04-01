@@ -254,7 +254,7 @@ Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
     $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "delay", "latency": "10ms", "jitter": "10ms", "correlation": "0"}'
     ```
 
-- **loss network packet**
+- **lose network packet**
 
     Description: Drops network packets randomly
 
