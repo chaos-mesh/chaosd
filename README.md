@@ -1,6 +1,6 @@
 # chaosd
 
-chaosd is an easy-to-use Chaos Engineering tool used to inject failures to a physical node. chaosd supports the following two modes to inject failures:
+chaosd is an easy-to-use Chaos Engineering tool used to inject failures to a physical node. Currently, two modes are supported:
 
 - **Command mode** - Using chaosd as a command-line tool. Supported failure types are:
   
@@ -55,7 +55,7 @@ Attacks a process according to the PID or process name. Supported tasks are:
 
 - **kill process** 
   
-    Description: Kills a process by sending `SIGKILL` signal
+    Description: Kills a process by sending the `SIGKILL` signal
   
     Sample usage:
 
@@ -81,7 +81,7 @@ Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
 
 - **delay network packet**
 
-    Description: Sends messages with the specified latency:
+    Description: Sends messages with the specified latency
 
     Sample usage:
 
@@ -89,7 +89,7 @@ Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
     $ chaosd attack network delay -d eth0 -i 172.16.4.4 -l 10ms
     ```
 
-- **loss network packet**
+- **lose network packet**
 
     Description: Drops network packets randomly
 
@@ -220,7 +220,7 @@ Attacks a process according to the PID or process name. Supported tasks are:
 
 - **kill process**
 
-    Description: Kills a process by sending `SIGKILL` signal
+    Description: Kills a process by sending the `SIGKILL` signal
   
     Sample usage:
 
@@ -231,7 +231,7 @@ Attacks a process according to the PID or process name. Supported tasks are:
 
 - **stop process**
 
-    Description: Kills a process by sending `SIGKILL` signal
+    Description: Kills a process by sending the `SIGKILL` signal
 
     Sample usage:
 
