@@ -77,7 +77,7 @@ func WriteDiskPayloadCommandFunc(cmd *cobra.Command, args []string) {
 	}
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.ProcessAttack(chaosd.DiskAttack, &dFlag)
+	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, &dFlag)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
@@ -108,7 +108,7 @@ func ReadDiskPayloadCommandFunc(cmd *cobra.Command, args []string) {
 	}
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.ProcessAttack(chaosd.DiskAttack, &dFlag)
+	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, &dFlag)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
@@ -140,7 +140,7 @@ func DiskFillCommandFunc(cmd *cobra.Command, args []string) {
 	}
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.ProcessAttack(chaosd.DiskAttack, &dFlag)
+	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, &dFlag)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}

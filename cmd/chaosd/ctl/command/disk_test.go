@@ -64,7 +64,7 @@ func TestServer_DiskFill(t *testing.T) {
 			if f != nil {
 				_ = f.Close()
 			}
-			_, err = s.ProcessAttack(chaosd.DiskAttack, tt.fill)
+			_, err = s.ExecuteAttack(chaosd.DiskAttack, tt.fill)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DiskFill() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -125,7 +125,7 @@ func TestServer_DiskPayload(t *testing.T) {
 				_ = f.Close()
 			}
 
-			_, err = s.ProcessAttack(chaosd.DiskAttack, &core.DiskCommand{
+			_, err = s.ExecuteAttack(chaosd.DiskAttack, &core.DiskCommand{
 				CommonAttackConfig: core.CommonAttackConfig{
 					Action: core.DiskFillAction,
 					Kind:   core.DiskAttack,
@@ -134,7 +134,7 @@ func TestServer_DiskPayload(t *testing.T) {
 				Path:            "temp",
 				FillByFallocate: true,
 			})
-			_, err = s.ProcessAttack(chaosd.DiskAttack, tt.command)
+			_, err = s.ExecuteAttack(chaosd.DiskAttack, tt.command)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DiskPayload() error = %v, wantErr %v", err, tt.wantErr)
 				return

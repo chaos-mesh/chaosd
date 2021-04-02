@@ -63,7 +63,7 @@ func hostAttackF(cmd *cobra.Command, f *core.HostCommand) {
 
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.ProcessAttack(chaosd.HostAttack, *f)
+	uid, err := chaos.ExecuteAttack(chaosd.HostAttack, *f)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}

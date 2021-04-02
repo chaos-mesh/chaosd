@@ -90,7 +90,7 @@ func stressAttackF(cmd *cobra.Command, s *core.StressCommand) {
 
 	chaos := mustChaosdFromCmd(cmd, &conf)
 
-	uid, err := chaos.ProcessAttack(chaosd.StressAttack, s)
+	uid, err := chaos.ExecuteAttack(chaosd.StressAttack, s)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
