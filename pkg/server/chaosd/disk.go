@@ -20,8 +20,10 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
+	"github.com/minio/minio/pkg/disk"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
@@ -62,7 +64,7 @@ func (s *Server) DiskPayload(payload *core.DiskCommand) (uid string, err error) 
 		if payload.Path == "" {
 			payload.Path = "/dev/null"
 		}
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDWritePayloadCommand, payload.Path, "1M", strconv.FormatUint(payload.Size, 10)))
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDWritePayloadCommand, payload.Path, "1M", payload.Size))
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
@@ -77,7 +79,7 @@ func (s *Server) DiskPayload(payload *core.DiskCommand) (uid string, err error) 
 			log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
 			return uid, err
 		}
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, payload.Path, "1M", strconv.FormatUint(payload.Size, 10)))
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, payload.Path, "1M", payload.Size))
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
@@ -150,11 +152,34 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 	}
 
 	var cmd *exec.Cmd
+	if fill.Size != "" {
+		fill.Size = strings.Trim(fill.Size, " ")
+	} else if fill.Percent != "" {
+		fill.Percent = strings.Trim(fill.Percent, " ")
+		percent, err := strconv.ParseUint(fill.Percent, 10, 0)
+		if err != nil {
+			log.Error(fmt.Sprintf(" unexcepted err when parsing disk percent '%s'", fill.Percent), zap.Error(err))
+			return uid, err
+		}
+		dir, err := os.Getwd()
+		if err != nil {
+			log.Error(fmt.Sprintf("unexpected err when using os.Getwd"), zap.Error(err))
+			return uid, err
+		}
+		di, err := disk.GetInfo(dir)
+		if err != nil {
+			log.Error(fmt.Sprintf("unexpected err when using disk.GetInfo"), zap.Error(err))
+			return uid, err
+		}
+		totalM := di.Total / 1024 / 1024
+		fill.Size = strconv.FormatUint(totalM*percent/100, 10)
+	}
+
 	if fill.FillByFallocate {
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFallocateCommand, strconv.FormatUint(fill.Size, 10), fill.Path))
+		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFallocateCommand, fill.Size, fill.Path))
 	} else {
 		//1M means the block size. The bytes size dd read | write is (block size) * (size).
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
+		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, "1M", fill.Size))
 	}
 
 	output, err := cmd.CombinedOutput()
