@@ -32,7 +32,7 @@ type DiskCommand struct {
 	FillByFallocate bool   `json:"fill_by_fallocate"`
 }
 
-var _ AttackConfig = DiskCommand{}
+var _ AttackConfig = &DiskCommand{}
 
 func (d DiskCommand) Validate() error {
 	if d.Action == DiskFillAction || d.Action == DiskWritePayloadAction || d.Action == DiskReadPayloadAction {
@@ -45,4 +45,12 @@ func (d DiskCommand) RecoverData() string {
 	data, _ := json.Marshal(d)
 
 	return string(data)
+}
+
+func NewDiskCommand() *DiskCommand {
+	return &DiskCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: DiskAttack,
+		},
+	}
 }

@@ -17,34 +17,44 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/fx"
+
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
+type recoverCommand struct {
+	uid string
+}
+
 func NewRecoverCommand() *cobra.Command {
+	options := &recoverCommand{}
+	dep := fx.Options(
+		Module,
+		fx.Provide(func() *recoverCommand {
+			return options
+		}),
+	)
+
 	cmd := &cobra.Command{
 		Use:   "recover UID",
 		Short: "Recover a chaos experiment",
 		Args:  cobra.MinimumNArgs(1),
-		Run:   recoverCommandF,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				ExitWithMsg(ExitBadArgs, "UID is required")
+			}
+			options.uid = args[0]
+			fx.New(dep, fx.Invoke(recoverCommandF)).Run()
+		},
 	}
-
-	cmd.Flags().StringVarP(&conf.Runtime, "runtime", "r", "docker", "current container runtime")
-	cmd.Flags().StringVarP(&conf.Platform, "platform", "f", "local", "platform to deploy, default: local, supported platform: local, kubernetes")
-
 	return cmd
 }
 
-func recoverCommandF(cmd *cobra.Command, args []string) {
-	if len(args) == 0 {
-		ExitWithMsg(ExitBadArgs, "UID is required")
-	}
-	uid := args[0]
-
-	chaos := mustChaosdFromCmd(cmd, &conf)
-
-	err := chaos.RecoverAttack(uid)
+func recoverCommandF(chaos *chaosd.Server, options *recoverCommand) {
+	err := chaos.RecoverAttack(options.uid)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Recover %s successfully", uid))
+	NormalExit(fmt.Sprintf("Recover %s successfully", options.uid))
 }

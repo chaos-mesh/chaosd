@@ -23,6 +23,9 @@ type AttackConfig interface {
 
 	// AttackKind returns the kind of attack
 	AttackKind() string
+
+	// CompleteDefaults is used to fill flags with default values
+	CompleteDefaults()
 }
 
 type SchedulerConfig struct {
@@ -48,3 +51,6 @@ func (config CommonAttackConfig) String() string {
 func (config CommonAttackConfig) AttackKind() string {
 	return config.Kind
 }
+
+// CompleteDefaults no-op implementation
+func (config *CommonAttackConfig) CompleteDefaults() {}

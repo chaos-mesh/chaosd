@@ -42,7 +42,7 @@ type NetworkCommand struct {
 	Hostname    string
 }
 
-var _ AttackConfig = NetworkCommand{}
+var _ AttackConfig = &NetworkCommand{}
 
 const (
 	NetworkDelayAction     = "delay"
@@ -116,7 +116,16 @@ func (n *NetworkCommand) validNetworkCommon() error {
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
 }
 
-func (n *NetworkCommand) SetDefaultForNetworkDelay() {
+func (n *NetworkCommand) CompleteDefaults() {
+	switch n.Action {
+	case NetworkDelayAction:
+		n.setDefaultForNetworkDelay()
+	case NetworkLossAction:
+		n.setDefaultForNetworkLoss()
+	}
+}
+
+func (n *NetworkCommand) setDefaultForNetworkDelay() {
 	if len(n.Jitter) == 0 {
 		n.Jitter = "0ms"
 	}
@@ -126,7 +135,7 @@ func (n *NetworkCommand) SetDefaultForNetworkDelay() {
 	}
 }
 
-func (n *NetworkCommand) SetDefaultForNetworkLoss() {
+func (n *NetworkCommand) setDefaultForNetworkLoss() {
 	if len(n.Correlation) == 0 {
 		n.Correlation = "0"
 	}
@@ -324,4 +333,12 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 
 func (n *NetworkCommand) ToChain() (*pb.Chain, error) {
 	return nil, nil
+}
+
+func NewNetworkCommand() *NetworkCommand {
+	return &NetworkCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: NetworkAttack,
+		},
+	}
 }

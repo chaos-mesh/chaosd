@@ -17,129 +17,142 @@ import (
 	"os"
 	"testing"
 
+	"go.uber.org/fx"
+	"go.uber.org/fx/fxtest"
+
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
+type diskTest struct {
+	name    string
+	command *core.DiskCommand
+	wantErr bool
+}
+
 func TestServer_DiskFill(t *testing.T) {
-	s := mustChaosdFromCmd(nil, &conf)
-	tests := []struct {
-		name    string
-		fill    *core.DiskCommand
-		wantErr bool
-	}{
-		{
-			name: "0",
-			fill: &core.DiskCommand{
-				CommonAttackConfig: core.CommonAttackConfig{
-					Action: core.DiskFillAction,
-					Kind:   core.DiskAttack,
+	fxtest.New(
+		t,
+		Module,
+		fx.Provide(func() []diskTest {
+			return []diskTest{
+				{
+					name: "0",
+					command: &core.DiskCommand{
+						CommonAttackConfig: core.CommonAttackConfig{
+							Action: core.DiskFillAction,
+							Kind:   core.DiskAttack,
+						},
+						Size:            1024,
+						Path:            "temp",
+						FillByFallocate: true,
+					},
+					wantErr: false,
+				}, {
+					name: "1",
+					command: &core.DiskCommand{
+						CommonAttackConfig: core.CommonAttackConfig{
+							Action: core.DiskFillAction,
+							Kind:   core.DiskAttack,
+						},
+						Size:            24,
+						Path:            "temp",
+						FillByFallocate: false,
+					},
+					wantErr: false,
 				},
-				Size:            1024,
-				Path:            "temp",
-				FillByFallocate: true,
-			},
-			wantErr: false,
-		}, {
-			name: "1",
-			fill: &core.DiskCommand{
-				CommonAttackConfig: core.CommonAttackConfig{
-					Action: core.DiskFillAction,
-					Kind:   core.DiskAttack,
-				},
-				Size:            24,
-				Path:            "temp",
-				FillByFallocate: false,
-			},
-			wantErr: false,
-		},
-	}
+			}
+		}),
+		fx.Invoke(func(s *chaosd.Server, tests []diskTest) {
+			for _, tt := range tests {
+				t.Run(tt.name, func(t *testing.T) {
+					f, err := os.Create(tt.command.Path)
+					if err != nil {
+						t.Errorf("unexpected err %v when creating temp file", err)
+					}
+					if f != nil {
+						_ = f.Close()
+					}
+					_, err = s.ExecuteAttack(chaosd.DiskAttack, tt.command)
+					if (err != nil) != tt.wantErr {
+						t.Errorf("DiskFill() error = %v, wantErr %v", err, tt.wantErr)
+						return
+					}
+					stat, err := os.Stat(tt.command.Path)
+					if err != nil {
+						t.Errorf("unexpected err %v when stat temp file", err)
+					}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			f, err := os.Create(tt.fill.Path)
-			if err != nil {
-				t.Errorf("unexpected err %v when creating temp file", err)
+					if uint64(stat.Size()) != tt.command.Size*1024*1024 {
+						t.Errorf("DiskFill() size %v, expect %d", stat.Size(), tt.command.Size*1024*1024)
+						return
+					}
+					os.Remove(tt.command.Path)
+				})
 			}
-			if f != nil {
-				_ = f.Close()
-			}
-			_, err = s.ExecuteAttack(chaosd.DiskAttack, tt.fill)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("DiskFill() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			stat, err := os.Stat(tt.fill.Path)
-			if err != nil {
-				t.Errorf("unexpected err %v when stat temp file", err)
-			}
-
-			if uint64(stat.Size()) != tt.fill.Size*1024*1024 {
-				t.Errorf("DiskFill() size %v, expect %d", stat.Size(), tt.fill.Size*1024*1024)
-				return
-			}
-			os.Remove(tt.fill.Path)
-		})
-	}
+		}),
+	)
 }
 
 func TestServer_DiskPayload(t *testing.T) {
-	s := mustChaosdFromCmd(nil, &conf)
-	tests := []struct {
-		name    string
-		command *core.DiskCommand
-		wantErr bool
-	}{
-		{
-			name: "0",
-			command: &core.DiskCommand{
-				CommonAttackConfig: core.CommonAttackConfig{
-					Action: core.DiskWritePayloadAction,
-					Kind:   core.DiskAttack,
+	fxtest.New(
+		t,
+		Module,
+		fx.Provide(func() []diskTest {
+			return []diskTest{
+				{
+					name: "0",
+					command: &core.DiskCommand{
+						CommonAttackConfig: core.CommonAttackConfig{
+							Action: core.DiskWritePayloadAction,
+							Kind:   core.DiskAttack,
+						},
+						Size: 24,
+						Path: "temp",
+					},
+					wantErr: false,
+				}, {
+					name: "1",
+					command: &core.DiskCommand{
+						CommonAttackConfig: core.CommonAttackConfig{
+							Action: core.DiskReadPayloadAction,
+							Kind:   core.DiskAttack,
+						},
+						Size: 24,
+						Path: "temp",
+					},
+					wantErr: false,
 				},
-				Size: 24,
-				Path: "temp",
-			},
-			wantErr: false,
-		}, {
-			name: "1",
-			command: &core.DiskCommand{
-				CommonAttackConfig: core.CommonAttackConfig{
-					Action: core.DiskReadPayloadAction,
-					Kind:   core.DiskAttack,
-				},
-				Size: 24,
-				Path: "temp",
-			},
-			wantErr: false,
-		},
-	}
+			}
+		}),
+		fx.Invoke(func(s *chaosd.Server, tests []diskTest) {
+			for _, tt := range tests {
+				t.Run(tt.name, func(t *testing.T) {
+					f, err := os.Create(tt.command.Path)
+					if err != nil {
+						t.Errorf("unexpected err %v when creating temp file", err)
+					}
+					if f != nil {
+						_ = f.Close()
+					}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			f, err := os.Create(tt.command.Path)
-			if err != nil {
-				t.Errorf("unexpected err %v when creating temp file", err)
+					_, err = s.ExecuteAttack(chaosd.DiskAttack, &core.DiskCommand{
+						CommonAttackConfig: core.CommonAttackConfig{
+							Action: core.DiskFillAction,
+							Kind:   core.DiskAttack,
+						},
+						Size:            tt.command.Size,
+						Path:            "temp",
+						FillByFallocate: true,
+					})
+					_, err = s.ExecuteAttack(chaosd.DiskAttack, tt.command)
+					if (err != nil) != tt.wantErr {
+						t.Errorf("DiskPayload() error = %v, wantErr %v", err, tt.wantErr)
+						return
+					}
+					os.Remove(tt.command.Path)
+				})
 			}
-			if f != nil {
-				_ = f.Close()
-			}
-
-			_, err = s.ExecuteAttack(chaosd.DiskAttack, &core.DiskCommand{
-				CommonAttackConfig: core.CommonAttackConfig{
-					Action: core.DiskFillAction,
-					Kind:   core.DiskAttack,
-				},
-				Size:            tt.command.Size,
-				Path:            "temp",
-				FillByFallocate: true,
-			})
-			_, err = s.ExecuteAttack(chaosd.DiskAttack, tt.command)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("DiskPayload() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			os.Remove(tt.command.Path)
-		})
-	}
+		}),
+	)
 }

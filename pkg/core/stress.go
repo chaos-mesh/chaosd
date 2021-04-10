@@ -36,7 +36,7 @@ type StressCommand struct {
 	StressngPid int32
 }
 
-var _ AttackConfig = StressCommand{}
+var _ AttackConfig = &StressCommand{}
 
 func (s StressCommand) Validate() error {
 	if len(s.Action) == 0 {
@@ -50,4 +50,12 @@ func (s StressCommand) RecoverData() string {
 	data, _ := json.Marshal(s)
 
 	return string(data)
+}
+
+func NewStressCommand() *StressCommand {
+	return &StressCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: StressAttack,
+		},
+	}
 }

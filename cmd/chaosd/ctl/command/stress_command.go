@@ -17,83 +17,79 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/fx"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
-var stFlag = core.StressCommand{
-	CommonAttackConfig: core.CommonAttackConfig{
-		Kind: core.StressAttack,
-	},
-}
-
 func NewStressAttackCommand() *cobra.Command {
+	options := core.NewStressCommand()
+	dep := fx.Options(
+		Module,
+		fx.Provide(func() *core.StressCommand {
+			return options
+		}),
+	)
+
 	cmd := &cobra.Command{
 		Use:   "stress <subcommand>",
 		Short: "Stress attack related commands",
 	}
 
 	cmd.AddCommand(
-		NewStressCPUCommand(),
-		NewStressMemCommand(),
+		NewStressCPUCommand(dep, options),
+		NewStressMemCommand(dep, options),
 	)
 
 	return cmd
 }
 
-func NewStressCPUCommand() *cobra.Command {
+func NewStressCPUCommand(dep fx.Option, options *core.StressCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cpu [options]",
 		Short: "continuously stress CPU out",
-		Run:   stressCPUCommandFunc,
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.StressCPUAction
+			fx.New(dep, fx.Invoke(stressAttackF)).Run()
+		},
 	}
 
-	cmd.Flags().IntVarP(&stFlag.Load, "load", "l", 10, "Load specifies P percent loading per CPU worker. 0 is effectively a sleep (no load) and 100 is full loading.")
-	cmd.Flags().IntVarP(&stFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
-	cmd.Flags().StringSliceVarP(&stFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
-	commonFlags(cmd, &stFlag.CommonAttackConfig)
+	cmd.Flags().IntVarP(&options.Load, "load", "l", 10, "Load specifies P percent loading per CPU worker. 0 is effectively a sleep (no load) and 100 is full loading.")
+	cmd.Flags().IntVarP(&options.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
+	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "extend stress-ng options.")
+	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
-func NewStressMemCommand() *cobra.Command {
+func NewStressMemCommand(dep fx.Option, options *core.StressCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mem [options]",
 		Short: "continuously stress virtual memory out",
-
-		Run: stressMemCommandFunc,
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.StressMemAction
+			fx.New(dep, fx.Invoke(stressAttackF)).Run()
+		},
 	}
 
-	cmd.Flags().IntVarP(&stFlag.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
-	cmd.Flags().StringVarP(&stFlag.Size, "size", "s", "", "Size specifies N bytes consumed per vm worker, default is the total available memory. One can specify the size as % of total available memory or in units of B, KB/KiB, MB/MiB, GB/GiB, TB/TiB..")
-	cmd.Flags().StringSliceVarP(&stFlag.Options, "options", "o", []string{}, "extend stress-ng options.")
-	commonFlags(cmd, &stFlag.CommonAttackConfig)
+	cmd.Flags().IntVarP(&options.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
+	cmd.Flags().StringVarP(&options.Size, "size", "s", "", "Size specifies N bytes consumed per vm worker, default is the total available memory. One can specify the size as % of total available memory or in units of B, KB/KiB, MB/MiB, GB/GiB, TB/TiB..")
+	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "extend stress-ng options.")
+	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
-func stressCPUCommandFunc(cmd *cobra.Command, args []string) {
-	stFlag.Action = core.StressCPUAction
-	stressAttackF(cmd, &stFlag)
-}
-
-func stressMemCommandFunc(cmd *cobra.Command, args []string) {
-	stFlag.Action = core.StressMemAction
-	stressAttackF(cmd, &stFlag)
-}
-
-func stressAttackF(cmd *cobra.Command, s *core.StressCommand) {
-	if err := stFlag.Validate(); err != nil {
+func stressAttackF(chaos *chaosd.Server, options *core.StressCommand) {
+	if err := options.Validate(); err != nil {
 		ExitWithError(ExitBadArgs, err)
 	}
 
-	chaos := mustChaosdFromCmd(cmd, &conf)
-
-	uid, err := chaos.ExecuteAttack(chaosd.StressAttack, s)
+	uid, err := chaos.ExecuteAttack(chaosd.StressAttack, options)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Attack stress %s successfully, uid: %s", s.Action, uid))
+	NormalExit(fmt.Sprintf("Attack stress %s successfully, uid: %s", options.Action, uid))
 }

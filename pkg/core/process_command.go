@@ -24,7 +24,7 @@ const (
 	ProcessStopAction = "stop"
 )
 
-var _ AttackConfig = ProcessCommand{}
+var _ AttackConfig = &ProcessCommand{}
 
 type ProcessCommand struct {
 	CommonAttackConfig
@@ -55,4 +55,12 @@ func (p ProcessCommand) RecoverData() string {
 	data, _ := json.Marshal(p)
 
 	return string(data)
+}
+
+func NewProcessCommand() *ProcessCommand {
+	return &ProcessCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: ProcessAttack,
+		},
+	}
 }
