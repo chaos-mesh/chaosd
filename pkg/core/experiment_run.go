@@ -16,6 +16,14 @@ package core
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
+)
+
+const (
+	RunStarted = "started"
+	RunFailed  = "failed"
+	RunSuccess = "success"
 )
 
 // ExperimentRunStore defines operations for working with experiment runs
@@ -24,6 +32,8 @@ type ExperimentRunStore interface {
 	ListByExperimentUID(ctx context.Context, uid string) ([]*ExperimentRun, error)
 	LatestRun(ctx context.Context, id uint) (*ExperimentRun, error)
 
+	NewRun(ctx context.Context, expRun *ExperimentRun) error
+	Update(ctx context.Context, runUid string, status string, message string) error
 	// TODO: experiment run creation and updation
 }
 
@@ -31,10 +41,18 @@ type ExperimentRunStore interface {
 type ExperimentRun struct {
 	ID           uint      `gorm:"primary_key" json:"id"`
 	UID          string    `gorm:"index:uid" json:"uid"`
-	StartAt      time.Time `json:"start_at"`
+	StartAt      time.Time `gorm:"autoCreateTime" json:"start_at"`
 	FinishedAt   time.Time `json:"finished_at"`
 	Status       string    `json:"status"`
 	Message      string    `json:"error"`
 	ExperimentID uint
 	Experiment   Experiment `gorm:"foreignKey:ExperimentID" json:"experiment"`
+}
+
+func (exp Experiment) NewRun() *ExperimentRun {
+	return &ExperimentRun{
+		ExperimentID: exp.ID,
+		UID:          uuid.New().String(),
+		Status:       RunStarted,
+	}
 }

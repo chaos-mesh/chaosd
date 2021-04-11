@@ -38,7 +38,7 @@ func (s *Server) RecoverAttack(uid string) error {
 		return perr.Errorf("can not recover %s experiment", exp.Status)
 	}
 
-	if len(exp.Cron) > 0 {
+	if exp.Status == core.Scheduled {
 		if err = s.Cron.Remove(exp.ID); err != nil {
 			return perr.WithMessage(err, "failed to remove scheduled task")
 		}
@@ -63,6 +63,7 @@ func (s *Server) RecoverAttack(uid string) error {
 	}
 
 	env := s.newEnvironment(uid)
+	// TODO: In case a scheduled cron is running right now, recovery may lead system to an unknown state
 	if err = attackType.Recover(*exp, env); err != nil {
 		if errorx.IsOfType(err, core.ErrNonRecoverableAttack) {
 			log.Warn(err.Error(), zap.String("uid", uid), zap.String("kind", exp.Kind))

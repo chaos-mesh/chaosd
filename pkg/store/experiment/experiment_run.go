@@ -72,3 +72,15 @@ func (store *experimentRunStore) LatestRun(ctx context.Context, id uint) (*core.
 
 	return run, nil
 }
+
+func (store *experimentRunStore) NewRun(_ context.Context, expRun *core.ExperimentRun) error {
+	return store.db.Model(core.ExperimentRun{}).Save(expRun).Error
+}
+
+func (store *experimentRunStore) Update(_ context.Context, runUid string, status string, message string) error {
+	return store.db.
+		Model(core.ExperimentRun{}).
+		Where("uid = ?", runUid).
+		Updates(core.Experiment{Status: status, Message: message}).
+		Error
+}

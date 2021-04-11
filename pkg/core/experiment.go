@@ -15,7 +15,10 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"time"
+
+	perr "github.com/pkg/errors"
 )
 
 const (
@@ -59,5 +62,33 @@ type Experiment struct {
 	Action         string `json:"action"`
 	RecoverCommand string `json:"recover_command"`
 
-	Cron string `json:"cron"`
+	cachedRequestCommand AttackConfig
+}
+
+func (exp *Experiment) GetRequestCommand() (AttackConfig, error) {
+	if exp.cachedRequestCommand != nil {
+		return exp.cachedRequestCommand, nil
+	}
+
+	var attackConfig AttackConfig
+	switch exp.Kind {
+	case ProcessAttack:
+		attackConfig = &ProcessCommand{}
+	case NetworkAttack:
+		attackConfig = &NetworkCommand{}
+	case HostAttack:
+		attackConfig = &HostCommand{}
+	case StressAttack:
+		attackConfig = &StressCommand{}
+	case DiskAttack:
+		attackConfig = &DiskCommand{}
+	default:
+		return nil, perr.Errorf("chaos experiment kind %s not found", exp.Kind)
+	}
+
+	if err := json.Unmarshal([]byte(exp.RecoverCommand), attackConfig); err != nil {
+		return nil, err
+	}
+	exp.cachedRequestCommand = attackConfig
+	return attackConfig, nil
 }
