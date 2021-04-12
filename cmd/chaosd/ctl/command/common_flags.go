@@ -19,7 +19,6 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-func commonFlags(cmd *cobra.Command, flag *core.CommonAttackConfig) {
-	cmd.Flags().StringVarP(&flag.Schedule, "cron", "", "", "Specify crontab-compatible expression to schedule the attack")
-	cmd.Flags().StringVarP(&flag.Duration, "duration", "", "", "Specify how long the experiment run every scheduled run")
+// commonFlags adds common flags/options for attack commands.
+func commonFlags(cmd *cobra.Command, options *core.CommonAttackConfig) {
 }
