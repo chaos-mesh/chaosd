@@ -57,7 +57,7 @@ type JVMCommand struct {
 	// the CPU core number need to use, only set it when action is stress
 	CPUCount int
 
-	// the memory size need to locate, only set it whern action is stress
+	// the memory size need to locate, only set it when action is stress
 	MemorySize int
 
 	// attach or agent
