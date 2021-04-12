@@ -69,6 +69,7 @@ func TestServer_DiskFill(t *testing.T) {
 					f, err := os.Create(tt.command.Path)
 					if err != nil {
 						t.Errorf("unexpected err %v when creating temp file", err)
+						return
 					}
 					if f != nil {
 						_ = f.Close()
@@ -81,6 +82,7 @@ func TestServer_DiskFill(t *testing.T) {
 					stat, err := os.Stat(tt.command.Path)
 					if err != nil {
 						t.Errorf("unexpected err %v when stat temp file", err)
+						return
 					}
 
 					if uint64(stat.Size()) != tt.command.Size*1024*1024 {
@@ -131,6 +133,7 @@ func TestServer_DiskPayload(t *testing.T) {
 					f, err := os.Create(tt.command.Path)
 					if err != nil {
 						t.Errorf("unexpected err %v when creating temp file", err)
+						return
 					}
 					if f != nil {
 						_ = f.Close()

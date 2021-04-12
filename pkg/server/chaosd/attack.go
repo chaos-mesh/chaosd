@@ -41,6 +41,10 @@ func (s *Server) newEnvironment(uid string) Environment {
 	}
 }
 
+// ExecuteAttack creates a new Experiment record and may schedule/execute
+// an attack for the given attackType.
+// If options.Schedule isn't provided, then the attack is executed immediately.
+// Otherwise the attack is scheduled based on the provided schedule spec and duration.
 func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig) (uid string, err error) {
 	if err = options.Validate(); err != nil {
 		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")

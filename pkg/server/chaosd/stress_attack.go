@@ -15,6 +15,7 @@ package chaosd
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"syscall"
 
@@ -55,7 +56,7 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 
 	errs := stressors.Validate(field.NewPath("stressors"))
 	if len(errs) > 0 {
-		return "", errors.New(errs.ToAggregate().Error())
+		return errors.New(errs.ToAggregate().Error())
 	}
 
 	stressorsStr, err := stressors.Normalize()
