@@ -2,7 +2,8 @@ module github.com/chaos-mesh/chaosd
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20201225074538-d531882d632a
+	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20210329064057-23471399d8f4
+	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0
 	github.com/containerd/containerd v1.2.3
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0
 	github.com/gin-gonic/gin v1.6.3
@@ -36,6 +37,8 @@ require (
 )
 
 replace (
+	// github.com/chaos-mesh/chaos-mesh require /api/v1alpha1 v0.0.0, but v0.0.0 can not be found, so use replace here
+	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 => github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0-20210329070828-9be168b2b489
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.17.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.0

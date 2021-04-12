@@ -32,6 +32,8 @@ type StressCommand struct {
 
 	Workers int
 
+	Size string
+
 	Options []string
 
 	Duration time.Duration

@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap/log"
 	"github.com/shirou/gopsutil/process"
 	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -71,8 +72,14 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 			Stressor: v1alpha1.Stressor{
 				Workers: attack.Workers,
 			},
+			Size:    attack.Size,
 			Options: attack.Options,
 		}
+	}
+
+	errs := stressors.Validate(field.NewPath("stressors"))
+	if len(errs) > 0 {
+		return "", errors.New(errs.ToAggregate().Error())
 	}
 
 	stressorsStr, err := stressors.Normalize()
