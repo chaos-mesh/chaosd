@@ -14,12 +14,7 @@
 package chaosd
 
 import (
-	"context"
-
-	"github.com/google/uuid"
-	"github.com/pingcap/errors"
-	"github.com/pingcap/log"
-	"go.uber.org/zap"
+	perr "github.com/pkg/errors"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -29,35 +24,17 @@ type HostManager interface {
 	Shutdown() error
 }
 
-func (s *Server) HostAttack(attack *core.HostCommand) (uid string, err error) {
-	uid = uuid.New().String()
+type hostAttack struct{}
 
-	if err = s.exp.Set(context.Background(), &core.Experiment{
-		Uid:            uid,
-		Status:         core.Created,
-		Kind:           core.HostAttack,
-		Action:         attack.Action,
-		RecoverCommand: attack.String(),
-	}); err != nil {
-		err = errors.WithStack(err)
-		return
+var HostAttack AttackType = hostAttack{}
+
+func (hostAttack) Attack(options core.AttackConfig, _ Environment) error {
+	if err := Host.Shutdown(); err != nil {
+		return perr.WithStack(err)
 	}
+	return nil
+}
 
-	defer func() {
-		if err != nil {
-			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), attack.String()); err != nil {
-				log.Error("failed to update experiment", zap.Error(err))
-			}
-			return
-		}
-		if err := s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
-			log.Error("failed to update experiment", zap.Error(err))
-		}
-	}()
-
-	if err = Host.Shutdown(); err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-	return
+func (hostAttack) Recover(exp core.Experiment, _ Environment) error {
+	return core.ErrNonRecoverableAttack.New("host attack not supported to recover")
 }

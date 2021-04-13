@@ -13,22 +13,35 @@
 
 package core
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 const (
 	HostShutdownAction = "shutdown"
 )
 
 type HostCommand struct {
-	Action string
+	CommonAttackConfig
 }
 
-func (h *HostCommand) Validate() error {
+var _ AttackConfig = &HostCommand{}
+
+func (h HostCommand) Validate() error {
 	return nil
 }
 
-func (h *HostCommand) String() string {
+func (h HostCommand) RecoverData() string {
 	data, _ := json.Marshal(h)
 
 	return string(data)
+}
+
+func NewHostCommand() *HostCommand {
+	return &HostCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind:   HostAttack,
+			Action: HostShutdownAction,
+		},
+	}
 }

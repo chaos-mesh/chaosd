@@ -28,7 +28,8 @@ import (
 )
 
 type NetworkCommand struct {
-	Action      string
+	CommonAttackConfig
+
 	Latency     string
 	Jitter      string
 	Correlation string
@@ -41,6 +42,8 @@ type NetworkCommand struct {
 	Hostname    string
 }
 
+var _ AttackConfig = &NetworkCommand{}
+
 const (
 	NetworkDelayAction     = "delay"
 	NetworkLossAction      = "loss"
@@ -48,7 +51,7 @@ const (
 	NetworkDuplicateAction = "duplicate"
 )
 
-func (n *NetworkCommand) Validate() error {
+func (n NetworkCommand) Validate() error {
 	switch n.Action {
 	case NetworkDelayAction:
 		return n.validNetworkDelay()
@@ -113,7 +116,16 @@ func (n *NetworkCommand) validNetworkCommon() error {
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
 }
 
-func (n *NetworkCommand) SetDefaultForNetworkDelay() {
+func (n *NetworkCommand) CompleteDefaults() {
+	switch n.Action {
+	case NetworkDelayAction:
+		n.setDefaultForNetworkDelay()
+	case NetworkLossAction:
+		n.setDefaultForNetworkLoss()
+	}
+}
+
+func (n *NetworkCommand) setDefaultForNetworkDelay() {
 	if len(n.Jitter) == 0 {
 		n.Jitter = "0ms"
 	}
@@ -123,7 +135,7 @@ func (n *NetworkCommand) SetDefaultForNetworkDelay() {
 	}
 }
 
-func (n *NetworkCommand) SetDefaultForNetworkLoss() {
+func (n *NetworkCommand) setDefaultForNetworkLoss() {
 	if len(n.Correlation) == 0 {
 		n.Correlation = "0"
 	}
@@ -153,7 +165,7 @@ func checkProtocolAndPorts(p string, sports string, dports string) error {
 	return nil
 }
 
-func (n *NetworkCommand) String() string {
+func (n NetworkCommand) RecoverData() string {
 	data, _ := json.Marshal(n)
 
 	return string(data)
@@ -321,4 +333,12 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 
 func (n *NetworkCommand) ToChain() (*pb.Chain, error) {
 	return nil, nil
+}
+
+func NewNetworkCommand() *NetworkCommand {
+	return &NetworkCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: NetworkAttack,
+		},
+	}
 }

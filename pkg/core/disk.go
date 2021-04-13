@@ -13,7 +13,10 @@
 
 package core
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 const (
 	DiskFillAction         = "fill"
@@ -22,18 +25,32 @@ const (
 )
 
 type DiskCommand struct {
-	Action          string `json:"action"`
+	CommonAttackConfig
+
 	Size            uint64 `json:"size"`
 	Path            string `json:"path"`
 	FillByFallocate bool   `json:"fill_by_fallocate"`
 }
 
-func (d *DiskCommand) Validate() error {
-	return nil
+var _ AttackConfig = &DiskCommand{}
+
+func (d DiskCommand) Validate() error {
+	if d.Action == DiskFillAction || d.Action == DiskWritePayloadAction || d.Action == DiskReadPayloadAction {
+		return nil
+	}
+	return fmt.Errorf("invalid disk attack action %v", d.Action)
 }
 
-func (d *DiskCommand) String() string {
+func (d DiskCommand) RecoverData() string {
 	data, _ := json.Marshal(d)
 
 	return string(data)
+}
+
+func NewDiskCommand() *DiskCommand {
+	return &DiskCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: DiskAttack,
+		},
+	}
 }

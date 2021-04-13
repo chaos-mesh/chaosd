@@ -26,22 +26,19 @@ const (
 )
 
 type StressCommand struct {
-	Action string
+	CommonAttackConfig
 
-	Load int
-
-	Workers int
-
-	Size string
-
-	Options []string
-
-	Duration time.Duration
-
+	Load        int
+	Workers     int
+	Size        string
+	Options     []string
+	Duration    time.Duration
 	StressngPid int32
 }
 
-func (s *StressCommand) Validate() error {
+var _ AttackConfig = &StressCommand{}
+
+func (s StressCommand) Validate() error {
 	if len(s.Action) == 0 {
 		return errors.New("action not provided")
 	}
@@ -49,8 +46,16 @@ func (s *StressCommand) Validate() error {
 	return nil
 }
 
-func (s *StressCommand) String() string {
+func (s StressCommand) RecoverData() string {
 	data, _ := json.Marshal(s)
 
 	return string(data)
+}
+
+func NewStressCommand() *StressCommand {
+	return &StressCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: StressAttack,
+		},
+	}
 }

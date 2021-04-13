@@ -17,165 +17,165 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/fx"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
 func NewNetworkAttackCommand() *cobra.Command {
+	options := core.NewNetworkCommand()
+	dep := fx.Options(
+		Module,
+		fx.Provide(func() *core.NetworkCommand {
+			return options
+		}),
+	)
+
 	cmd := &cobra.Command{
 		Use:   "network <subcommand>",
 		Short: "Network attack related commands",
 	}
 
 	cmd.AddCommand(
-		NewNetworkDelayCommand(),
-		NewNetworkLossCommand(),
-		NewNetworkCorruptCommand(),
-		NetworkDuplicateCommand(),
+		NewNetworkDelayCommand(dep, options),
+		NewNetworkLossCommand(dep, options),
+		NewNetworkCorruptCommand(dep, options),
+		NetworkDuplicateCommand(dep, options),
 	)
 
 	return cmd
 }
 
-var nFlag core.NetworkCommand
-
-func NewNetworkDelayCommand() *cobra.Command {
+func NewNetworkDelayCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delay",
 		Short: "delay network",
 
-		Run: networkDelayCommandFunc,
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.NetworkDelayAction
+			options.CompleteDefaults()
+			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
 	}
 
-	cmd.Flags().StringVarP(&nFlag.Latency, "latency", "l", "",
+	cmd.Flags().StringVarP(&options.Latency, "latency", "l", "",
 		"delay egress time, time units: ns, us (or µs), ms, s, m, h.")
-	cmd.Flags().StringVarP(&nFlag.Jitter, "jitter", "j", "",
+	cmd.Flags().StringVarP(&options.Jitter, "jitter", "j", "",
 		"jitter time, time units: ns, us (or µs), ms, s, m, h.")
-	cmd.Flags().StringVarP(&nFlag.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
-	cmd.Flags().StringVarP(&nFlag.Device, "device", "d", "", "the network interface to impact")
-	cmd.Flags().StringVarP(&nFlag.EgressPort, "egress-port", "e", "",
+	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
 		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
 			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&nFlag.SourcePort, "source-port", "s", "",
+	cmd.Flags().StringVarP(&options.SourcePort, "source-port", "s", "",
 		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
 			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&nFlag.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
-	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
-	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
-func NewNetworkLossCommand() *cobra.Command {
+func NewNetworkLossCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "loss",
 		Short: "loss network packet",
 
-		Run: networkLossCommandFunc,
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.NetworkLossAction
+			options.CompleteDefaults()
+			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
 	}
 
-	cmd.Flags().StringVar(&nFlag.Percent, "percent", "1", "percentage of packets to drop (10 is 10%)")
-	cmd.Flags().StringVarP(&nFlag.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
-	cmd.Flags().StringVarP(&nFlag.Device, "device", "d", "", "the network interface to impact")
-	cmd.Flags().StringVarP(&nFlag.EgressPort, "egress-port", "e", "",
+	cmd.Flags().StringVar(&options.Percent, "percent", "1", "percentage of packets to drop (10 is 10%)")
+	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
 		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
 			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&nFlag.SourcePort, "source-port", "s", "",
+	cmd.Flags().StringVarP(&options.SourcePort, "source-port", "s", "",
 		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
 			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&nFlag.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
-	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
-	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
-func NewNetworkCorruptCommand() *cobra.Command {
+func NewNetworkCorruptCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "corrupt",
 		Short: "corrupt network packet",
 
-		Run: networkCorruptCommandFunc,
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.NetworkCorruptAction
+			options.CompleteDefaults()
+			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
 	}
 
-	cmd.Flags().StringVar(&nFlag.Percent, "percent", "1", "percentage of packets to corrupt (10 is 10%)")
-	cmd.Flags().StringVarP(&nFlag.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
-	cmd.Flags().StringVarP(&nFlag.Device, "device", "d", "", "the network interface to impact")
-	cmd.Flags().StringVarP(&nFlag.EgressPort, "egress-port", "e", "",
+	cmd.Flags().StringVar(&options.Percent, "percent", "1", "percentage of packets to corrupt (10 is 10%)")
+	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
 		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
 			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&nFlag.SourcePort, "source-port", "s", "",
+	cmd.Flags().StringVarP(&options.SourcePort, "source-port", "s", "",
 		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
 			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&nFlag.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
-	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
-	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
-func NetworkDuplicateCommand() *cobra.Command {
+func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "duplicate",
 		Short: "duplicate network packet",
 
-		Run: networkDuplicateCommandFunc,
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.NetworkDuplicateAction
+			options.CompleteDefaults()
+			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
 	}
 
-	cmd.Flags().StringVar(&nFlag.Percent, "percent", "1", "percentage of packets to corrupt (10 is 10%)")
-	cmd.Flags().StringVarP(&nFlag.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
-	cmd.Flags().StringVarP(&nFlag.Device, "device", "d", "", "the network interface to impact")
-	cmd.Flags().StringVarP(&nFlag.EgressPort, "egress-port", "e", "",
+	cmd.Flags().StringVar(&options.Percent, "percent", "1", "percentage of packets to corrupt (10 is 10%)")
+	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
 		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
 			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&nFlag.SourcePort, "source-port", "s", "",
+	cmd.Flags().StringVarP(&options.SourcePort, "source-port", "s", "",
 		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
 			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&nFlag.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
-	cmd.Flags().StringVarP(&nFlag.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
-	cmd.Flags().StringVarP(&nFlag.IPProtocol, "protocol", "p", "",
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
-func networkDuplicateCommandFunc(cmd *cobra.Command, args []string) {
-	nFlag.Action = core.NetworkDuplicateAction
-
-	commonNetworkAttackFunc(cmd)
-}
-
-func networkCorruptCommandFunc(cmd *cobra.Command, args []string) {
-	nFlag.Action = core.NetworkCorruptAction
-
-	commonNetworkAttackFunc(cmd)
-}
-
-func networkDelayCommandFunc(cmd *cobra.Command, args []string) {
-	nFlag.Action = core.NetworkDelayAction
-	nFlag.SetDefaultForNetworkDelay()
-
-	commonNetworkAttackFunc(cmd)
-}
-
-func networkLossCommandFunc(cmd *cobra.Command, args []string) {
-	nFlag.Action = core.NetworkLossAction
-	nFlag.SetDefaultForNetworkLoss()
-
-	commonNetworkAttackFunc(cmd)
-}
-
-func commonNetworkAttackFunc(cmd *cobra.Command) {
-	if err := nFlag.Validate(); err != nil {
+func commonNetworkAttackFunc(options *core.NetworkCommand, chaos *chaosd.Server) {
+	if err := options.Validate(); err != nil {
 		ExitWithError(ExitBadArgs, err)
 	}
 
-	chaos := mustChaosdFromCmd(cmd, &conf)
-
-	uid, err := chaos.NetworkAttack(&nFlag)
+	uid, err := chaos.ExecuteAttack(chaosd.NetworkAttack, options)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}

@@ -18,10 +18,13 @@ import (
 
 	"github.com/chaos-mesh/chaosd/pkg/config"
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/scheduler"
 )
 
 type Server struct {
 	exp          core.ExperimentStore
+	ExpRun       core.ExperimentRunStore
+	Cron         scheduler.Scheduler
 	ipsetRule    core.IPSetRuleStore
 	iptablesRule core.IptablesRuleStore
 	tcRule       core.TCRuleStore
@@ -32,14 +35,18 @@ type Server struct {
 func NewServer(
 	conf *config.Config,
 	exp core.ExperimentStore,
+	expRun core.ExperimentRunStore,
 	ipset core.IPSetRuleStore,
 	iptables core.IptablesRuleStore,
 	tc core.TCRuleStore,
 	svr *chaosdaemon.DaemonServer,
+	cron scheduler.Scheduler,
 ) *Server {
 	return &Server{
 		conf:         conf,
 		exp:          exp,
+		Cron:         cron,
+		ExpRun:       expRun,
 		ipsetRule:    ipset,
 		iptablesRule: iptables,
 		tcRule:       tc,

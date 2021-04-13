@@ -18,74 +18,77 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/fx"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
-var pFlag core.ProcessCommand
-
 func NewProcessAttackCommand() *cobra.Command {
+	options := core.NewProcessCommand()
+	dep := fx.Options(
+		Module,
+		fx.Provide(func() *core.ProcessCommand {
+			return options
+		}),
+	)
+
 	cmd := &cobra.Command{
 		Use:   "process <subcommand>",
 		Short: "Process attack related commands",
 	}
 
 	cmd.AddCommand(
-		NewProcessKillCommand(),
-		NewProcessStopCommand(),
+		NewProcessKillCommand(dep, options),
+		NewProcessStopCommand(dep, options),
 	)
 
 	return cmd
 }
 
-func NewProcessKillCommand() *cobra.Command {
+func NewProcessKillCommand(dep fx.Option, options *core.ProcessCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kill",
 		Short: "kill process, default signal 9",
-		Run:   processKillCommandFunc,
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.ProcessKillAction
+			fx.New(dep, fx.Invoke(processAttackF)).Run()
+		},
 	}
 
-	cmd.Flags().StringVarP(&pFlag.Process, "process", "p", "", "The process name or the process ID")
-	cmd.Flags().IntVarP(&pFlag.Signal, "signal", "s", 9, "The signal number to send")
+	cmd.Flags().StringVarP(&options.Process, "process", "p", "", "The process name or the process ID")
+	cmd.Flags().IntVarP(&options.Signal, "signal", "s", 9, "The signal number to send")
+	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
-func NewProcessStopCommand() *cobra.Command {
+func NewProcessStopCommand(dep fx.Option, options *core.ProcessCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stop",
 		Short: "stop process, this action will stop the process with SIGSTOP",
-
-		Run: processStopCommandFunc,
+		Run: func(*cobra.Command, []string) {
+			options.Signal = int(syscall.SIGSTOP)
+			options.Action = core.ProcessStopAction
+			fx.New(dep, fx.Invoke(processAttackF)).Run()
+		},
 	}
 
-	cmd.Flags().StringVarP(&pFlag.Process, "process", "p", "", "The process name or the process ID")
+	cmd.Flags().StringVarP(&options.Process, "process", "p", "", "The process name or the process ID")
+	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
-func processKillCommandFunc(cmd *cobra.Command, args []string) {
-	pFlag.Action = core.ProcessKillAction
-	processAttackF(cmd, &pFlag)
-}
-
-func processStopCommandFunc(cmd *cobra.Command, args []string) {
-	pFlag.Signal = int(syscall.SIGSTOP)
-	pFlag.Action = core.ProcessStopAction
-	processAttackF(cmd, &pFlag)
-}
-
-func processAttackF(cmd *cobra.Command, f *core.ProcessCommand) {
-	if err := pFlag.Validate(); err != nil {
+func processAttackF(options *core.ProcessCommand, chaos *chaosd.Server) {
+	if err := options.Validate(); err != nil {
 		ExitWithError(ExitBadArgs, err)
 	}
 
-	chaos := mustChaosdFromCmd(cmd, &conf)
-
-	uid, err := chaos.ProcessAttack(f)
+	uid, err := chaos.ExecuteAttack(chaosd.ProcessAttack, options)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Attack process %s successfully, uid: %s", f.Process, uid))
+	NormalExit(fmt.Sprintf("Attack process %s successfully, uid: %s", options.Process, uid))
 }
