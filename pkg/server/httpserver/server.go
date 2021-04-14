@@ -23,6 +23,7 @@ import (
 
 	"github.com/chaos-mesh/chaosd/pkg/config"
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/scheduler"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 	"github.com/chaos-mesh/chaosd/pkg/swaggerserver"
@@ -51,7 +52,7 @@ func NewServer(
 	}
 }
 
-func Register(s *httpServer) {
+func Register(s *httpServer, scheduler scheduler.Scheduler) {
 	if s.conf.Platform != config.LocalPlatform {
 		return
 	}
@@ -66,6 +67,8 @@ func Register(s *httpServer) {
 			log.Fatal("failed to start HTTP server", zap.Error(err))
 		}
 	}()
+
+	scheduler.Start()
 }
 
 func handler(s *httpServer) {

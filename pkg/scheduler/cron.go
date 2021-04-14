@@ -17,8 +17,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/pingcap/log"
 	perr "github.com/pkg/errors"
 	cron "github.com/robfig/cron/v3"
+	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -38,6 +40,7 @@ type CronJob struct {
 
 // TODO: write tests for it
 func (cj *CronJob) Run() {
+	log.Info("Started new run", zap.String("expId", cj.experiment.Uid))
 	var err error
 	cfg, err := cj.experiment.GetRequestCommand()
 	if err != nil {
@@ -47,7 +50,7 @@ func (cj *CronJob) Run() {
 	if err != nil {
 		panic(perr.WithStack(err))
 	}
-	if cj.experiment.CreatedAt.Add(cronDuration).Sub(time.Now()).Microseconds() >= 0 {
+	if cronDuration != nil && cj.experiment.CreatedAt.Add(*cronDuration).Sub(time.Now()).Microseconds() >= 0 {
 		cj.scheduler.Remove(cj.experiment.ID)
 		if err = cj.scheduler.expStore.Update(context.Background(), cj.experiment.Uid, core.Success, "", cj.experiment.RecoverCommand); err != nil {
 			panic(perr.WithStack(err))
@@ -96,10 +99,18 @@ func (scheduler *Scheduler) Schedule(exp *core.Experiment, spec string, task fun
 		return err
 	}
 	scheduler.cronStore.Add(exp.ID, entryId)
+	defer func() {
+		log.Info("Scheduled new attack cron", zap.String("expUid", exp.Uid), zap.String("cron", spec))
+	}()
 	return nil
 }
 
 func (scheduler Scheduler) Remove(expId uint) error {
 	scheduler.Cron.Remove(scheduler.cronStore.Remove(expId))
 	return nil
+}
+
+func (scheduler Scheduler) Start() {
+	log.Info("starting Scheduler")
+	scheduler.Cron.Start()
 }

@@ -18,7 +18,7 @@ import "time"
 type AttackConfig interface {
 	Validate() error
 	Cron() string
-	ScheduleDuration() (time.Duration, error)
+	ScheduleDuration() (*time.Duration, error)
 	// String is replacement of .Action
 	String() string
 	// RecoverData is replacement of earlier .String()
@@ -40,8 +40,12 @@ func (config SchedulerConfig) Cron() string {
 	return config.Schedule
 }
 
-func (config SchedulerConfig) ScheduleDuration() (time.Duration, error) {
-	return time.ParseDuration(config.Duration)
+func (config SchedulerConfig) ScheduleDuration() (*time.Duration, error) {
+	if len(config.Duration) == 0 {
+		return nil, nil
+	}
+	duration, err := time.ParseDuration(config.Duration)
+	return &duration, err
 }
 
 type CommonAttackConfig struct {
