@@ -18,10 +18,11 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 
-	"github.com/minio/minio/pkg/disk"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
@@ -124,17 +125,15 @@ func (diskAttack) attackDiskFill(fill *core.DiskCommand) error {
 			log.Error(fmt.Sprintf(" unexcepted err when parsing disk percent '%s'", fill.Percent), zap.Error(err))
 			return err
 		}
-		dir, err := os.Getwd()
+		dir := filepath.Dir(fill.Path)
+		s := syscall.Statfs_t{}
+		err = syscall.Statfs(dir, &s)
 		if err != nil {
-			log.Error(fmt.Sprintf("unexpected err when using os.Getwd"), zap.Error(err))
+			log.Error(fmt.Sprintf("unexpected err when using syscall.Statfs"), zap.Error(err))
 			return err
 		}
-		di, err := disk.GetInfo(dir)
-		if err != nil {
-			log.Error(fmt.Sprintf("unexpected err when using disk.GetInfo"), zap.Error(err))
-			return err
-		}
-		totalM := di.Total / 1024 / 1024
+		reservedBlocks := s.Bfree - s.Bavail
+		totalM := uint64(s.Frsize) * (s.Blocks - reservedBlocks) / 1024 / 1024
 		fill.Size = strconv.FormatUint(totalM*percent/100, 10)
 	}
 

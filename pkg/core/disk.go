@@ -44,9 +44,6 @@ func (d *DiskCommand) Validate() error {
 		return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
 			"if you want allocate a 0 size file please set fallocate=false, DiskCommand : %v", d)
 	}
-	if _, err := strconv.ParseUint(d.Size, 10, 0); err != nil {
-		return fmt.Errorf("unsupport size : %s, DiskCommand : %v", d.Size, d)
-	}
 	_, err := strconv.ParseUint(d.Percent, 10, 0)
 	if d.Size == "" && err != nil {
 		return fmt.Errorf("unsupport percent : %s, DiskCommand : %v", d.Percent, d)

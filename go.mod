@@ -7,9 +7,8 @@ require (
 	github.com/containerd/containerd v1.2.3
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0
 	github.com/gin-gonic/gin v1.6.3
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.1.1
 	github.com/joomcode/errorx v1.0.1
-	github.com/minio/minio v0.0.0-20210414152956-97aa83135272
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/onsi/gomega v1.9.0
@@ -27,6 +26,10 @@ require (
 	github.com/swaggo/swag v1.6.7
 	go.uber.org/fx v1.13.1
 	go.uber.org/zap v1.15.0
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
+	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
+	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/grpc v1.27.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gorm.io/driver/sqlite v1.1.4
