@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,23 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package store
+package command
 
 import (
-	"go.uber.org/fx"
+	"github.com/spf13/cobra"
 
-	"github.com/chaos-mesh/chaosd/pkg/store/dbstore"
-	"github.com/chaos-mesh/chaosd/pkg/store/experiment"
-	"github.com/chaos-mesh/chaosd/pkg/store/network"
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		dbstore.NewDBStore,
-		experiment.NewStore,
-		experiment.NewRunStore,
-		network.NewIPSetRuleStore,
-		network.NewIptablesRuleStore,
-		network.NewTCRuleStore,
-	),
-)
+// commonFlags adds common flags/options for attack commands.
+func commonFlags(cmd *cobra.Command, options *core.CommonAttackConfig) {
+}

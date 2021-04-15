@@ -11,24 +11,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package command
 
-import "encoding/json"
+import (
+	"go.uber.org/fx"
 
-const (
-	HostShutdownAction = "shutdown"
+	"github.com/chaos-mesh/chaosd/pkg/config"
+	"github.com/chaos-mesh/chaosd/pkg/server"
+	"github.com/chaos-mesh/chaosd/pkg/store"
 )
 
-type HostCommand struct {
-	Action string
-}
-
-func (h *HostCommand) Validate() error {
-	return nil
-}
-
-func (h *HostCommand) String() string {
-	data, _ := json.Marshal(h)
-
-	return string(data)
-}
+var Module = fx.Options(
+	fx.Provide(
+		func() *config.Config {
+			return &conf
+		},
+	),
+	store.Module,
+	server.Module,
+)

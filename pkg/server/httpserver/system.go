@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,23 +11,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package store
+package httpserver
 
 import (
-	"go.uber.org/fx"
+	"net/http"
 
-	"github.com/chaos-mesh/chaosd/pkg/store/dbstore"
-	"github.com/chaos-mesh/chaosd/pkg/store/experiment"
-	"github.com/chaos-mesh/chaosd/pkg/store/network"
+	"github.com/gin-gonic/gin"
+
+	"github.com/chaos-mesh/chaosd/pkg/version"
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		dbstore.NewDBStore,
-		experiment.NewStore,
-		experiment.NewRunStore,
-		network.NewIPSetRuleStore,
-		network.NewIptablesRuleStore,
-		network.NewTCRuleStore,
-	),
-)
+type healthInfo struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+}
+
+func (s *httpServer) healthcheck(c *gin.Context) {
+	c.JSON(http.StatusOK, healthInfo{Status: 0})
+}
+
+func (s *httpServer) version(c *gin.Context) {
+	c.JSON(http.StatusOK, version.Get())
+}

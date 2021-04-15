@@ -19,44 +19,51 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+	"go.uber.org/fx"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
-var sFlag core.SearchCommand
-
 func NewSearchCommand() *cobra.Command {
+	options := &core.SearchCommand{}
+	dep := fx.Options(
+		Module,
+		fx.Provide(func() *core.SearchCommand {
+			return options
+		}),
+	)
+
 	cmd := &cobra.Command{
 		Use:   "search UID",
 		Short: "Search chaos attack, you can search attacks through the uid or the state of the attack",
-		Run:   searchCommandFunc,
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) > 0 {
+				options.UID = args[0]
+			}
+			fx.New(dep, fx.Invoke(searchCommandFunc)).Run()
+		},
 	}
 
-	cmd.Flags().BoolVarP(&sFlag.All, "all", "A", false, "list all chaos attacks")
-	cmd.Flags().StringVarP(&sFlag.Status, "status", "s", "", "attack status, "+
+	cmd.Flags().BoolVarP(&options.All, "all", "A", false, "list all chaos attacks")
+	cmd.Flags().StringVarP(&options.Status, "status", "s", "", "attack status, "+
 		"supported value: created, success, error, destroyed, revoked")
-	cmd.Flags().StringVarP(&sFlag.Kind, "kind", "k", "", "attack kind, "+
+	cmd.Flags().StringVarP(&options.Kind, "kind", "k", "", "attack kind, "+
 		"supported value: network, process")
-	cmd.Flags().Uint32VarP(&sFlag.Offset, "offset", "o", 0, "starting to search attacks from offset")
-	cmd.Flags().Uint32VarP(&sFlag.Limit, "limit", "l", 0, "limit the count of attacks")
-	cmd.Flags().BoolVar(&sFlag.Asc, "asc", false, "order by CreateTime, "+
+	cmd.Flags().Uint32VarP(&options.Offset, "offset", "o", 0, "starting to search attacks from offset")
+	cmd.Flags().Uint32VarP(&options.Limit, "limit", "l", 0, "limit the count of attacks")
+	cmd.Flags().BoolVar(&options.Asc, "asc", false, "order by CreateTime, "+
 		"default value is false that means order by CreateTime desc")
 
 	return cmd
 }
 
-func searchCommandFunc(cmd *cobra.Command, args []string) {
-	if len(args) > 0 {
-		sFlag.UID = args[0]
-	}
-
-	if err := sFlag.Validate(); err != nil {
+func searchCommandFunc(chaos *chaosd.Server, options *core.SearchCommand) {
+	if err := options.Validate(); err != nil {
 		ExitWithError(ExitBadArgs, err)
 	}
 
-	chaos := mustChaosdFromCmd(cmd, &conf)
-
-	exps, err := chaos.Search(&sFlag)
+	exps, err := chaos.Search(options)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
@@ -76,4 +83,6 @@ func searchCommandFunc(cmd *cobra.Command, args []string) {
 	}
 
 	tw.Render()
+
+	NormalExit("")
 }

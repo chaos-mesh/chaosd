@@ -19,70 +19,42 @@ import (
 	"fmt"
 	"strings"
 
-	"go.uber.org/zap"
-
-	"github.com/google/uuid"
 	"github.com/pingcap/errors"
-	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-func (s *Server) NetworkAttack(attack *core.NetworkCommand) (string, error) {
+type networkAttack struct{}
+
+var NetworkAttack AttackType = networkAttack{}
+
+func (networkAttack) Attack(options core.AttackConfig, env Environment) (err error) {
+	attack := options.(*core.NetworkCommand)
 	var (
 		ipsetName string
-		err       error
 	)
-	uid := uuid.New().String()
-
-	if err = s.exp.Set(context.Background(), &core.Experiment{
-		Uid:            uid,
-		Status:         core.Created,
-		Kind:           core.NetworkAttack,
-		Action:         attack.Action,
-		RecoverCommand: attack.String(),
-	}); err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	defer func() {
-		if err != nil {
-			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), attack.String()); err != nil {
-				log.Error("failed to update experiment", zap.Error(err))
-			}
-			return
-		}
-		if err := s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
-			log.Error("failed to update experiment", zap.Error(err))
-		}
-	}()
 
 	if attack.NeedApplyIPSet() {
-		ipsetName, err = s.applyIPSet(attack, uid)
+		ipsetName, err = env.Chaos.applyIPSet(attack, env.AttackUid)
 		if err != nil {
-			return "", errors.WithStack(err)
+			return errors.WithStack(err)
 		}
 	}
 
 	if attack.NeedApplyIptables() {
-		if err = s.applyIptables(attack, uid); err != nil {
-			return "", errors.WithStack(err)
+		if err = env.Chaos.applyIptables(attack, env.AttackUid); err != nil {
+			return errors.WithStack(err)
 		}
 	}
 
 	if attack.NeedApplyTC() {
-		if err = s.applyTC(attack, ipsetName, uid); err != nil {
-			return "", errors.WithStack(err)
+		if err = env.Chaos.applyTC(attack, ipsetName, env.AttackUid); err != nil {
+			return errors.WithStack(err)
 		}
 	}
-
-	if err = s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
-		return "", errors.WithStack(err)
-	}
-
-	return uid, nil
+	return nil
 }
 
 func (s *Server) applyIPSet(attack *core.NetworkCommand, uid string) (string, error) {
@@ -215,27 +187,29 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	return nil
 }
 
-func (s *Server) RecoverNetworkAttack(uid string, attack *core.NetworkCommand) error {
+func (networkAttack) Recover(exp core.Experiment, env Environment) error {
+	attack := &core.NetworkCommand{}
+	if err := json.Unmarshal([]byte(exp.RecoverCommand), attack); err != nil {
+		return err
+	}
 	if attack.NeedApplyIPSet() {
-		if err := s.recoverIPSet(uid); err != nil {
+		if err := env.Chaos.recoverIPSet(env.AttackUid); err != nil {
 			return errors.WithStack(err)
 		}
 	}
 
 	if attack.NeedApplyIptables() {
-		if err := s.recoverIptables(uid); err != nil {
+		if err := env.Chaos.recoverIptables(env.AttackUid); err != nil {
 			return errors.WithStack(err)
 		}
 	}
 
 	if attack.NeedApplyTC() {
-		if err := s.recoverTC(uid, attack.Device); err != nil {
+		if err := env.Chaos.recoverTC(env.AttackUid, attack.Device); err != nil {
 			return errors.WithStack(err)
 		}
 	}
-
-	return errors.WithStack(s.exp.Update(context.Background(),
-		uid, core.Destroyed, "", attack.String()))
+	return nil
 }
 
 func (s *Server) recoverIPSet(uid string) error {

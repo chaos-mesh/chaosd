@@ -14,7 +14,6 @@
 package chaosd
 
 import (
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -22,7 +21,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/minio/minio/pkg/disk"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
@@ -31,34 +29,23 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
+type diskAttack struct{}
+
+var DiskAttack AttackType = diskAttack{}
+
 const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
 const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync,direct,fullblock"
 
-func (s *Server) DiskPayload(payload *core.DiskCommand) (uid string, err error) {
-	uid = uuid.New().String()
+func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err error) {
+	attack := options.(*core.DiskCommand)
 
-	if err = s.exp.Set(context.Background(), &core.Experiment{
-		Uid:            uid,
-		Status:         core.Created,
-		Kind:           core.DiskAttack,
-		Action:         payload.Action,
-		RecoverCommand: payload.String(),
-	}); err != nil {
-		err = errors.WithStack(err)
-		return
+	if options.String() == core.DiskFillAction {
+		return disk.attackDiskFill(attack)
 	}
-	defer func() {
-		if err != nil {
-			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), payload.String()); err != nil {
-				log.Error("failed to update experiment", zap.Error(err))
-			}
-			return
-		}
-		if err := s.exp.Update(context.Background(), uid, core.Success, "", payload.String()); err != nil {
-			log.Error("failed to update experiment", zap.Error(err))
-		}
-	}()
+	return disk.attackDiskPayload(attack)
+}
 
+func (diskAttack) attackDiskPayload(payload *core.DiskCommand) error {
 	switch payload.Action {
 	case core.DiskWritePayloadAction:
 		if payload.Path == "" {
@@ -72,12 +59,12 @@ func (s *Server) DiskPayload(payload *core.DiskCommand) (uid string, err error) 
 		} else {
 			log.Info(string(output))
 		}
-		return uid, err
+		return err
 	case core.DiskReadPayloadAction:
 		if payload.Path == "" {
 			err := errors.Errorf("empty read payload path")
 			log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
-			return uid, err
+			return err
 		}
 		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, payload.Path, "1M", payload.Size))
 		output, err := cmd.CombinedOutput()
@@ -87,59 +74,35 @@ func (s *Server) DiskPayload(payload *core.DiskCommand) (uid string, err error) 
 		} else {
 			log.Info(string(output))
 		}
-		return uid, err
+		return err
 	default:
 		err := errors.Errorf("invalid payload action")
 		log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
-		return uid, err
+		return err
 	}
 }
 
 const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock"
 const DDFallocateCommand = "fallocate -l %sM %s"
 
-func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
-	uid = uuid.New().String()
-
-	if err = s.exp.Set(context.Background(), &core.Experiment{
-		Uid:            uid,
-		Status:         core.Created,
-		Kind:           core.DiskAttack,
-		Action:         fill.Action,
-		RecoverCommand: fill.String(),
-	}); err != nil {
-		err = errors.WithStack(err)
-		return
-	}
-	defer func() {
-		if err != nil {
-			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), fill.String()); err != nil {
-				log.Error("failed to update experiment", zap.Error(err))
-			}
-			return
-		}
-		if err := s.exp.Update(context.Background(), uid, core.Success, "", fill.String()); err != nil {
-			log.Error("failed to update experiment", zap.Error(err))
-		}
-	}()
-
+func (diskAttack) attackDiskFill(fill *core.DiskCommand) error {
 	if fill.Path == "" {
 		tempFile, err := ioutil.TempFile("", "example")
 		if err != nil {
 			log.Error("unexpected err when open temp file", zap.Error(err))
-			return uid, err
+			return err
 		}
 
 		if tempFile != nil {
 			err = tempFile.Close()
 			if err != nil {
 				log.Error("unexpected err when close temp file", zap.Error(err))
-				return uid, err
+				return err
 			}
 		} else {
 			err := errors.Errorf("unexpected err : file get from ioutil.TempFile is nil")
 			log.Error(fmt.Sprintf("payload action: %s", fill.Action), zap.Error(err))
-			return uid, err
+			return err
 		}
 
 		fill.Path = tempFile.Name()
@@ -159,17 +122,17 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 		percent, err := strconv.ParseUint(fill.Percent, 10, 0)
 		if err != nil {
 			log.Error(fmt.Sprintf(" unexcepted err when parsing disk percent '%s'", fill.Percent), zap.Error(err))
-			return uid, err
+			return err
 		}
 		dir, err := os.Getwd()
 		if err != nil {
 			log.Error(fmt.Sprintf("unexpected err when using os.Getwd"), zap.Error(err))
-			return uid, err
+			return err
 		}
 		di, err := disk.GetInfo(dir)
 		if err != nil {
 			log.Error(fmt.Sprintf("unexpected err when using disk.GetInfo"), zap.Error(err))
-			return uid, err
+			return err
 		}
 		totalM := di.Total / 1024 / 1024
 		fill.Size = strconv.FormatUint(totalM*percent/100, 10)
@@ -190,13 +153,10 @@ func (s *Server) DiskFill(fill *core.DiskCommand) (uid string, err error) {
 		log.Info(string(output))
 	}
 
-	return uid, err
+	return err
 }
 
-func (s *Server) RecoverDiskAttack(uid string, attack *core.DiskCommand) error {
+func (diskAttack) Recover(exp core.Experiment, _ Environment) error {
 	log.Info("Recover disk attack will do nothing, because delete | truncate data is too dangerous.")
-	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
-		return errors.WithStack(err)
-	}
 	return nil
 }

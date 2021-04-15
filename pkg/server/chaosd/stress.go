@@ -14,49 +14,27 @@
 package chaosd
 
 import (
-	"context"
+	"encoding/json"
+	"errors"
 	"strings"
 	"syscall"
 
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
-	"github.com/google/uuid"
-	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"github.com/shirou/gopsutil/process"
 	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
-	var err error
-	uid := uuid.New().String()
+type stressAttack struct{}
 
-	if err := s.exp.Set(context.Background(), &core.Experiment{
-		Uid:            uid,
-		Status:         core.Created,
-		Kind:           core.StressAttack,
-		Action:         attack.Action,
-		RecoverCommand: attack.String(),
-	}); err != nil {
-		return "", errors.WithStack(err)
-	}
+var StressAttack AttackType = stressAttack{}
 
-	defer func() {
-		if err != nil {
-			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), attack.String()); err != nil {
-				log.Error("failed to update experiment", zap.Error(err))
-			}
-			return
-		}
-
-		// use the stressngPid as recover command, and will kill the pid when recover
-		if err := s.exp.Update(context.Background(), uid, core.Success, "", attack.String()); err != nil {
-			log.Error("failed to update experiment", zap.Error(err))
-		}
-	}()
-
+func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error) {
+	attack := options.(*core.StressCommand)
 	stressors := &v1alpha1.Stressors{}
 	if attack.Action == core.StressCPUAction {
 		stressors.CPUStressor = &v1alpha1.CPUStressor{
@@ -71,13 +49,19 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 			Stressor: v1alpha1.Stressor{
 				Workers: attack.Workers,
 			},
+			Size:    attack.Size,
 			Options: attack.Options,
 		}
 	}
 
+	errs := stressors.Validate(field.NewPath("stressors"))
+	if len(errs) > 0 {
+		return errors.New(errs.ToAggregate().Error())
+	}
+
 	stressorsStr, err := stressors.Normalize()
 	if err != nil {
-		return "", err
+		return
 	}
 	log.Info("stressors normalize", zap.String("arguments", stressorsStr))
 
@@ -91,16 +75,20 @@ func (s *Server) StressAttack(attack *core.StressCommand) (string, error) {
 	backgroundProcessManager := bpm.NewBackgroundProcessManager()
 	err = backgroundProcessManager.StartProcess(cmd)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	attack.StressngPid = int32(cmd.Process.Pid)
 	log.Info("Start stress-ng process successfully", zap.String("command", cmd.String()), zap.Int32("Pid", attack.StressngPid))
 
-	return uid, nil
+	return nil
 }
 
-func (s *Server) RecoverStressAttack(uid string, attack *core.StressCommand) error {
+func (stressAttack) Recover(exp core.Experiment, _ Environment) error {
+	attack := &core.StressCommand{}
+	if err := json.Unmarshal([]byte(exp.RecoverCommand), attack); err != nil {
+		return err
+	}
 	proc, err := process.NewProcess(attack.StressngPid)
 	if err != nil {
 		return err
@@ -119,10 +107,6 @@ func (s *Server) RecoverStressAttack(uid string, attack *core.StressCommand) err
 	if err := proc.Kill(); err != nil {
 		log.Error("the stress-ng process kill failed", zap.Error(err))
 		return err
-	}
-
-	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", attack.String()); err != nil {
-		return errors.WithStack(err)
 	}
 
 	return nil

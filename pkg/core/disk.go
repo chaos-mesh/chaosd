@@ -26,12 +26,15 @@ const (
 )
 
 type DiskCommand struct {
-	Action          string `json:"action"`
+	CommonAttackConfig
+
 	Size            string `json:"size"`
 	Path            string `json:"path"`
 	Percent         string `json:"percent"`
 	FillByFallocate bool   `json:"fill_by_fallocate"`
 }
+
+var _ AttackConfig = &DiskCommand{}
 
 func (d *DiskCommand) Validate() error {
 	if d.Percent == "" && d.Size == "" {
@@ -51,8 +54,16 @@ func (d *DiskCommand) Validate() error {
 	return nil
 }
 
-func (d *DiskCommand) String() string {
+func (d DiskCommand) RecoverData() string {
 	data, _ := json.Marshal(d)
 
 	return string(data)
+}
+
+func NewDiskCommand() *DiskCommand {
+	return &DiskCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: DiskAttack,
+		},
+	}
 }

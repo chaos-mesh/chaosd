@@ -17,47 +17,51 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/fx"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
-var hFlag core.HostCommand
-
 func NewHostAttackCommand() *cobra.Command {
+	options := core.NewHostCommand()
+	dep := fx.Options(
+		Module,
+		fx.Provide(func() *core.HostCommand {
+			return options
+		}),
+	)
+
 	cmd := &cobra.Command{
 		Use:   "host <subcommand>",
 		Short: "Host attack related commands",
 	}
 
-	cmd.AddCommand(NewHostShutdownCommand())
+	cmd.AddCommand(NewHostShutdownCommand(dep, options))
 
 	return cmd
 }
 
-func NewHostShutdownCommand() *cobra.Command {
+func NewHostShutdownCommand(dep fx.Option, options *core.HostCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shutdown",
 		Short: "shutdowns system, this action will trigger shutdown of the host machine",
 
-		Run: processShutdownCommandFunc,
+		Run: func(*cobra.Command, []string) {
+			fx.New(dep, fx.Invoke(hostAttackF)).Run()
+		},
 	}
+	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
-func processShutdownCommandFunc(cmd *cobra.Command, args []string) {
-	hFlag.Action = core.HostShutdownAction
-	hostAttackF(cmd, &hFlag)
-}
-
-func hostAttackF(cmd *cobra.Command, f *core.HostCommand) {
-	if err := hFlag.Validate(); err != nil {
+func hostAttackF(chaos *chaosd.Server, options *core.HostCommand) {
+	if err := options.Validate(); err != nil {
 		ExitWithError(ExitBadArgs, err)
 	}
 
-	chaos := mustChaosdFromCmd(cmd, &conf)
-
-	uid, err := chaos.HostAttack(f)
+	uid, err := chaos.ExecuteAttack(chaosd.HostAttack, options)
 	if err != nil {
 		ExitWithError(ExitError, err)
 	}
