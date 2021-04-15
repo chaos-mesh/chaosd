@@ -174,7 +174,7 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dns",
-		Short: "attack DNS",
+		Short: "attack DNS server",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkDNSAction
