@@ -40,6 +40,9 @@ type NetworkCommand struct {
 	IPAddress   string
 	IPProtocol  string
 	Hostname    string
+
+	// used for DNS attack
+	DNSServer string
 }
 
 var _ AttackConfig = &NetworkCommand{}
@@ -49,6 +52,7 @@ const (
 	NetworkLossAction      = "loss"
 	NetworkCorruptAction   = "corrupt"
 	NetworkDuplicateAction = "duplicate"
+	NetworkDNSAction       = "dns"
 )
 
 func (n NetworkCommand) Validate() error {
@@ -57,6 +61,8 @@ func (n NetworkCommand) Validate() error {
 		return n.validNetworkDelay()
 	case NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
 		return n.validNetworkCommon()
+	case NetworkDNSAction:
+		return nil
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}

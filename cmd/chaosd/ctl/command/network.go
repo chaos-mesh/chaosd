@@ -42,6 +42,7 @@ func NewNetworkAttackCommand() *cobra.Command {
 		NewNetworkLossCommand(dep, options),
 		NewNetworkCorruptCommand(dep, options),
 		NetworkDuplicateCommand(dep, options),
+		NetworkDNSCommand(dep, options),
 	)
 
 	return cmd
@@ -165,6 +166,25 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	commonFlags(cmd, &options.CommonAttackConfig)
+
+	return cmd
+}
+
+func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "dns",
+		Short: "attack DNS",
+
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.NetworkDNSAction
+			options.CompleteDefaults()
+			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.DNSServer, "dns-server", "", "123.123.123.123",
+		"update the DNS server in /etc/resolv.conf with this value")
 	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
