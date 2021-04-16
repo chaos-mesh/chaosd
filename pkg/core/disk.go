@@ -16,6 +16,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 )
 
 const (
@@ -27,18 +28,27 @@ const (
 type DiskCommand struct {
 	CommonAttackConfig
 
-	Size            uint64 `json:"size"`
+	Size            string `json:"size"`
 	Path            string `json:"path"`
+	Percent         string `json:"percent"`
 	FillByFallocate bool   `json:"fill_by_fallocate"`
 }
 
 var _ AttackConfig = &DiskCommand{}
 
-func (d DiskCommand) Validate() error {
-	if d.Action == DiskFillAction || d.Action == DiskWritePayloadAction || d.Action == DiskReadPayloadAction {
-		return nil
+func (d *DiskCommand) Validate() error {
+	if d.Percent == "" && d.Size == "" {
+		return fmt.Errorf("one of percent and size must not be empty, DiskCommand : %v", d)
 	}
-	return fmt.Errorf("invalid disk attack action %v", d.Action)
+	if d.FillByFallocate && (d.Size == "0" || (d.Size == "" && d.Percent == "0")) {
+		return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
+			"if you want allocate a 0 size file please set fallocate=false, DiskCommand : %v", d)
+	}
+	_, err := strconv.ParseUint(d.Percent, 10, 0)
+	if d.Size == "" && err != nil {
+		return fmt.Errorf("unsupport percent : %s, DiskCommand : %v", d.Percent, d)
+	}
+	return nil
 }
 
 func (d DiskCommand) RecoverData() string {

@@ -15,6 +15,7 @@ package command
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"go.uber.org/fx"
@@ -43,7 +44,7 @@ func TestServer_DiskFill(t *testing.T) {
 							Action: core.DiskFillAction,
 							Kind:   core.DiskAttack,
 						},
-						Size:            1024,
+						Size:            "1024",
 						Path:            "temp",
 						FillByFallocate: true,
 					},
@@ -55,7 +56,7 @@ func TestServer_DiskFill(t *testing.T) {
 							Action: core.DiskFillAction,
 							Kind:   core.DiskAttack,
 						},
-						Size:            24,
+						Size:            "24",
 						Path:            "temp",
 						FillByFallocate: false,
 					},
@@ -85,8 +86,10 @@ func TestServer_DiskFill(t *testing.T) {
 						return
 					}
 
-					if uint64(stat.Size()) != tt.command.Size*1024*1024 {
-						t.Errorf("DiskFill() size %v, expect %d", stat.Size(), tt.command.Size*1024*1024)
+					size, _ := strconv.ParseUint(tt.command.Size, 10, 0)
+
+					if uint64(stat.Size()) != size*1024*1024 {
+						t.Errorf("DiskFill() size %v, expect %d", stat.Size(), size*1024*1024)
 						return
 					}
 					os.Remove(tt.command.Path)
@@ -109,7 +112,7 @@ func TestServer_DiskPayload(t *testing.T) {
 							Action: core.DiskWritePayloadAction,
 							Kind:   core.DiskAttack,
 						},
-						Size: 24,
+						Size: "24",
 						Path: "temp",
 					},
 					wantErr: false,
@@ -120,7 +123,7 @@ func TestServer_DiskPayload(t *testing.T) {
 							Action: core.DiskReadPayloadAction,
 							Kind:   core.DiskAttack,
 						},
-						Size: 24,
+						Size: "24",
 						Path: "temp",
 					},
 					wantErr: false,

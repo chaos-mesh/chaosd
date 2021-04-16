@@ -67,7 +67,7 @@ func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra
 		},
 	}
 
-	cmd.Flags().Uint64VarP(&options.Size, "size", "s", 0,
+	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
 		"'size' specifies how many data will fill in the file path with unit MB.")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "/dev/null",
 		"'path' specifies the location to fill data in.\n"+
@@ -86,7 +86,7 @@ func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra.
 		},
 	}
 
-	cmd.Flags().Uint64VarP(&options.Size, "size", "s", 0,
+	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
 		"'size' specifies how many data will read from the file path with unit MB.")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
 		"'path' specifies the location to read data.\n"+
@@ -105,11 +105,13 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskCommand) *cobra.Command
 		},
 	}
 
-	cmd.Flags().Uint64VarP(&options.Size, "size", "s", 0,
+	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
 		"'size' specifies how many data will fill in the file path with unit MB.")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
 		"'path' specifies the location to fill data in.\n"+
 			"If path not provided, a temp file will be generated and deleted immediately after data filled in or allocated")
+	cmd.Flags().StringVarP(&options.Percent, "percent", "c", "",
+		"'percent' how many percent data of disk will fill in the file path")
 	cmd.Flags().BoolVarP(&options.FillByFallocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
 	commonFlags(cmd, &options.CommonAttackConfig)
 	return cmd
