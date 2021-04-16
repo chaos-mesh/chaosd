@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -25,40 +26,66 @@ const (
 	DiskReadPayloadAction  = "read-payload"
 )
 
-type DiskCommand struct {
+type DiskOption struct {
 	CommonAttackConfig
 
-	Size            string `json:"size"`
-	Path            string `json:"path"`
-	Percent         string `json:"percent"`
-	FillByFallocate bool   `json:"fill_by_fallocate"`
+	Size              string `json:"size"`
+	Path              string `json:"path"`
+	Percent           string `json:"percent"`
+	Unit              string `json:"unit"`
+	FillByFallocate   bool   `json:"fill_by_fallocate"`
+	FillDestroyFile   bool   `json:"fill_destroy_file"`
+	PayloadProcessNum uint8  `json:"payload_process_num"`
 }
 
-var _ AttackConfig = &DiskCommand{}
+var _ AttackConfig = &DiskOption{}
+var Units = []string{"c", "w", "b", "kB", "K", "MB", "M", "GB", "G"}
 
-func (d *DiskCommand) Validate() error {
-	if d.Percent == "" && d.Size == "" {
-		return fmt.Errorf("one of percent and size must not be empty, DiskCommand : %v", d)
+func IsValidUnit(unit string) bool {
+	unit = strings.Trim(unit, " ")
+	for _, u := range Units {
+		if unit == u {
+			return true
+		}
 	}
+	return false
+}
+
+func (d *DiskOption) Validate() error {
+	if d.Size == "" {
+		if d.Percent == "" {
+			return fmt.Errorf("one of percent and size must not be empty, DiskOption : %v", d)
+		}
+		_, err := strconv.ParseUint(d.Percent, 10, 0)
+		if err != nil {
+			return fmt.Errorf("unsupport percent : %s, DiskOption : %v", d.Percent, d)
+		}
+	}
+
 	if d.FillByFallocate && (d.Size == "0" || (d.Size == "" && d.Percent == "0")) {
 		return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
-			"if you want allocate a 0 size file please set fallocate=false, DiskCommand : %v", d)
+			"if you want allocate a 0 size file please set fallocate=false, DiskOption : %v", d)
 	}
-	_, err := strconv.ParseUint(d.Percent, 10, 0)
-	if d.Size == "" && err != nil {
-		return fmt.Errorf("unsupport percent : %s, DiskCommand : %v", d.Percent, d)
+
+	if !IsValidUnit(d.Unit) {
+		return fmt.Errorf("unsupport unit : %s, DiskOption : %v", d.Unit, d)
 	}
+
+	if d.PayloadProcessNum == 0 {
+		return fmt.Errorf("unsupport process num : %s, DiskOption : %v", d.PayloadProcessNum, d)
+	}
+
 	return nil
 }
 
-func (d DiskCommand) RecoverData() string {
+func (d DiskOption) RecoverData() string {
 	data, _ := json.Marshal(d)
 
 	return string(data)
 }
 
-func NewDiskCommand() *DiskCommand {
-	return &DiskCommand{
+func NewDiskOption() *DiskOption {
+	return &DiskOption{
 		CommonAttackConfig: CommonAttackConfig{
 			Kind: DiskAttack,
 		},
