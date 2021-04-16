@@ -11,10 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package recover
 
 import (
 	"fmt"
+	"github.com/chaos-mesh/chaosd/cmd/server"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
@@ -29,7 +31,7 @@ type recoverCommand struct {
 func NewRecoverCommand() *cobra.Command {
 	options := &recoverCommand{}
 	dep := fx.Options(
-		Module,
+		server.Module,
 		fx.Provide(func() *recoverCommand {
 			return options
 		}),
@@ -41,7 +43,7 @@ func NewRecoverCommand() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
-				ExitWithMsg(ExitBadArgs, "UID is required")
+				utils.ExitWithMsg(utils.ExitBadArgs, "UID is required")
 			}
 			options.uid = args[0]
 			fx.New(dep, fx.Invoke(recoverCommandF)).Run()
@@ -53,8 +55,8 @@ func NewRecoverCommand() *cobra.Command {
 func recoverCommandF(chaos *chaosd.Server, options *recoverCommand) {
 	err := chaos.RecoverAttack(options.uid)
 	if err != nil {
-		ExitWithError(ExitError, err)
+		utils.ExitWithError(utils.ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Recover %s successfully", options.uid))
+	utils.NormalExit(fmt.Sprintf("Recover %s successfully", options.uid))
 }

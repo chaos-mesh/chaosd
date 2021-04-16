@@ -11,10 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package attack
 
 import (
 	"fmt"
+	"github.com/chaos-mesh/chaosd/cmd/server"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
@@ -26,7 +28,7 @@ import (
 func NewStressAttackCommand() *cobra.Command {
 	options := core.NewStressCommand()
 	dep := fx.Options(
-		Module,
+		server.Module,
 		fx.Provide(func() *core.StressCommand {
 			return options
 		}),
@@ -58,7 +60,6 @@ func NewStressCPUCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 	cmd.Flags().IntVarP(&options.Load, "load", "l", 10, "Load specifies P percent loading per CPU worker. 0 is effectively a sleep (no load) and 100 is full loading.")
 	cmd.Flags().IntVarP(&options.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
 	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "extend stress-ng options.")
-	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
@@ -76,20 +77,19 @@ func NewStressMemCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 	cmd.Flags().IntVarP(&options.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "", "Size specifies N bytes consumed per vm worker, default is the total available memory. One can specify the size as % of total available memory or in units of B, KB/KiB, MB/MiB, GB/GiB, TB/TiB..")
 	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "extend stress-ng options.")
-	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
 func stressAttackF(chaos *chaosd.Server, options *core.StressCommand) {
 	if err := options.Validate(); err != nil {
-		ExitWithError(ExitBadArgs, err)
+		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
 	uid, err := chaos.ExecuteAttack(chaosd.StressAttack, options)
 	if err != nil {
-		ExitWithError(ExitError, err)
+		utils.ExitWithError(utils.ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Attack stress %s successfully, uid: %s", options.Action, uid))
+	utils.NormalExit(fmt.Sprintf("Attack stress %s successfully, uid: %s", options.Action, uid))
 }

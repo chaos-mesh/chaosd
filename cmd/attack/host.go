@@ -11,10 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package attack
 
 import (
 	"fmt"
+	"github.com/chaos-mesh/chaosd/cmd/server"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
@@ -26,7 +28,7 @@ import (
 func NewHostAttackCommand() *cobra.Command {
 	options := core.NewHostCommand()
 	dep := fx.Options(
-		Module,
+		server.Module,
 		fx.Provide(func() *core.HostCommand {
 			return options
 		}),
@@ -51,20 +53,19 @@ func NewHostShutdownCommand(dep fx.Option, options *core.HostCommand) *cobra.Com
 			fx.New(dep, fx.Invoke(hostAttackF)).Run()
 		},
 	}
-	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
 func hostAttackF(chaos *chaosd.Server, options *core.HostCommand) {
 	if err := options.Validate(); err != nil {
-		ExitWithError(ExitBadArgs, err)
+		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
 	uid, err := chaos.ExecuteAttack(chaosd.HostAttack, options)
 	if err != nil {
-		ExitWithError(ExitError, err)
+		utils.ExitWithError(utils.ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Attack host successfully, uid: %s", uid))
+	utils.NormalExit(fmt.Sprintf("Attack host successfully, uid: %s", uid))
 }

@@ -11,9 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package server
 
 import (
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
@@ -46,7 +47,7 @@ var conf = config.Config{
 
 func serverCommandFunc(cmd *cobra.Command, args []string) {
 	if err := conf.Validate(); err != nil {
-		ExitWithError(ExitBadArgs, err)
+		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
 	version.PrintVersionInfo("Chaosd Server")

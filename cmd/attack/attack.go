@@ -1,4 +1,4 @@
-// Copyright 2021 Chaos Mesh Authors.
+// Copyright 2020 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,22 +11,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package attack
 
-import (
-	"go.uber.org/fx"
+import "github.com/spf13/cobra"
 
-	"github.com/chaos-mesh/chaosd/pkg/config"
-	"github.com/chaos-mesh/chaosd/pkg/server"
-	"github.com/chaos-mesh/chaosd/pkg/store"
-)
+func NewAttackCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "attack <subcommand>",
+		Short: "Attack related commands",
+	}
 
-var Module = fx.Options(
-	fx.Provide(
-		func() *config.Config {
-			return &conf
-		},
-	),
-	store.Module,
-	server.Module,
-)
+	cmd.AddCommand(
+		NewProcessAttackCommand(),
+		NewNetworkAttackCommand(),
+		NewStressAttackCommand(),
+		NewDiskAttackCommand(),
+		NewHostAttackCommand(),
+	)
+
+	return cmd
+}

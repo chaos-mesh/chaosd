@@ -11,10 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package attack
 
 import (
 	"fmt"
+	"github.com/chaos-mesh/chaosd/cmd/server"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -27,7 +29,7 @@ import (
 func NewProcessAttackCommand() *cobra.Command {
 	options := core.NewProcessCommand()
 	dep := fx.Options(
-		Module,
+		server.Module,
 		fx.Provide(func() *core.ProcessCommand {
 			return options
 		}),
@@ -58,7 +60,6 @@ func NewProcessKillCommand(dep fx.Option, options *core.ProcessCommand) *cobra.C
 
 	cmd.Flags().StringVarP(&options.Process, "process", "p", "", "The process name or the process ID")
 	cmd.Flags().IntVarP(&options.Signal, "signal", "s", 9, "The signal number to send")
-	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
@@ -75,20 +76,19 @@ func NewProcessStopCommand(dep fx.Option, options *core.ProcessCommand) *cobra.C
 	}
 
 	cmd.Flags().StringVarP(&options.Process, "process", "p", "", "The process name or the process ID")
-	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
 
 func processAttackF(options *core.ProcessCommand, chaos *chaosd.Server) {
 	if err := options.Validate(); err != nil {
-		ExitWithError(ExitBadArgs, err)
+		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
 	uid, err := chaos.ExecuteAttack(chaosd.ProcessAttack, options)
 	if err != nil {
-		ExitWithError(ExitError, err)
+		utils.ExitWithError(utils.ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Attack process %s successfully, uid: %s", options.Process, uid))
+	utils.NormalExit(fmt.Sprintf("Attack process %s successfully, uid: %s", options.Process, uid))
 }
