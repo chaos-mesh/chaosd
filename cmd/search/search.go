@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package search
 
 import (
 	"os"
@@ -21,14 +21,16 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
+	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 func NewSearchCommand() *cobra.Command {
 	options := &core.SearchCommand{}
 	dep := fx.Options(
-		Module,
+		server.Module,
 		fx.Provide(func() *core.SearchCommand {
 			return options
 		}),
@@ -60,12 +62,12 @@ func NewSearchCommand() *cobra.Command {
 
 func searchCommandFunc(chaos *chaosd.Server, options *core.SearchCommand) {
 	if err := options.Validate(); err != nil {
-		ExitWithError(ExitBadArgs, err)
+		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
 	exps, err := chaos.Search(options)
 	if err != nil {
-		ExitWithError(ExitError, err)
+		utils.ExitWithError(utils.ExitError, err)
 	}
 
 	tw := tablewriter.NewWriter(os.Stdout)
@@ -84,5 +86,5 @@ func searchCommandFunc(chaos *chaosd.Server, options *core.SearchCommand) {
 
 	tw.Render()
 
-	NormalExit("")
+	utils.NormalExit("")
 }
