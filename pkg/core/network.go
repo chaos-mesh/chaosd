@@ -62,7 +62,7 @@ func (n NetworkCommand) Validate() error {
 	case NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
 		return n.validNetworkCommon()
 	case NetworkDNSAction:
-		return nil
+		return n.validNetworkDNS()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -122,6 +122,10 @@ func (n *NetworkCommand) validNetworkCommon() error {
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
 }
 
+func (n *NetworkCommand) validNetworkDNS() error {
+	return nil
+}
+
 func (n *NetworkCommand) CompleteDefaults() {
 	switch n.Action {
 	case NetworkDelayAction:
@@ -144,6 +148,12 @@ func (n *NetworkCommand) setDefaultForNetworkDelay() {
 func (n *NetworkCommand) setDefaultForNetworkLoss() {
 	if len(n.Correlation) == 0 {
 		n.Correlation = "0"
+	}
+}
+
+func (n *NetworkCommand) setDefaultForNetworkDNS() {
+	if len(n.DNSServer) == 0 {
+		n.DNSServer = "123.123.123.123"
 	}
 }
 
