@@ -96,7 +96,7 @@ Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
     Sample usage:
 
     ```bash
-    $ chaosd attack network loss -d eth0 -i 172.16.4.4 --percent 50%
+    $ chaosd attack network loss -d eth0 -i 172.16.4.4 --percent 50
     ```
 
 - **corrupt network packet**
@@ -106,7 +106,7 @@ Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
     Sample usage:
 
     ```bash
-    $ chaosd attack network corrupt -d eth0 -i 172.16.4.4 --percent 50%
+    $ chaosd attack network corrupt -d eth0 -i 172.16.4.4 --percent 50
     ```
 
 - **duplicate network packet**
@@ -116,7 +116,7 @@ Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
     Sample usage:
 
     ```bash
-    $ chaosd attack network duplicate -d eth0 -i 172.16.4.4 --percent 50%
+    $ chaosd attack network duplicate -d eth0 -i 172.16.4.4 --percent 50
     ```
 
 #### Stress attack
@@ -295,7 +295,7 @@ Generates stress on the host. Supported tasks are:
    Sample usage:
 
     ```bash
-    $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"cpu", "load": 100, "worker": 2}'
+    $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"cpu", "load": 100, "workers": 2}'
     ```
 
 - **Memory stress**
@@ -305,7 +305,7 @@ Generates stress on the host. Supported tasks are:
    Sample usage:
 
     ```bash
-    $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"mem", "worker": 2}'
+    $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"mem", "workers": 2}'
     ```
 
 #### Disk attack
