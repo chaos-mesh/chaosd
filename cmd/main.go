@@ -11,14 +11,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ctl
+package main
 
 import (
+	_ "github.com/alecthomas/template"
 	"github.com/pingcap/log"
 	"github.com/spf13/cobra"
+	_ "github.com/swaggo/swag"
 	"go.uber.org/zap"
 
-	"github.com/chaos-mesh/chaosd/cmd/chaosd/ctl/command"
+	"github.com/chaos-mesh/chaosd/cmd/attack"
+	"github.com/chaos-mesh/chaosd/cmd/recover"
+	"github.com/chaos-mesh/chaosd/cmd/search"
+	"github.com/chaos-mesh/chaosd/cmd/server"
+	"github.com/chaos-mesh/chaosd/cmd/version"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 var logLevel string
@@ -34,19 +41,12 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", "", "the log level of chaosd, the value can be 'debug', 'info', 'warn' and 'error'")
 
 	rootCmd.AddCommand(
-		command.NewServerCommand(),
-		command.NewAttackCommand(),
-		command.NewRecoverCommand(),
-		command.NewSearchCommand(),
-		command.NewVersionCommand(),
+		server.NewServerCommand(),
+		attack.NewAttackCommand(),
+		recover.NewRecoverCommand(),
+		search.NewSearchCommand(),
+		version.NewVersionCommand(),
 	)
-}
-
-// Execute execs Command
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		command.ExitWithError(command.ExitError, err)
-	}
 }
 
 func setLogLevel() {
@@ -57,4 +57,10 @@ func setLogLevel() {
 		return
 	}
 	log.ReplaceGlobals(lg, r)
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		utils.ExitWithError(utils.ExitError, err)
+	}
 }

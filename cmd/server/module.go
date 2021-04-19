@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,22 +11,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package server
 
 import (
-	"github.com/spf13/cobra"
+	"go.uber.org/fx"
 
-	"github.com/chaos-mesh/chaosd/pkg/version"
+	"github.com/chaos-mesh/chaosd/pkg/config"
+	"github.com/chaos-mesh/chaosd/pkg/server"
+	"github.com/chaos-mesh/chaosd/pkg/store"
 )
 
-func NewVersionCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:   "version",
-		Short: "Prints the version of chaosd",
-		Run:   versionCommandFunc,
-	}
-}
-
-func versionCommandFunc(cmd *cobra.Command, args []string) {
-	version.PrintVersionInfo("Chaosd")
-}
+var Module = fx.Options(
+	fx.Provide(
+		func() *config.Config {
+			return &conf
+		},
+	),
+	store.Module,
+	server.Module,
+)
