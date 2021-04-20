@@ -320,6 +320,7 @@ Attacks the disk by increasing write/read payload, or filling up the disk. Suppo
 
     ```bash
     curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"read-payload","size":1024,"path":"temp"}'
+    ```
 
     ```bash
     curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"write-payload","size":1024,"path":"temp"}'
