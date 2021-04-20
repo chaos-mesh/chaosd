@@ -132,6 +132,8 @@ func (n *NetworkCommand) CompleteDefaults() {
 		n.setDefaultForNetworkDelay()
 	case NetworkLossAction:
 		n.setDefaultForNetworkLoss()
+	case NetworkDNSAction:
+		n.setDefaultForNetworkDNS()
 	}
 }
 
