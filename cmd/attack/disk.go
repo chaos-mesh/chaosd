@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package attack
 
 import (
 	"fmt"
@@ -19,14 +19,16 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
+	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 func NewDiskAttackCommand() *cobra.Command {
 	options := core.NewDiskCommand()
 	dep := fx.Options(
-		Module,
+		server.Module,
 		fx.Provide(func() *core.DiskCommand {
 			return options
 		}),
@@ -67,12 +69,11 @@ func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra
 		},
 	}
 
-	cmd.Flags().Uint64VarP(&options.Size, "size", "s", 0,
+	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
 		"'size' specifies how many data will fill in the file path with unit MB.")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "/dev/null",
 		"'path' specifies the location to fill data in.\n"+
 			"If path not provided, payload will write into /dev/null")
-	commonFlags(cmd, &options.CommonAttackConfig)
 	return cmd
 }
 
@@ -86,12 +87,11 @@ func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra.
 		},
 	}
 
-	cmd.Flags().Uint64VarP(&options.Size, "size", "s", 0,
+	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
 		"'size' specifies how many data will read from the file path with unit MB.")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
 		"'path' specifies the location to read data.\n"+
 			"If path not provided, payload will raise an error")
-	commonFlags(cmd, &options.CommonAttackConfig)
 	return cmd
 }
 
@@ -105,30 +105,31 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskCommand) *cobra.Command
 		},
 	}
 
-	cmd.Flags().Uint64VarP(&options.Size, "size", "s", 0,
+	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
 		"'size' specifies how many data will fill in the file path with unit MB.")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
 		"'path' specifies the location to fill data in.\n"+
 			"If path not provided, a temp file will be generated and deleted immediately after data filled in or allocated")
+	cmd.Flags().StringVarP(&options.Percent, "percent", "c", "",
+		"'percent' how many percent data of disk will fill in the file path")
 	cmd.Flags().BoolVarP(&options.FillByFallocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
-	commonFlags(cmd, &options.CommonAttackConfig)
 	return cmd
 }
 
 func processDiskAttack(options *core.DiskCommand, chaos *chaosd.Server) {
 	if err := options.Validate(); err != nil {
-		ExitWithError(ExitBadArgs, err)
+		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, options)
 	if err != nil {
-		ExitWithError(ExitError, err)
+		utils.ExitWithError(utils.ExitError, err)
 	}
 
 	if options.String() == core.DiskWritePayloadAction {
-		NormalExit(fmt.Sprintf("Write file %s successfully, uid: %s", options.Path, uid))
+		utils.NormalExit(fmt.Sprintf("Write file %s successfully, uid: %s", options.Path, uid))
 	} else if options.String() == core.DiskReadPayloadAction {
-		NormalExit(fmt.Sprintf("Read file %s successfully, uid: %s", options.Path, uid))
+		utils.NormalExit(fmt.Sprintf("Read file %s successfully, uid: %s", options.Path, uid))
 	} else {
-		NormalExit(fmt.Sprintf("Fill file %s successfully, uid: %s", options.Path, uid))
+		utils.NormalExit(fmt.Sprintf("Fill file %s successfully, uid: %s", options.Path, uid))
 	}
 }

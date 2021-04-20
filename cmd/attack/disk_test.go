@@ -11,15 +11,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package attack
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxtest"
 
+	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
@@ -33,7 +35,7 @@ type diskTest struct {
 func TestServer_DiskFill(t *testing.T) {
 	fxtest.New(
 		t,
-		Module,
+		server.Module,
 		fx.Provide(func() []diskTest {
 			return []diskTest{
 				{
@@ -43,7 +45,7 @@ func TestServer_DiskFill(t *testing.T) {
 							Action: core.DiskFillAction,
 							Kind:   core.DiskAttack,
 						},
-						Size:            1024,
+						Size:            "1024",
 						Path:            "temp",
 						FillByFallocate: true,
 					},
@@ -55,7 +57,7 @@ func TestServer_DiskFill(t *testing.T) {
 							Action: core.DiskFillAction,
 							Kind:   core.DiskAttack,
 						},
-						Size:            24,
+						Size:            "24",
 						Path:            "temp",
 						FillByFallocate: false,
 					},
@@ -85,8 +87,10 @@ func TestServer_DiskFill(t *testing.T) {
 						return
 					}
 
-					if uint64(stat.Size()) != tt.command.Size*1024*1024 {
-						t.Errorf("DiskFill() size %v, expect %d", stat.Size(), tt.command.Size*1024*1024)
+					size, _ := strconv.ParseUint(tt.command.Size, 10, 0)
+
+					if uint64(stat.Size()) != size*1024*1024 {
+						t.Errorf("DiskFill() size %v, expect %d", stat.Size(), size*1024*1024)
 						return
 					}
 					os.Remove(tt.command.Path)
@@ -99,7 +103,7 @@ func TestServer_DiskFill(t *testing.T) {
 func TestServer_DiskPayload(t *testing.T) {
 	fxtest.New(
 		t,
-		Module,
+		server.Module,
 		fx.Provide(func() []diskTest {
 			return []diskTest{
 				{
@@ -109,7 +113,7 @@ func TestServer_DiskPayload(t *testing.T) {
 							Action: core.DiskWritePayloadAction,
 							Kind:   core.DiskAttack,
 						},
-						Size: 24,
+						Size: "24",
 						Path: "temp",
 					},
 					wantErr: false,
@@ -120,7 +124,7 @@ func TestServer_DiskPayload(t *testing.T) {
 							Action: core.DiskReadPayloadAction,
 							Kind:   core.DiskAttack,
 						},
-						Size: 24,
+						Size: "24",
 						Path: "temp",
 					},
 					wantErr: false,

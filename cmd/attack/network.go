@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package attack
 
 import (
 	"fmt"
@@ -19,14 +19,16 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
+	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 func NewNetworkAttackCommand() *cobra.Command {
 	options := core.NewNetworkCommand()
 	dep := fx.Options(
-		Module,
+		server.Module,
 		fx.Provide(func() *core.NetworkCommand {
 			return options
 		}),
@@ -76,7 +78,6 @@ func NewNetworkDelayCommand(dep fx.Option, options *core.NetworkCommand) *cobra.
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
@@ -106,7 +107,6 @@ func NewNetworkLossCommand(dep fx.Option, options *core.NetworkCommand) *cobra.C
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
@@ -136,7 +136,6 @@ func NewNetworkCorruptCommand(dep fx.Option, options *core.NetworkCommand) *cobr
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
@@ -166,7 +165,6 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
@@ -192,13 +190,13 @@ func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 
 func commonNetworkAttackFunc(options *core.NetworkCommand, chaos *chaosd.Server) {
 	if err := options.Validate(); err != nil {
-		ExitWithError(ExitBadArgs, err)
+		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
 	uid, err := chaos.ExecuteAttack(chaosd.NetworkAttack, options)
 	if err != nil {
-		ExitWithError(ExitError, err)
+		utils.ExitWithError(utils.ExitError, err)
 	}
 
-	NormalExit(fmt.Sprintf("Attack network successfully, uid: %s", uid))
+	utils.NormalExit(fmt.Sprintf("Attack network successfully, uid: %s", uid))
 }

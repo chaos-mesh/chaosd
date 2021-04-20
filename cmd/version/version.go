@@ -11,23 +11,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package version
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
 
-func NewAttackCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
+	"github.com/chaos-mesh/chaosd/pkg/version"
+)
+
+func NewVersionCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Prints the version of chaosd",
+		Run:   versionCommandFunc,
 	}
+}
 
-	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-		NewStressAttackCommand(),
-		NewDiskAttackCommand(),
-		NewHostAttackCommand(),
-	)
-
-	return cmd
+func versionCommandFunc(cmd *cobra.Command, args []string) {
+	version.PrintVersionInfo("Chaosd")
 }

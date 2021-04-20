@@ -18,7 +18,10 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
+	"strings"
+	"syscall"
 
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
@@ -38,18 +41,18 @@ func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err e
 	attack := options.(*core.DiskCommand)
 
 	if options.String() == core.DiskFillAction {
-		return disk.attackDiskFill(env.AttackUid, attack)
+		return disk.attackDiskFill(attack)
 	}
-	return disk.attackDiskPayload(env.AttackUid, attack)
+	return disk.attackDiskPayload(attack)
 }
 
-func (diskAttack) attackDiskPayload(uid string, payload *core.DiskCommand) error {
+func (diskAttack) attackDiskPayload(payload *core.DiskCommand) error {
 	switch payload.Action {
 	case core.DiskWritePayloadAction:
 		if payload.Path == "" {
 			payload.Path = "/dev/null"
 		}
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDWritePayloadCommand, payload.Path, "1M", strconv.FormatUint(payload.Size, 10)))
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDWritePayloadCommand, payload.Path, "1M", payload.Size))
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
@@ -64,7 +67,7 @@ func (diskAttack) attackDiskPayload(uid string, payload *core.DiskCommand) error
 			log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
 			return err
 		}
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, payload.Path, "1M", strconv.FormatUint(payload.Size, 10)))
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, payload.Path, "1M", payload.Size))
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
@@ -83,7 +86,7 @@ func (diskAttack) attackDiskPayload(uid string, payload *core.DiskCommand) error
 const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock"
 const DDFallocateCommand = "fallocate -l %sM %s"
 
-func (diskAttack) attackDiskFill(uid string, fill *core.DiskCommand) error {
+func (diskAttack) attackDiskFill(fill *core.DiskCommand) error {
 	if fill.Path == "" {
 		tempFile, err := ioutil.TempFile("", "example")
 		if err != nil {
@@ -113,11 +116,32 @@ func (diskAttack) attackDiskFill(uid string, fill *core.DiskCommand) error {
 	}
 
 	var cmd *exec.Cmd
+	if fill.Size != "" {
+		fill.Size = strings.Trim(fill.Size, " ")
+	} else if fill.Percent != "" {
+		fill.Percent = strings.Trim(fill.Percent, " ")
+		percent, err := strconv.ParseUint(fill.Percent, 10, 0)
+		if err != nil {
+			log.Error(fmt.Sprintf(" unexcepted err when parsing disk percent '%s'", fill.Percent), zap.Error(err))
+			return err
+		}
+		dir := filepath.Dir(fill.Path)
+		s := syscall.Statfs_t{}
+		err = syscall.Statfs(dir, &s)
+		if err != nil {
+			log.Error(fmt.Sprintf("unexpected err when using syscall.Statfs"), zap.Error(err))
+			return err
+		}
+		reservedBlocks := s.Bfree - s.Bavail
+		totalM := uint64(s.Frsize) * (s.Blocks - reservedBlocks) / 1024 / 1024
+		fill.Size = strconv.FormatUint(totalM*percent/100, 10)
+	}
+
 	if fill.FillByFallocate {
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFallocateCommand, strconv.FormatUint(fill.Size, 10), fill.Path))
+		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFallocateCommand, fill.Size, fill.Path))
 	} else {
 		//1M means the block size. The bytes size dd read | write is (block size) * (size).
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, "1M", strconv.FormatUint(fill.Size, 10)))
+		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, "1M", fill.Size))
 	}
 
 	output, err := cmd.CombinedOutput()

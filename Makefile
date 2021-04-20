@@ -59,7 +59,7 @@ image-binary: image-build-base
 endif
 
 chaosd:
-	$(CGOENV) go build -ldflags '$(LDFLAGS)' -tags "${BUILD_TAGS}" -o bin/chaosd ./cmd/chaosd/main.go
+	$(CGOENV) go build -ldflags '$(LDFLAGS)' -tags "${BUILD_TAGS}" -o bin/chaosd ./cmd/main.go
 
 
 swagger_spec:
