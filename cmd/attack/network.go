@@ -183,7 +183,6 @@ func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 
 	cmd.Flags().StringVarP(&options.DNSServer, "dns-server", "", "123.123.123.123",
 		"update the DNS server in /etc/resolv.conf with this value")
-	commonFlags(cmd, &options.CommonAttackConfig)
 
 	return cmd
 }
