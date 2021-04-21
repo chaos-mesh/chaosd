@@ -192,7 +192,7 @@ func commonNetworkAttackFunc(options *core.NetworkCommand, chaos *chaosd.Server)
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
-	uid, err := chaos.ExecuteAttack(chaosd.NetworkAttack, options)
+	uid, err := chaos.ExecuteAttack(chaosd.NetworkAttack, options, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

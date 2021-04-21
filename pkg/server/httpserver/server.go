@@ -119,7 +119,7 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.ProcessAttack, attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.ProcessAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -148,7 +148,7 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.NetworkAttack, attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.NetworkAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -177,7 +177,7 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.StressAttack, attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.StressAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -206,7 +206,7 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attack, core.ServerMode)
 
 	if err != nil {
 		handleError(c, err)

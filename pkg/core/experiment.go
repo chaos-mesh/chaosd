@@ -39,9 +39,15 @@ const (
 	JVMAttack     = "jvm"
 )
 
+const (
+	ServerMode  = "svr"
+	CommandMode = "cmd"
+)
+
 // ExperimentStore defines operations for working with experiments
 type ExperimentStore interface {
 	List(ctx context.Context) ([]*Experiment, error)
+	ListByLaunchMode(ctx context.Context, mode string) ([]*Experiment, error)
 	ListByConditions(ctx context.Context, conds *SearchCommand) ([]*Experiment, error)
 	ListByStatus(ctx context.Context, status string) ([]*Experiment, error)
 	FindByUid(ctx context.Context, uid string) (*Experiment, error)
@@ -61,6 +67,7 @@ type Experiment struct {
 	Kind           string `json:"kind"`
 	Action         string `json:"action"`
 	RecoverCommand string `json:"recover_command"`
+	LaunchMode     string `json:"launch_mode"`
 
 	cachedRequestCommand AttackConfig
 }

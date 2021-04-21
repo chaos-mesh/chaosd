@@ -45,7 +45,7 @@ func (s *Server) newEnvironment(uid string) Environment {
 // an attack for the given attackType.
 // If options.Schedule isn't provided, then the attack is executed immediately.
 // Otherwise the attack is scheduled based on the provided schedule spec and duration.
-func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig) (uid string, err error) {
+func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig, launchMode string) (uid string, err error) {
 	if err = options.Validate(); err != nil {
 		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
 		return
@@ -59,6 +59,7 @@ func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig)
 		Kind:           options.AttackKind(),
 		Action:         options.String(),
 		RecoverCommand: options.RecoverData(),
+		LaunchMode:     launchMode,
 	}
 	if err = s.exp.Set(context.Background(), exp); err != nil {
 		err = perr.WithStack(err)
