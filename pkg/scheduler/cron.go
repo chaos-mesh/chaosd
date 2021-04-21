@@ -40,8 +40,24 @@ type CronJob struct {
 
 // TODO: write tests for it
 func (cj *CronJob) Run() {
+	var newRun *core.ExperimentRun
+	defer func() {
+		var updErr, panicErr error
+		if panicErr = recover().(error); panicErr != nil {
+			log.Error("scheduled run errored", zap.String("expId", cj.experiment.Uid), zap.Error(panicErr))
+			if newRun != nil {
+				updErr = cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunFailed, panicErr.Error())
+			}
+		} else {
+			log.Info("scheduled run success", zap.String("expId", cj.experiment.Uid))
+			updErr = cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunSuccess, "")
+		}
+		if updErr != nil {
+			log.Error("failed to update experiment run", zap.Error(panicErr))
+		}
+	}()
+
 	log.Info("Started new run", zap.String("expId", cj.experiment.Uid))
-	var err error
 	cfg, err := cj.experiment.GetRequestCommand()
 	if err != nil {
 		panic(perr.WithStack(err))
@@ -58,19 +74,12 @@ func (cj *CronJob) Run() {
 		return
 	}
 
-	newRun := cj.experiment.NewRun()
+	newRun = cj.experiment.NewRun()
 	if err = cj.scheduler.expRunStore.NewRun(context.Background(), newRun); err != nil {
 		panic(perr.WithStack(err))
 	}
 
-	defer func() {
-		if err != nil {
-			cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunFailed, err.Error())
-		} else {
-			cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunSuccess, "")
-		}
-	}()
-
+	log.Info("executing attack on new exp run", zap.String("expRunUID", newRun.UID))
 	if err = cj.run(); err != nil {
 		panic(perr.WithMessage(err, "attack failed"))
 	}
