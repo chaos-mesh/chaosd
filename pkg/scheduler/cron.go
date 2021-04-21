@@ -42,18 +42,22 @@ type CronJob struct {
 func (cj *CronJob) Run() {
 	var newRun *core.ExperimentRun
 	defer func() {
-		var updErr, panicErr error
-		if panicErr = recover().(error); panicErr != nil {
+		var updErr error
+		if panicErr, ok := recover().(error); panicErr != nil && ok {
 			log.Error("scheduled run errored", zap.String("expId", cj.experiment.Uid), zap.Error(panicErr))
 			if newRun != nil {
 				updErr = cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunFailed, panicErr.Error())
 			}
 		} else {
 			log.Info("scheduled run success", zap.String("expId", cj.experiment.Uid))
-			updErr = cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunSuccess, "")
+			if newRun != nil {
+				updErr = cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunSuccess, "")
+			} else {
+				log.Info("cron run finished")
+			}
 		}
 		if updErr != nil {
-			log.Error("failed to update experiment run", zap.Error(panicErr))
+			log.Error("failed to update experiment run", zap.Error(updErr))
 		}
 	}()
 
@@ -66,8 +70,10 @@ func (cj *CronJob) Run() {
 	if err != nil {
 		panic(perr.WithStack(err))
 	}
-	if cronDuration != nil && cj.experiment.CreatedAt.Add(*cronDuration).Sub(time.Now()).Microseconds() >= 0 {
-		cj.scheduler.Remove(cj.experiment.ID)
+	if cronDuration != nil && time.Until(cj.experiment.CreatedAt.Add(*cronDuration)).Milliseconds() < 0 {
+		if err = cj.scheduler.Remove(cj.experiment.ID); err != nil {
+			panic(perr.WithStack(err))
+		}
 		if err = cj.scheduler.expStore.Update(context.Background(), cj.experiment.Uid, core.Success, "", cj.experiment.RecoverCommand); err != nil {
 			panic(perr.WithStack(err))
 		}
@@ -93,7 +99,7 @@ func NewScheduler(expRunStore core.ExperimentRunStore, expStore core.ExperimentS
 		),
 		expRunStore: expRunStore,
 		expStore:    expStore,
-		cronStore:   &cronStore{entry: make(map[uint]cron.EntryID, 0)},
+		cronStore:   &cronStore{entry: make(map[uint]cron.EntryID)},
 	}
 }
 
