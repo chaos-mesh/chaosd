@@ -40,6 +40,9 @@ type NetworkCommand struct {
 	IPAddress   string
 	IPProtocol  string
 	Hostname    string
+
+	// used for DNS attack
+	DNSServer string
 }
 
 var _ AttackConfig = &NetworkCommand{}
@@ -49,6 +52,7 @@ const (
 	NetworkLossAction      = "loss"
 	NetworkCorruptAction   = "corrupt"
 	NetworkDuplicateAction = "duplicate"
+	NetworkDNSAction       = "dns"
 )
 
 func (n NetworkCommand) Validate() error {
@@ -57,6 +61,8 @@ func (n NetworkCommand) Validate() error {
 		return n.validNetworkDelay()
 	case NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
 		return n.validNetworkCommon()
+	case NetworkDNSAction:
+		return n.validNetworkDNS()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -116,12 +122,18 @@ func (n *NetworkCommand) validNetworkCommon() error {
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
 }
 
+func (n *NetworkCommand) validNetworkDNS() error {
+	return nil
+}
+
 func (n *NetworkCommand) CompleteDefaults() {
 	switch n.Action {
 	case NetworkDelayAction:
 		n.setDefaultForNetworkDelay()
 	case NetworkLossAction:
 		n.setDefaultForNetworkLoss()
+	case NetworkDNSAction:
+		n.setDefaultForNetworkDNS()
 	}
 }
 
@@ -138,6 +150,12 @@ func (n *NetworkCommand) setDefaultForNetworkDelay() {
 func (n *NetworkCommand) setDefaultForNetworkLoss() {
 	if len(n.Correlation) == 0 {
 		n.Correlation = "0"
+	}
+}
+
+func (n *NetworkCommand) setDefaultForNetworkDNS() {
+	if len(n.DNSServer) == 0 {
+		n.DNSServer = "123.123.123.123"
 	}
 }
 
