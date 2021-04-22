@@ -33,11 +33,11 @@ type diskAttack struct{}
 
 var DiskAttack AttackType = diskAttack{}
 
-const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
-const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync,direct,fullblock"
+const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=1%s count=%s oflag=dsync"
+const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=1%s count=%s iflag=dsync,direct,fullblock"
 
 func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err error) {
-	attack := options.(*core.DiskCommand)
+	attack := options.(*core.DiskOption)
 
 	if options.String() == core.DiskFillAction {
 		return disk.attackDiskFill(attack)
@@ -45,13 +45,13 @@ func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err e
 	return disk.attackDiskPayload(attack)
 }
 
-func (diskAttack) attackDiskPayload(payload *core.DiskCommand) error {
+func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 	switch payload.Action {
 	case core.DiskWritePayloadAction:
 		if payload.Path == "" {
 			payload.Path = "/dev/null"
 		}
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDWritePayloadCommand, payload.Path, "1M", payload.Size))
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDWritePayloadCommand, payload.Path, payload.Unit, payload.Size))
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
@@ -75,7 +75,7 @@ func (diskAttack) attackDiskPayload(payload *core.DiskCommand) error {
 				}
 			}()
 		}
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, payload.Path, "1M", payload.Size))
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, payload.Path, payload.Unit, payload.Size))
 		output, err := cmd.CombinedOutput()
 
 		if err != nil {
@@ -91,10 +91,10 @@ func (diskAttack) attackDiskPayload(payload *core.DiskCommand) error {
 	}
 }
 
-const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock"
-const DDFallocateCommand = "fallocate -l %sM %s"
+const DDFillCommand = "dd if=/dev/zero of=%s bs=1%s count=%s iflag=fullblock"
+const DDFallocateCommand = "fallocate -l %s%s %s"
 
-func (diskAttack) attackDiskFill(fill *core.DiskCommand) error {
+func (diskAttack) attackDiskFill(fill *core.DiskOption) error {
 	if fill.Path == "" {
 		var err error
 		fill.Path, err = utils.CreateTempFile()
@@ -102,13 +102,16 @@ func (diskAttack) attackDiskFill(fill *core.DiskCommand) error {
 			log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", fill.Action))
 			return err
 		}
-		defer func() {
+	}
+
+	defer func() {
+		if fill.FillDestroyFile {
 			err := os.Remove(fill.Path)
 			if err != nil {
-				log.Error(fmt.Sprintf("unexpected err when removing temp file %s", fill.Path), zap.Error(err))
+				log.Error(fmt.Sprintf("unexpected err when removing file %s", fill.Path), zap.Error(err))
 			}
-		}()
-	}
+		}
+	}()
 
 	var cmd *exec.Cmd
 	if fill.Size != "" {
@@ -127,13 +130,14 @@ func (diskAttack) attackDiskFill(fill *core.DiskCommand) error {
 			return err
 		}
 		fill.Size = strconv.FormatUint(totalSize/1024/1024*percent/100, 10)
+		fill.Unit = "M"
 	}
 
 	if fill.FillByFallocate {
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFallocateCommand, fill.Size, fill.Path))
+		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFallocateCommand, fill.Size, fill.Unit, fill.Path))
 	} else {
 		//1M means the block size. The bytes size dd read | write is (block size) * (size).
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, "1M", fill.Size))
+		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, fill.Unit, fill.Size))
 	}
 
 	output, err := cmd.CombinedOutput()
