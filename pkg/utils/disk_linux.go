@@ -17,7 +17,7 @@ import (
 	"syscall"
 )
 
-// GetInfo returns total and free bytes available in a directory, e.g. `/`.
+// GetDiskTotalSize returns the total bytes in disk
 func GetDiskTotalSize(path string) (total uint64, err error) {
 	s := syscall.Statfs_t{}
 	err = syscall.Statfs(path, &s)
