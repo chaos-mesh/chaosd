@@ -40,8 +40,21 @@ You can either build directly from the source or download the binary to finish t
 
 - Download binary
 
+    Download the latest unstable version by executing the command below:
+
     ```bash
     curl -fsSL -o chaosd https://mirrors.chaos-mesh.org/latest/chaosd
+    ```
+
+    If you want to download the release version, you can replace the `latest` in the above command with the version number. For example, download `v0.9.0` by executing the command below:
+
+    ```bash
+    curl -fsSL -o chaosd https://mirrors.chaos-mesh.org/v0.9.0/chaosd
+    ```
+
+    Then add executable permissions to the chaosd and move it to path `/usr/local/bin`:
+
+    ```bash
     chmod +x chaosd && mv chaosd /usr/local/bin/chaosd
     ```
 
