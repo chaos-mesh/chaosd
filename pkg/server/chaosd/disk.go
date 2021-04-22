@@ -21,13 +21,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
-	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 type diskAttack struct{}
@@ -126,12 +126,15 @@ func (diskAttack) attackDiskFill(fill *core.DiskCommand) error {
 			return err
 		}
 		dir := filepath.Dir(fill.Path)
-		totalSize, err := utils.GetDiskTotalSize(dir)
+		s := syscall.Statfs_t{}
+		err = syscall.Statfs(dir, &s)
 		if err != nil {
-			log.Error("fail to get disk total size", zap.Error(err))
+			log.Error(fmt.Sprintf("unexpected err when using syscall.Statfs"), zap.Error(err))
 			return err
 		}
-		fill.Size = strconv.FormatUint(totalSize/1024/1024*percent/100, 10)
+		reservedBlocks := s.Bfree - s.Bavail
+		totalM := uint64(s.Frsize) * (s.Blocks - reservedBlocks) / 1024 / 1024
+		fill.Size = strconv.FormatUint(totalM*percent/100, 10)
 	}
 
 	if fill.FillByFallocate {
