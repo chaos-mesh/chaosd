@@ -2,6 +2,7 @@ module github.com/chaos-mesh/chaosd
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
 	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20210329064057-23471399d8f4
 	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0
 	github.com/containerd/containerd v1.2.3

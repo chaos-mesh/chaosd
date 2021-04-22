@@ -17,7 +17,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
+
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 const (
@@ -39,17 +40,6 @@ type DiskOption struct {
 }
 
 var _ AttackConfig = &DiskOption{}
-var Units = []string{"c", "w", "b", "kB", "K", "MB", "M", "GB", "G"}
-
-func IsValidUnit(unit string) bool {
-	unit = strings.Trim(unit, " ")
-	for _, u := range Units {
-		if unit == u {
-			return true
-		}
-	}
-	return false
-}
 
 func (d *DiskOption) Validate() error {
 	if d.Size == "" {
@@ -62,17 +52,19 @@ func (d *DiskOption) Validate() error {
 		}
 	}
 
-	if d.FillByFallocate && (d.Size == "0" || (d.Size == "" && d.Percent == "0")) {
-		return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
-			"if you want allocate a 0 size file please set fallocate=false, DiskOption : %v", d)
+	if d.Action == DiskFillAction {
+		if d.FillByFallocate && (d.Size == "0" || (d.Size == "" && d.Percent == "0")) {
+			return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
+				"if you want allocate a 0 size file please set fallocate=false, DiskOption : %v", d)
+		}
 	}
 
-	if !IsValidUnit(d.Unit) {
-		return fmt.Errorf("unsupport unit : %s, DiskOption : %v", d.Unit, d)
+	if _, err := utils.ParseUnit("1" + d.Unit); err != nil {
+		return fmt.Errorf("unknown unit : %s, DiskOption : %v", d.Unit, d)
 	}
 
 	if d.PayloadProcessNum == 0 {
-		return fmt.Errorf("unsupport process num : %s, DiskOption : %v", d.PayloadProcessNum, d)
+		return fmt.Errorf("unsupport process num : %d, DiskOption : %v", d.PayloadProcessNum, d)
 	}
 
 	return nil

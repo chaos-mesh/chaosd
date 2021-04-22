@@ -15,6 +15,8 @@ package utils
 
 import (
 	"syscall"
+
+	"github.com/shirou/gopsutil/disk"
 )
 
 // GetDiskTotalSize returns the total bytes in disk
@@ -27,4 +29,17 @@ func GetDiskTotalSize(path string) (total uint64, err error) {
 	reservedBlocks := s.Bfree - s.Bavail
 	total = uint64(s.Frsize) * (s.Blocks - reservedBlocks)
 	return total, nil
+}
+
+func GetRootDevice() (string, error) {
+	mapStat, err := disk.Partitions(false)
+	if err != nil {
+		return "", err
+	}
+	for _, stat := range mapStat {
+		if stat.Mountpoint == "/" {
+			return stat.Device, nil
+		}
+	}
+	return "", nil
 }

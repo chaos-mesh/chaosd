@@ -71,13 +71,13 @@ func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
 		"'size' specifies how many data will fill in the file path with unit.")
-	cmd.Flags().StringVarP(&options.Path, "path", "p", "/dev/null",
+	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
 		"'path' specifies the location to fill data in.\n"+
-			"If path not provided, payload will write into /dev/null")
+			"If path not provided, payload will write into a temp file, temp file will be deleted after writing")
 	cmd.Flags().StringVarP(&options.Unit, "unit", "u", "M",
 		"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
 			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES, default : M")
-	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "pn", 1,
+	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
 		"'process-num' specifies the number of process work on writing , default 1, only 1-255 is valid value")
 	return cmd
 }
@@ -96,11 +96,11 @@ func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.C
 		"'size' specifies how many data will read from the file path with unit.")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
 		"'path' specifies the location to read data.\n"+
-			"If path not provided, payload will raise an error")
+			"If path not provided, payload will read from disk mount on \"/\"")
 	cmd.Flags().StringVarP(&options.Unit, "unit", "u", "M",
 		"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
 			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES, default : M")
-	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "pn", 1,
+	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
 		"'process-num' specifies the number of process work on reading , default 1, only 1-255 is valid value")
 	return cmd
 }

@@ -28,3 +28,7 @@ func GetDiskTotalSize(path string) (total uint64, err error) {
 	total = uint64(s.Bsize) * (s.Blocks - reservedBlocks)
 	return total, err
 }
+
+func GetRootDevice() (string, error) {
+	return "", nil
+}

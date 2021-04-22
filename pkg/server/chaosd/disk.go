@@ -33,8 +33,8 @@ type diskAttack struct{}
 
 var DiskAttack AttackType = diskAttack{}
 
-const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=1%s count=%s oflag=dsync"
-const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=1%s count=%s iflag=dsync,direct,fullblock"
+const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
+const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync,direct,fullblock"
 
 func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err error) {
 	attack := options.(*core.DiskOption)
@@ -46,21 +46,10 @@ func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err e
 }
 
 func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
+	var cmdFormat string
 	switch payload.Action {
 	case core.DiskWritePayloadAction:
-		if payload.Path == "" {
-			payload.Path = "/dev/null"
-		}
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDWritePayloadCommand, payload.Path, payload.Unit, payload.Size))
-		output, err := cmd.CombinedOutput()
-
-		if err != nil {
-			log.Error(string(output), zap.Error(err))
-		} else {
-			log.Info(string(output))
-		}
-		return err
-	case core.DiskReadPayloadAction:
+		cmdFormat = DDWritePayloadCommand
 		if payload.Path == "" {
 			var err error
 			payload.Path, err = utils.CreateTempFile()
@@ -75,23 +64,48 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 				}
 			}()
 		}
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, payload.Path, payload.Unit, payload.Size))
-		output, err := cmd.CombinedOutput()
-
-		if err != nil {
-			log.Error(string(output), zap.Error(err))
-		} else {
-			log.Info(string(output))
+	case core.DiskReadPayloadAction:
+		cmdFormat = DDReadPayloadCommand
+		if payload.Path == "" {
+			path, err := utils.GetRootDevice()
+			if err != nil {
+				log.Error("err when GetRootDevice in reading payload", zap.Error(err))
+				return err
+			}
+			if path == "" {
+				err = fmt.Errorf("can not get root device path")
+				return err
+			}
+			payload.Path = path
 		}
-		return err
 	default:
 		err := errors.Errorf("invalid payload action")
 		log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
 		return err
 	}
+
+	byteSize, err := utils.ParseUnit(payload.Size + payload.Unit)
+	if err != nil {
+		log.Error(fmt.Sprintf("fail to get parse size unit , %s, %s", payload.Size, payload.Unit), zap.Error(err))
+		return err
+	}
+	sizeBlocks := utils.SplitByteSize(byteSize, payload.PayloadProcessNum)
+
+	for _, sizeBlock := range sizeBlocks {
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, sizeBlock.BlockSize, sizeBlock.Size))
+		output, err := cmd.CombinedOutput()
+
+		if err != nil {
+			log.Error(string(output), zap.Error(err))
+			return err
+		}
+		log.Info(string(output))
+	}
+
+	return nil
 }
 
-const DDFillCommand = "dd if=/dev/zero of=%s bs=1%s count=%s iflag=fullblock"
+const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock"
 const DDFallocateCommand = "fallocate -l %s%s %s"
 
 func (diskAttack) attackDiskFill(fill *core.DiskOption) error {
@@ -113,7 +127,6 @@ func (diskAttack) attackDiskFill(fill *core.DiskOption) error {
 		}
 	}()
 
-	var cmd *exec.Cmd
 	if fill.Size != "" {
 		fill.Size = strings.Trim(fill.Size, " ")
 	} else if fill.Percent != "" {
@@ -133,10 +146,11 @@ func (diskAttack) attackDiskFill(fill *core.DiskOption) error {
 		fill.Unit = "M"
 	}
 
+	var cmd *exec.Cmd
 	if fill.FillByFallocate {
 		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFallocateCommand, fill.Size, fill.Unit, fill.Path))
 	} else {
-		//1M means the block size. The bytes size dd read | write is (block size) * (size).
+		//1Unit means the block size. The bytes size dd read | write is (block size) * (size).
 		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, fill.Unit, fill.Size))
 	}
 
