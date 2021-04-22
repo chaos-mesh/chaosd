@@ -43,7 +43,7 @@ func NewSearchCommand() *cobra.Command {
 			if len(args) > 0 {
 				options.UID = args[0]
 			}
-			fx.New(dep, fx.Invoke(searchCommandFunc)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(searchCommandFunc)).Run()
 		},
 	}
 

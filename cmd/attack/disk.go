@@ -65,7 +65,7 @@ func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra
 		Short: "write payload",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.DiskWritePayloadAction
-			fx.New(dep, fx.Invoke(processDiskAttack)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(processDiskAttack)).Run()
 		},
 	}
 
@@ -83,7 +83,7 @@ func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra.
 		Short: "read payload",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.DiskReadPayloadAction
-			fx.New(dep, fx.Invoke(processDiskAttack)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(processDiskAttack)).Run()
 		},
 	}
 
@@ -101,7 +101,7 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskCommand) *cobra.Command
 		Short: "fill disk",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.DiskFillAction
-			fx.New(dep, fx.Invoke(processDiskAttack)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(processDiskAttack), fx.NopLogger).Run()
 		},
 	}
 
