@@ -15,7 +15,6 @@ package chaosd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -63,9 +62,18 @@ func (diskAttack) attackDiskPayload(payload *core.DiskCommand) error {
 		return err
 	case core.DiskReadPayloadAction:
 		if payload.Path == "" {
-			err := errors.Errorf("empty read payload path")
-			log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
-			return err
+			var err error
+			payload.Path, err = utils.CreateTempFile()
+			if err != nil {
+				log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", payload.Action))
+				return err
+			}
+			defer func() {
+				err := os.Remove(payload.Path)
+				if err != nil {
+					log.Error(fmt.Sprintf("unexpected err when removing temp file %s", payload.Path), zap.Error(err))
+				}
+			}()
 		}
 		cmd := exec.Command("bash", "-c", fmt.Sprintf(DDReadPayloadCommand, payload.Path, "1M", payload.Size))
 		output, err := cmd.CombinedOutput()
@@ -88,25 +96,12 @@ const DDFallocateCommand = "fallocate -l %sM %s"
 
 func (diskAttack) attackDiskFill(fill *core.DiskCommand) error {
 	if fill.Path == "" {
-		tempFile, err := ioutil.TempFile("", "example")
+		var err error
+		fill.Path, err = utils.CreateTempFile()
 		if err != nil {
-			log.Error("unexpected err when open temp file", zap.Error(err))
+			log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", fill.Action))
 			return err
 		}
-
-		if tempFile != nil {
-			err = tempFile.Close()
-			if err != nil {
-				log.Error("unexpected err when close temp file", zap.Error(err))
-				return err
-			}
-		} else {
-			err := errors.Errorf("unexpected err : file get from ioutil.TempFile is nil")
-			log.Error(fmt.Sprintf("payload action: %s", fill.Action), zap.Error(err))
-			return err
-		}
-
-		fill.Path = tempFile.Name()
 		defer func() {
 			err := os.Remove(fill.Path)
 			if err != nil {
