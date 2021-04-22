@@ -36,24 +36,31 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 		ipsetName string
 	)
 
-	if attack.NeedApplyIPSet() {
-		ipsetName, err = env.Chaos.applyIPSet(attack, env.AttackUid)
-		if err != nil {
-			return errors.WithStack(err)
+	switch attack.Action {
+	case core.NetworkDNSAction:
+		return env.Chaos.updateDNSServer(attack)
+
+	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction:
+		if attack.NeedApplyIPSet() {
+			ipsetName, err = env.Chaos.applyIPSet(attack, env.AttackUid)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+		}
+
+		if attack.NeedApplyIptables() {
+			if err = env.Chaos.applyIptables(attack, env.AttackUid); err != nil {
+				return errors.WithStack(err)
+			}
+		}
+
+		if attack.NeedApplyTC() {
+			if err = env.Chaos.applyTC(attack, ipsetName, env.AttackUid); err != nil {
+				return errors.WithStack(err)
+			}
 		}
 	}
 
-	if attack.NeedApplyIptables() {
-		if err = env.Chaos.applyIptables(attack, env.AttackUid); err != nil {
-			return errors.WithStack(err)
-		}
-	}
-
-	if attack.NeedApplyTC() {
-		if err = env.Chaos.applyTC(attack, ipsetName, env.AttackUid); err != nil {
-			return errors.WithStack(err)
-		}
-	}
 	return nil
 }
 
@@ -192,21 +199,27 @@ func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 	if err := json.Unmarshal([]byte(exp.RecoverCommand), attack); err != nil {
 		return err
 	}
-	if attack.NeedApplyIPSet() {
-		if err := env.Chaos.recoverIPSet(env.AttackUid); err != nil {
-			return errors.WithStack(err)
-		}
-	}
+	switch attack.Action {
+	case core.NetworkDNSAction:
+		return env.Chaos.recoverDNSServer(attack)
 
-	if attack.NeedApplyIptables() {
-		if err := env.Chaos.recoverIptables(env.AttackUid); err != nil {
-			return errors.WithStack(err)
+	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction:
+		if attack.NeedApplyIPSet() {
+			if err := env.Chaos.recoverIPSet(env.AttackUid); err != nil {
+				return errors.WithStack(err)
+			}
 		}
-	}
 
-	if attack.NeedApplyTC() {
-		if err := env.Chaos.recoverTC(env.AttackUid, attack.Device); err != nil {
-			return errors.WithStack(err)
+		if attack.NeedApplyIptables() {
+			if err := env.Chaos.recoverIptables(env.AttackUid); err != nil {
+				return errors.WithStack(err)
+			}
+		}
+
+		if attack.NeedApplyTC() {
+			if err := env.Chaos.recoverTC(env.AttackUid, attack.Device); err != nil {
+				return errors.WithStack(err)
+			}
 		}
 	}
 	return nil
@@ -255,6 +268,29 @@ func (s *Server) recoverTC(uid string, device string) error {
 	}
 
 	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: device, EnterNS: false}); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func (s *Server) updateDNSServer(attack *core.NetworkCommand) error {
+	if _, err := s.svr.SetDNSServer(context.Background(), &pb.SetDNSServerRequest{
+		DnsServer: attack.DNSServer,
+		Enable:    true,
+		EnterNS:   false,
+	}); err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func (s *Server) recoverDNSServer(attack *core.NetworkCommand) error {
+	if _, err := s.svr.SetDNSServer(context.Background(), &pb.SetDNSServerRequest{
+		Enable:  false,
+		EnterNS: false,
+	}); err != nil {
 		return errors.WithStack(err)
 	}
 
