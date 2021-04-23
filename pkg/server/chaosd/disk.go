@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
@@ -91,15 +92,36 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 	}
 	sizeBlocks := utils.SplitByteSize(byteSize, payload.PayloadProcessNum)
 
+	var wg sync.WaitGroup
+	wg.Add(len(sizeBlocks))
+	fatalErrors := make(chan error)
+	wgDone := make(chan bool)
 	for _, sizeBlock := range sizeBlocks {
 		cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, sizeBlock.BlockSize, sizeBlock.Size))
-		output, err := cmd.CombinedOutput()
 
-		if err != nil {
-			log.Error(string(output), zap.Error(err))
-			return err
-		}
-		log.Info(string(output))
+		go func(cmd *exec.Cmd) {
+			output, err := cmd.CombinedOutput()
+
+			if err != nil {
+				log.Error(string(output), zap.Error(err))
+				fatalErrors <- err
+			}
+			log.Info(string(output))
+			wg.Done()
+		}(cmd)
+	}
+
+	go func() {
+		wg.Wait()
+		close(wgDone)
+	}()
+
+	select {
+	case <-wgDone:
+		break
+	case err := <-fatalErrors:
+		close(fatalErrors)
+		return err
 	}
 
 	return nil
