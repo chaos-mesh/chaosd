@@ -86,9 +86,9 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 		return err
 	}
 
-	byteSize, err := utils.ParseUnit(payload.Size + payload.Unit)
+	byteSize, err := utils.ParseUnit(payload.Size)
 	if err != nil {
-		log.Error(fmt.Sprintf("fail to get parse size unit , %s, %s", payload.Size, payload.Unit), zap.Error(err))
+		log.Error(fmt.Sprintf("fail to get parse size per units , %s", payload.Size), zap.Error(err))
 		return err
 	}
 	sizeBlocks := utils.SplitByteSize(byteSize, payload.PayloadProcessNum)
@@ -129,7 +129,7 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 }
 
 const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock"
-const DDFallocateCommand = "fallocate -l %s%s %s"
+const FallocateCommand = "fallocate -l %s %s"
 
 func (diskAttack) attackDiskFill(fill *core.DiskOption) error {
 	if fill.Path == "" {
@@ -165,16 +165,16 @@ func (diskAttack) attackDiskFill(fill *core.DiskOption) error {
 			log.Error("fail to get disk total size", zap.Error(err))
 			return err
 		}
-		fill.Size = strconv.FormatUint(totalSize/1024/1024*percent/100, 10)
-		fill.Unit = "M"
+		fill.Size = strconv.FormatUint(totalSize*percent/100, 10)
 	}
 
 	var cmd *exec.Cmd
 	if fill.FillByFallocate {
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFallocateCommand, fill.Size, fill.Unit, fill.Path))
+		cmd = exec.Command("bash", "-c", fmt.Sprintf(FallocateCommand, fill.Size, fill.Path))
 	} else {
 		//1Unit means the block size. The bytes size dd read | write is (block size) * (size).
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, fill.Unit, fill.Size))
+
+		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, fill.Size, "1"))
 	}
 
 	output, err := cmd.CombinedOutput()
