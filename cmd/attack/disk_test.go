@@ -14,8 +14,8 @@
 package attack
 
 import (
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 	"os"
-	"strconv"
 	"testing"
 
 	"go.uber.org/fx"
@@ -45,10 +45,10 @@ func TestServer_DiskFill(t *testing.T) {
 							Action: core.DiskFillAction,
 							Kind:   core.DiskAttack,
 						},
-						Size:            "1024",
-						Path:            "temp",
-						Unit:            "M",
-						FillByFallocate: true,
+						Size:              "1024M",
+						Path:              "temp",
+						FillByFallocate:   true,
+						PayloadProcessNum: 1,
 					},
 					wantErr: false,
 				}, {
@@ -58,10 +58,10 @@ func TestServer_DiskFill(t *testing.T) {
 							Action: core.DiskFillAction,
 							Kind:   core.DiskAttack,
 						},
-						Size:            "24",
-						Path:            "temp",
-						Unit:            "MB",
-						FillByFallocate: false,
+						Size:              "24MB",
+						Path:              "temp",
+						FillByFallocate:   false,
+						PayloadProcessNum: 1,
 					},
 					wantErr: false,
 				},
@@ -89,15 +89,9 @@ func TestServer_DiskFill(t *testing.T) {
 						return
 					}
 
-					size, _ := strconv.ParseUint(tt.option.Size, 10, 0)
-					usize := uint64(0)
-					if tt.option.Unit == "M" {
-						usize = 1024 * 1024
-					} else if tt.option.Unit == "MB" {
-						usize = 1000 * 1000
-					}
-					if stat.Size() != int64(size*usize) {
-						t.Errorf("DiskFill() size %v, expect %d", stat.Size(), size*usize)
+					size, _ := utils.ParseUnit(tt.option.Size)
+					if stat.Size() != int64(size) {
+						t.Errorf("DiskFill() size %v, expect %d", stat.Size(), size)
 						return
 					}
 					os.Remove(tt.option.Path)
@@ -120,9 +114,9 @@ func TestServer_DiskPayload(t *testing.T) {
 							Action: core.DiskWritePayloadAction,
 							Kind:   core.DiskAttack,
 						},
-						Size: "24",
-						Path: "temp",
-						Unit: "M",
+						Size:              "24M",
+						Path:              "temp",
+						PayloadProcessNum: 1,
 					},
 					wantErr: false,
 				}, {
@@ -132,9 +126,9 @@ func TestServer_DiskPayload(t *testing.T) {
 							Action: core.DiskReadPayloadAction,
 							Kind:   core.DiskAttack,
 						},
-						Size: "24",
-						Path: "temp",
-						Unit: "M",
+						Size:              "24M",
+						Path:              "temp",
+						PayloadProcessNum: 1,
 					},
 					wantErr: false,
 				},

@@ -55,14 +55,21 @@ func SplitByteSize(b uint64, num uint8) []SizeBlock {
 		}}
 	}
 	sizeBlocks := make([]SizeBlock, num)
-	if b/uint64(num) > 1<<20 {
+	if b > uint64(num)*(1<<20) {
+		splitSize := (b >> 20) / uint64(num)
 		for i := range sizeBlocks {
-			if i != len(sizeBlocks)-1 {
-				sizeBlocks[i].Size = strconv.FormatUint(b/uint64(num)>>20, 10)
-				sizeBlocks[i].BlockSize = "1M"
+			if i == len(sizeBlocks)-1 {
+				if (b >> 20 << 20) == b {
+					sizeBlocks[i].Size = strconv.FormatUint((b>>20)%uint64(num), 10)
+					sizeBlocks[i].BlockSize = "1M"
+				} else {
+					sizeBlocks[i].Size = "1"
+					sizeBlocks[i].BlockSize = strconv.FormatUint(splitSize<<20+b%(splitSize<<20), 10) + "c"
+				}
 			} else {
-				sizeBlocks[i].Size = "1"
-				sizeBlocks[i].BlockSize = strconv.FormatUint(b/uint64(num)+b%uint64(num), 10) + "c"
+				sizeBlocks[i].Size = strconv.FormatUint(splitSize, 10)
+				sizeBlocks[i].BlockSize = "1M"
+				b -= splitSize
 			}
 		}
 	} else {

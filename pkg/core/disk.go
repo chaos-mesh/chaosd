@@ -16,9 +16,8 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
-
 	"github.com/chaos-mesh/chaosd/pkg/utils"
+	"strconv"
 )
 
 const (
@@ -33,7 +32,6 @@ type DiskOption struct {
 	Size              string `json:"size"`
 	Path              string `json:"path"`
 	Percent           string `json:"percent"`
-	Unit              string `json:"unit"`
 	FillByFallocate   bool   `json:"fill_by_fallocate"`
 	FillDestroyFile   bool   `json:"fill_destroy_file"`
 	PayloadProcessNum uint8  `json:"payload_process_num"`
@@ -42,25 +40,25 @@ type DiskOption struct {
 var _ AttackConfig = &DiskOption{}
 
 func (d *DiskOption) Validate() error {
+	var byteSize uint64
+	var err error
 	if d.Size == "" {
 		if d.Percent == "" {
 			return fmt.Errorf("one of percent and size must not be empty, DiskOption : %v", d)
 		}
-		_, err := strconv.ParseUint(d.Percent, 10, 0)
-		if err != nil {
+		if byteSize, err = strconv.ParseUint(d.Percent, 10, 0); err != nil {
 			return fmt.Errorf("unsupport percent : %s, DiskOption : %v", d.Percent, d)
 		}
+	} else {
+		if byteSize, err = utils.ParseUnit(d.Size); err != nil {
+			return fmt.Errorf("unknown units of size : %s, DiskOption : %v", d.Size, d)
+		}
 	}
-
 	if d.Action == DiskFillAction {
-		if d.FillByFallocate && (d.Size == "0" || (d.Size == "" && d.Percent == "0")) {
+		if d.FillByFallocate && byteSize == 0 {
 			return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
 				"if you want allocate a 0 size file please set fallocate=false, DiskOption : %v", d)
 		}
-	}
-
-	if _, err := utils.ParseUnit("1" + d.Unit); err != nil {
-		return fmt.Errorf("unknown unit : %s, DiskOption : %v", d.Unit, d)
 	}
 
 	if d.PayloadProcessNum == 0 {
