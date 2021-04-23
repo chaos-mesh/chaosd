@@ -74,7 +74,8 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 				return err
 			}
 			if path == "" {
-				err = fmt.Errorf("can not get root device path")
+				err = errors.Errorf("can not get root device path")
+				log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
 				return err
 			}
 			payload.Path = path
