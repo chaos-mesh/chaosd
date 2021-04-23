@@ -30,5 +30,6 @@ func GetDiskTotalSize(path string) (total uint64, err error) {
 }
 
 func GetRootDevice() (string, error) {
+	// TODO: complete get device of root on darwin
 	return "", nil
 }
