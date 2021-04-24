@@ -17,6 +17,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/go-logr/zapr"
 	"github.com/pingcap/log"
 	perr "github.com/pkg/errors"
 	cron "github.com/robfig/cron/v3"
@@ -96,6 +97,7 @@ func NewScheduler(expRunStore core.ExperimentRunStore, expStore core.ExperimentS
 		Cron: cron.New(
 			cron.WithLocation(time.UTC),
 			cron.WithChain(cron.SkipIfStillRunning(cron.DiscardLogger)),
+			cron.WithLogger(zapr.NewLogger(log.L())),
 		),
 		expRunStore: expRunStore,
 		expStore:    expStore,

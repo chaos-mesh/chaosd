@@ -34,7 +34,6 @@ type ExperimentRunStore interface {
 
 	NewRun(ctx context.Context, expRun *ExperimentRun) error
 	Update(ctx context.Context, runUid string, status string, message string) error
-	// TODO: experiment run creation and updation
 }
 
 // ExperimentRun represents a run of an experiment
