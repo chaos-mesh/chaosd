@@ -39,6 +39,10 @@ type CronJob struct {
 	run        func() error
 }
 
+func hasCronDurationExceeded(startedAt time.Time, duration time.Duration) bool {
+	return time.Until(startedAt.Add(duration)).Milliseconds() < 0
+}
+
 // TODO: write tests for it
 func (cj *CronJob) Run() {
 	var newRun *core.ExperimentRun
@@ -71,7 +75,7 @@ func (cj *CronJob) Run() {
 	if err != nil {
 		panic(perr.WithStack(err))
 	}
-	if cronDuration != nil && time.Until(cj.experiment.CreatedAt.Add(*cronDuration)).Milliseconds() < 0 {
+	if cronDuration != nil && hasCronDurationExceeded(cj.experiment.CreatedAt, *cronDuration) {
 		if err = cj.scheduler.Remove(cj.experiment.ID); err != nil {
 			panic(perr.WithStack(err))
 		}
