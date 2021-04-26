@@ -17,8 +17,12 @@ import (
 	"go.uber.org/fx"
 )
 
+var PrintFxLog bool
+
 // FxNewAppWithoutLog returns fx App without log
 func FxNewAppWithoutLog(opts ...fx.Option) *fx.App {
-	opts = append(opts, fx.NopLogger)
+	if !PrintFxLog {
+		opts = append(opts, fx.NopLogger)
+	}
 	return fx.New(opts...)
 }
