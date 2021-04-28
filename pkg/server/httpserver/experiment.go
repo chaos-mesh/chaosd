@@ -37,3 +37,13 @@ func (s *httpServer) listExperiments(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, chaosList)
 }
+
+func (s *httpServer) listExperimentRuns(c *gin.Context) {
+	uid := c.Param("uid")
+	runsList, err := s.chaos.ExpRun.ListByExperimentUID(context.Background(), uid)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, runsList)
+}

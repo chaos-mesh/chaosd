@@ -39,6 +39,13 @@ func (s *Server) RecoverAttack(uid string) error {
 	}
 
 	if exp.Status == core.Scheduled {
+		latestRun, err := s.ExpRun.LatestRun(context.Background(), exp.ID)
+		if err != nil {
+			return perr.WithMessage(err, "failed to get the latest run")
+		}
+		if latestRun != nil && latestRun.Status == core.RunStarted {
+			return perr.Errorf("a scheduled run is in-process, cannot recover before it gets over")
+		}
 		if err = s.Cron.Remove(exp.ID); err != nil {
 			return perr.WithMessage(err, "failed to remove scheduled task")
 		}
@@ -63,7 +70,6 @@ func (s *Server) RecoverAttack(uid string) error {
 	}
 
 	env := s.newEnvironment(uid)
-	// TODO: In case a scheduled cron is running right now, recovery may lead system to an unknown state
 	if err = attackType.Recover(*exp, env); err != nil {
 		if errorx.IsOfType(err, core.ErrNonRecoverableAttack) {
 			log.Warn(err.Error(), zap.String("uid", uid), zap.String("kind", exp.Kind))

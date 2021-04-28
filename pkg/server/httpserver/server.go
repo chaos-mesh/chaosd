@@ -90,6 +90,7 @@ func handler(s *httpServer) {
 	experiments := api.Group("/experiments")
 	{
 		experiments.GET("/", s.listExperiments)
+		experiments.GET("/:uid/runs", s.listExperimentRuns)
 	}
 
 	system := api.Group("/system")
