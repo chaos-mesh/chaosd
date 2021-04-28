@@ -50,7 +50,7 @@ func NewHostShutdownCommand(dep fx.Option, options *core.HostCommand) *cobra.Com
 		Short: "shutdowns system, this action will trigger shutdown of the host machine",
 
 		Run: func(*cobra.Command, []string) {
-			fx.New(dep, fx.Invoke(hostAttackF)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(hostAttackF)).Run()
 		},
 	}
 

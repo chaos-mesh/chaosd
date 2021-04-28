@@ -55,7 +55,7 @@ func NewProcessKillCommand(dep fx.Option, options *core.ProcessCommand) *cobra.C
 		Short: "kill process, default signal 9",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.ProcessKillAction
-			fx.New(dep, fx.Invoke(processAttackF)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(processAttackF)).Run()
 		},
 	}
 
@@ -72,7 +72,7 @@ func NewProcessStopCommand(dep fx.Option, options *core.ProcessCommand) *cobra.C
 		Run: func(*cobra.Command, []string) {
 			options.Signal = int(syscall.SIGSTOP)
 			options.Action = core.ProcessStopAction
-			fx.New(dep, fx.Invoke(processAttackF)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(processAttackF)).Run()
 		},
 	}
 

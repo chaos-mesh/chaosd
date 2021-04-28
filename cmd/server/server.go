@@ -52,7 +52,7 @@ func serverCommandFunc(cmd *cobra.Command, args []string) {
 
 	version.PrintVersionInfo("Chaosd Server")
 
-	app := fx.New(
+	app := utils.FxNewAppWithoutLog(
 		Module,
 		fx.Invoke(httpserver.Register),
 	)

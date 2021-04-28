@@ -14,6 +14,8 @@
 package main
 
 import (
+	"strings"
+
 	_ "github.com/alecthomas/template"
 	"github.com/pingcap/log"
 	"github.com/spf13/cobra"
@@ -57,6 +59,11 @@ func setLogLevel() {
 		return
 	}
 	log.ReplaceGlobals(lg, r)
+
+	// only in debug mode print log of go.uber.org/fx
+	if strings.ToLower(logLevel) == "debug" {
+		utils.PrintFxLog = true
+	}
 }
 
 func main() {
