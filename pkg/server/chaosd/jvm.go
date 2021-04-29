@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"text/template"
 
+	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
 
@@ -58,9 +59,11 @@ func (j jvmAttack) Attack(options core.AttackConfig, env Environment) (err error
 
 	if attack.Type == core.JVMAttachType {
 		return j.attach(attack)
-	} else {
+	} else if attack.Type == core.JVMInstallRuleType {
 		return j.installRule(attack)
 	}
+
+	return errors.Errorf("attack type %s not supported", attack.Type)
 }
 
 func (j jvmAttack) attach(attack *core.JVMCommand) error {
@@ -118,7 +121,7 @@ func (j jvmAttack) installRule(attack *core.JVMCommand) error {
 		return err
 	}
 
-	log.Info("byteman rule", zap.String("rule", string(buf.Bytes())))
+	log.Info("byteman rule", zap.String("rule", buf.String()))
 
 	tmpfile, err := ioutil.TempFile("", "rule.btm")
 	if err != nil {
