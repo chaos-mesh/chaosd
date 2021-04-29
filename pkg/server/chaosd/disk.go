@@ -94,7 +94,7 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 	}
 	sizeBlocks, err := utils.SplitByteSize(byteSize, payload.PayloadProcessNum)
 	if err != nil {
-		log.Error(fmt.Sprintf("split size ,process num %s", payload.PayloadProcessNum), zap.Error(err))
+		log.Error(fmt.Sprintf("split size ,process num %d", payload.PayloadProcessNum), zap.Error(err))
 		return err
 	}
 	var wg sync.WaitGroup

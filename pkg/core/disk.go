@@ -16,8 +16,9 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/chaos-mesh/chaosd/pkg/utils"
 	"strconv"
+
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 const (
