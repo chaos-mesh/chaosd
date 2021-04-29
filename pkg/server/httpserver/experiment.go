@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,23 +11,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package store
+package httpserver
 
 import (
-	"go.uber.org/fx"
+	"context"
+	"net/http"
 
-	"github.com/chaos-mesh/chaosd/pkg/store/dbstore"
-	"github.com/chaos-mesh/chaosd/pkg/store/experiment"
-	"github.com/chaos-mesh/chaosd/pkg/store/network"
+	"github.com/gin-gonic/gin"
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		dbstore.NewDBStore,
-		experiment.NewStore,
-		experiment.NewRunStore,
-		network.NewIPSetRuleStore,
-		network.NewIptablesRuleStore,
-		network.NewTCRuleStore,
-	),
-)
+func (s *httpServer) listExperiments(c *gin.Context) {
+	chaosList, err := s.exp.List(context.Background())
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, chaosList)
+}

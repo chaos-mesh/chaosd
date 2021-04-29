@@ -14,10 +14,10 @@
 package httpserver
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joomcode/errorx"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
 
@@ -83,6 +83,17 @@ func handler(s *httpServer) {
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
+
+	experiments := api.Group("/experiments")
+	{
+		experiments.GET("/", s.listExperiments)
+	}
+
+	system := api.Group("/system")
+	{
+		system.GET("/health", s.healthcheck)
+		system.GET("/version", s.version)
+	}
 }
 
 // @Summary Create process attack.
@@ -95,15 +106,19 @@ func handler(s *httpServer) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/process [post]
 func (s *httpServer) createProcessAttack(c *gin.Context) {
-	attack := &core.ProcessCommand{}
+	attack := &core.ProcessCommand{
+		CommonAttackConfig: core.CommonAttackConfig{
+			Kind: core.ProcessAttack,
+		},
+	}
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	uid, err := s.chaos.ProcessAttack(attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.ProcessAttack, attack)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		handleError(c, err)
 		return
 	}
 
@@ -120,15 +135,19 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/network [post]
 func (s *httpServer) createNetworkAttack(c *gin.Context) {
-	attack := &core.NetworkCommand{}
+	attack := &core.NetworkCommand{
+		CommonAttackConfig: core.CommonAttackConfig{
+			Kind: core.ProcessAttack,
+		},
+	}
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	uid, err := s.chaos.NetworkAttack(attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.NetworkAttack, attack)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		handleError(c, err)
 		return
 	}
 
@@ -145,15 +164,19 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/stress [post]
 func (s *httpServer) createStressAttack(c *gin.Context) {
-	attack := &core.StressCommand{}
+	attack := &core.StressCommand{
+		CommonAttackConfig: core.CommonAttackConfig{
+			Kind: core.ProcessAttack,
+		},
+	}
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	uid, err := s.chaos.StressAttack(attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.StressAttack, attack)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		handleError(c, err)
 		return
 	}
 
@@ -170,29 +193,20 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/disk [post]
 func (s *httpServer) createDiskAttack(c *gin.Context) {
-	attack := &core.DiskCommand{}
+	attack := &core.DiskCommand{
+		CommonAttackConfig: core.CommonAttackConfig{
+			Kind: core.ProcessAttack,
+		},
+	}
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	var uid string
-	var err error
-	switch attack.Action {
-	case core.DiskFillAction:
-		uid, err = s.chaos.DiskFill(attack)
-	case core.DiskReadPayloadAction:
-		uid, err = s.chaos.DiskPayload(attack)
-	case core.DiskWritePayloadAction:
-		uid, err = s.chaos.DiskPayload(attack)
-	default:
-		c.AbortWithError(http.StatusBadRequest,
-			utils.ErrInvalidRequest.WrapWithNoMessage(fmt.Errorf("invalid disk attack action %v", attack.Action)))
-		return
-	}
+	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attack)
 
 	if err != nil {
-		_ = c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		handleError(c, err)
 		return
 	}
 
@@ -209,11 +223,19 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 // @Router /api/attack/{uid} [delete]
 func (s *httpServer) recoverAttack(c *gin.Context) {
 	uid := c.Param("uid")
-	err := utils.RecoverExp(s.exp, s.chaos, uid)
+	err := s.chaos.RecoverAttack(uid)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+		handleError(c, err)
 		return
 	}
 
 	c.JSON(http.StatusOK, utils.RecoverSuccessResponse(uid))
+}
+
+func handleError(c *gin.Context, err error) {
+	if errorx.IsOfType(err, core.ErrAttackConfigValidation) {
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInvalidRequest.WrapWithNoMessage(err))
+	} else {
+		_ = c.AbortWithError(http.StatusInternalServerError, utils.ErrInternalServer.WrapWithNoMessage(err))
+	}
 }

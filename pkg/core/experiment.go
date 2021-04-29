@@ -22,6 +22,7 @@ const (
 	Created   = "created"
 	Success   = "success"
 	Error     = "error"
+	Scheduled = "scheduled"
 	Destroyed = "destroyed"
 	Revoked   = "revoked"
 )
@@ -57,4 +58,6 @@ type Experiment struct {
 	Kind           string `json:"kind"`
 	Action         string `json:"action"`
 	RecoverCommand string `json:"recover_command"`
+
+	Cron string `json:"cron"`
 }

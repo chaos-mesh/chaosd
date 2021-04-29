@@ -11,28 +11,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package version
 
 import (
-	"os"
+	"github.com/spf13/cobra"
 
-	"go.uber.org/fx"
-
-	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
-
-	"github.com/chaos-mesh/chaosd/pkg/crclient"
-	"github.com/chaos-mesh/chaosd/pkg/scheduler"
-	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaosd/pkg/server/httpserver"
+	"github.com/chaos-mesh/chaosd/pkg/version"
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		httpserver.NewServer,
-		crclient.NewNodeCRClient,
-		os.Getpid,
-		chaosdaemon.NewDaemonServerWithCRClient,
-		scheduler.NewScheduler,
-	),
-)
+func NewVersionCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Prints the version of chaosd",
+		Run:   versionCommandFunc,
+	}
+}
+
+func versionCommandFunc(cmd *cobra.Command, args []string) {
+	version.PrintVersionInfo("Chaosd")
+}

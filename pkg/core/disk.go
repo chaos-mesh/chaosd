@@ -13,7 +13,11 @@
 
 package core
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+)
 
 const (
 	DiskFillAction         = "fill"
@@ -22,18 +26,41 @@ const (
 )
 
 type DiskCommand struct {
-	Action          string `json:"action"`
-	Size            uint64 `json:"size"`
+	CommonAttackConfig
+
+	Size            string `json:"size"`
 	Path            string `json:"path"`
+	Percent         string `json:"percent"`
 	FillByFallocate bool   `json:"fill_by_fallocate"`
 }
 
+var _ AttackConfig = &DiskCommand{}
+
 func (d *DiskCommand) Validate() error {
+	if d.Percent == "" && d.Size == "" {
+		return fmt.Errorf("one of percent and size must not be empty, DiskCommand : %v", d)
+	}
+	if d.FillByFallocate && (d.Size == "0" || (d.Size == "" && d.Percent == "0")) {
+		return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
+			"if you want allocate a 0 size file please set fallocate=false, DiskCommand : %v", d)
+	}
+	_, err := strconv.ParseUint(d.Percent, 10, 0)
+	if d.Size == "" && err != nil {
+		return fmt.Errorf("unsupport percent : %s, DiskCommand : %v", d.Percent, d)
+	}
 	return nil
 }
 
-func (d *DiskCommand) String() string {
+func (d DiskCommand) RecoverData() string {
 	data, _ := json.Marshal(d)
 
 	return string(data)
+}
+
+func NewDiskCommand() *DiskCommand {
+	return &DiskCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: DiskAttack,
+		},
+	}
 }

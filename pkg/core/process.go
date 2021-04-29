@@ -15,47 +15,52 @@ package core
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/pingcap/errors"
 )
 
 const (
-	StressCPUAction = "cpu"
-	StressMemAction = "mem"
+	ProcessKillAction = "kill"
+	ProcessStopAction = "stop"
 )
 
-type StressCommand struct {
+var _ AttackConfig = &ProcessCommand{}
+
+type ProcessCommand struct {
 	CommonAttackConfig
 
-	Load        int
-	Workers     int
-	Size        string
-	Options     []string
-	Duration    time.Duration
-	StressngPid int32
+	// Process defines the process name or the process ID.
+	Process string
+	Signal  int
+	PIDs    []int
+	// TODO: support these feature
+	// Newest       bool
+	// Oldest       bool
+	// Exact        bool
+	// KillChildren bool
+	// User         string
 }
 
-var _ AttackConfig = &StressCommand{}
-
-func (s StressCommand) Validate() error {
-	if len(s.Action) == 0 {
-		return errors.New("action not provided")
+func (p ProcessCommand) Validate() error {
+	if len(p.Process) == 0 {
+		return errors.New("process not provided")
 	}
+
+	// TODO: validate signal
 
 	return nil
 }
 
-func (s StressCommand) RecoverData() string {
-	data, _ := json.Marshal(s)
+func (p ProcessCommand) RecoverData() string {
+	data, _ := json.Marshal(p)
 
 	return string(data)
 }
 
-func NewStressCommand() *StressCommand {
-	return &StressCommand{
+func NewProcessCommand() *ProcessCommand {
+	return &ProcessCommand{
 		CommonAttackConfig: CommonAttackConfig{
-			Kind: StressAttack,
+			Kind: ProcessAttack,
 		},
 	}
 }

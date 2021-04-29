@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,28 +11,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package utils
 
 import (
-	"os"
-
 	"go.uber.org/fx"
-
-	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
-
-	"github.com/chaos-mesh/chaosd/pkg/crclient"
-	"github.com/chaos-mesh/chaosd/pkg/scheduler"
-	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaosd/pkg/server/httpserver"
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		httpserver.NewServer,
-		crclient.NewNodeCRClient,
-		os.Getpid,
-		chaosdaemon.NewDaemonServerWithCRClient,
-		scheduler.NewScheduler,
-	),
-)
+var PrintFxLog bool
+
+// FxNewAppWithoutLog returns fx App without log
+func FxNewAppWithoutLog(opts ...fx.Option) *fx.App {
+	if !PrintFxLog {
+		opts = append(opts, fx.NopLogger)
+	}
+	return fx.New(opts...)
+}

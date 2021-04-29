@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,23 +11,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package store
+package utils
 
 import (
-	"go.uber.org/fx"
-
-	"github.com/chaos-mesh/chaosd/pkg/store/dbstore"
-	"github.com/chaos-mesh/chaosd/pkg/store/experiment"
-	"github.com/chaos-mesh/chaosd/pkg/store/network"
+	"syscall"
 )
 
-var Module = fx.Options(
-	fx.Provide(
-		dbstore.NewDBStore,
-		experiment.NewStore,
-		experiment.NewRunStore,
-		network.NewIPSetRuleStore,
-		network.NewIptablesRuleStore,
-		network.NewTCRuleStore,
-	),
-)
+// GetDiskTotalSize returns the total bytes in disk
+func GetDiskTotalSize(path string) (total uint64, err error) {
+	s := syscall.Statfs_t{}
+	err = syscall.Statfs(path, &s)
+	if err != nil {
+		return 0, err
+	}
+	reservedBlocks := s.Bfree - uint64(s.Bavail)
+	total = uint64(s.Bsize) * (s.Blocks - reservedBlocks)
+	return total, err
+}

@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,47 +15,33 @@ package core
 
 import (
 	"encoding/json"
-	"time"
-
-	"github.com/pingcap/errors"
 )
 
 const (
-	StressCPUAction = "cpu"
-	StressMemAction = "mem"
+	HostShutdownAction = "shutdown"
 )
 
-type StressCommand struct {
+type HostCommand struct {
 	CommonAttackConfig
-
-	Load        int
-	Workers     int
-	Size        string
-	Options     []string
-	Duration    time.Duration
-	StressngPid int32
 }
 
-var _ AttackConfig = &StressCommand{}
+var _ AttackConfig = &HostCommand{}
 
-func (s StressCommand) Validate() error {
-	if len(s.Action) == 0 {
-		return errors.New("action not provided")
-	}
-
+func (h HostCommand) Validate() error {
 	return nil
 }
 
-func (s StressCommand) RecoverData() string {
-	data, _ := json.Marshal(s)
+func (h HostCommand) RecoverData() string {
+	data, _ := json.Marshal(h)
 
 	return string(data)
 }
 
-func NewStressCommand() *StressCommand {
-	return &StressCommand{
+func NewHostCommand() *HostCommand {
+	return &HostCommand{
 		CommonAttackConfig: CommonAttackConfig{
-			Kind: StressAttack,
+			Kind:   HostAttack,
+			Action: HostShutdownAction,
 		},
 	}
 }

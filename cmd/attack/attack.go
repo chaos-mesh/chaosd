@@ -11,28 +11,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package attack
 
-import (
-	"os"
+import "github.com/spf13/cobra"
 
-	"go.uber.org/fx"
+func NewAttackCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "attack <subcommand>",
+		Short: "Attack related commands",
+	}
 
-	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
+	cmd.AddCommand(
+		NewProcessAttackCommand(),
+		NewNetworkAttackCommand(),
+		NewStressAttackCommand(),
+		NewDiskAttackCommand(),
+		NewHostAttackCommand(),
+		NewJVMAttackCommand(),
+	)
 
-	"github.com/chaos-mesh/chaosd/pkg/crclient"
-	"github.com/chaos-mesh/chaosd/pkg/scheduler"
-	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
-	"github.com/chaos-mesh/chaosd/pkg/server/httpserver"
-)
-
-var Module = fx.Options(
-	fx.Provide(
-		chaosd.NewServer,
-		httpserver.NewServer,
-		crclient.NewNodeCRClient,
-		os.Getpid,
-		chaosdaemon.NewDaemonServerWithCRClient,
-		scheduler.NewScheduler,
-	),
-)
+	return cmd
+}

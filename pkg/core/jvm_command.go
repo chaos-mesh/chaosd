@@ -33,6 +33,8 @@ const (
 )
 
 type JVMCommand struct {
+	CommonAttackConfig
+
 	// rule name, should be unique
 	Name string
 
@@ -80,42 +82,65 @@ type JVMCommand struct {
 }
 
 func (j *JVMCommand) Validate() error {
-	if len(j.Action) == 0 {
-		return errors.New("action not provided, action can be 'latency', 'exception', 'return' or 'stress'")
-	}
-
-	if j.Action == JVMStressAction {
-		if j.CPUCount == 0 && j.MemorySize == 0 {
-			return errors.New("must set one of cpu-count and mem-size when action is 'stress'")
-		}
-
-		if j.CPUCount > 0 && j.MemorySize > 0 {
-			return errors.New("inject stress on both CPU and memory is not support now")
-		}
-	} else {
-		if len(j.Class) == 0 {
-			return errors.New("class not provided")
-		}
-
-		if len(j.Method) == 0 {
-			return errors.New("method not provided")
-		}
-
-	}
-
 	if len(j.Type) == 0 {
 		return errors.New("type not provided, type can be 'install' or 'attach'")
 	}
 
-	if len(j.Name) == 0 {
-		j.Name = fmt.Sprintf("%s-%s-%s-%s-%s", j.Class, j.Method, j.Action, j.Type, utils.RandomStringWithCharset(5))
+	if j.Type == JVMAttachType {
+		if j.Pid == 0 {
+			return errors.New("pid can't be 0")
+		}
+
+	} else if j.Type == JVMInstallRuleType {
+		if len(j.Action) == 0 {
+			return errors.New("action not provided, action can be 'latency', 'exception', 'return' or 'stress'")
+		}
+
+		if j.Action == JVMStressAction {
+			if j.CPUCount == 0 && j.MemorySize == 0 {
+				return errors.New("must set one of cpu-count and mem-size when action is 'stress'")
+			}
+
+			if j.CPUCount > 0 && j.MemorySize > 0 {
+				return errors.New("inject stress on both CPU and memory is not support now")
+			}
+		} else {
+			if len(j.Class) == 0 {
+				return errors.New("class not provided")
+			}
+
+			if len(j.Method) == 0 {
+				return errors.New("method not provided")
+			}
+
+		}
+
+		if len(j.Name) == 0 {
+			j.Name = fmt.Sprintf("%s-%s-%s-%s-%s", j.Class, j.Method, j.Action, j.Type, utils.RandomStringWithCharset(5))
+		}
 	}
 
 	return nil
 }
 
+/*
 func (j *JVMCommand) String() string {
 	data, _ := json.Marshal(j)
 
 	return string(data)
+}
+*/
+
+func (j *JVMCommand) RecoverData() string {
+	data, _ := json.Marshal(j)
+
+	return string(data)
+}
+
+func NewJVMCommand() *JVMCommand {
+	return &JVMCommand{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: JVMAttack,
+		},
+	}
 }

@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,23 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package store
+package scheduler
 
-import (
-	"go.uber.org/fx"
+import cron "github.com/robfig/cron/v3"
 
-	"github.com/chaos-mesh/chaosd/pkg/store/dbstore"
-	"github.com/chaos-mesh/chaosd/pkg/store/experiment"
-	"github.com/chaos-mesh/chaosd/pkg/store/network"
-)
+type CronStore struct {
+	entry map[uint]cron.EntryID
+}
 
-var Module = fx.Options(
-	fx.Provide(
-		dbstore.NewDBStore,
-		experiment.NewStore,
-		experiment.NewRunStore,
-		network.NewIPSetRuleStore,
-		network.NewIptablesRuleStore,
-		network.NewTCRuleStore,
-	),
-)
+var cronStore = &CronStore{entry: make(map[uint]cron.EntryID, 0)}
