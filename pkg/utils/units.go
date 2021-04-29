@@ -28,6 +28,9 @@ var (
 )
 
 func ParseUnit(s string) (uint64, error) {
+	if _, err := strconv.Atoi(s); err == nil {
+		s += "M"
+	}
 	if n, err := units.ParseUnit(s, shortBinaryUnitMap); err == nil {
 		return uint64(n), nil
 	}
@@ -47,12 +50,15 @@ type SizeBlock struct {
 	Size      string
 }
 
-func SplitByteSize(b uint64, num uint8) []SizeBlock {
+func SplitByteSize(b uint64, num uint8) ([]SizeBlock, error) {
 	if b == 0 {
 		return []SizeBlock{{
 			BlockSize: "1M",
 			Size:      "0",
-		}}
+		}}, nil
+	}
+	if num == 0 {
+		return nil, fmt.Errorf("num must not be zero")
 	}
 	sizeBlocks := make([]SizeBlock, num)
 	if b > uint64(num)*(1<<20) {
@@ -60,7 +66,7 @@ func SplitByteSize(b uint64, num uint8) []SizeBlock {
 		for i := range sizeBlocks {
 			if i == len(sizeBlocks)-1 {
 				if (b >> 20 << 20) == b {
-					sizeBlocks[i].Size = strconv.FormatUint((b>>20)%uint64(num), 10)
+					sizeBlocks[i].Size = strconv.FormatUint((b>>20)%uint64(num)+splitSize, 10)
 					sizeBlocks[i].BlockSize = "1M"
 				} else {
 					sizeBlocks[i].Size = "1"
@@ -69,7 +75,7 @@ func SplitByteSize(b uint64, num uint8) []SizeBlock {
 			} else {
 				sizeBlocks[i].Size = strconv.FormatUint(splitSize, 10)
 				sizeBlocks[i].BlockSize = "1M"
-				b -= splitSize
+				b -= splitSize << 20
 			}
 		}
 	} else {
@@ -83,5 +89,5 @@ func SplitByteSize(b uint64, num uint8) []SizeBlock {
 			}
 		}
 	}
-	return sizeBlocks
+	return sizeBlocks, nil
 }

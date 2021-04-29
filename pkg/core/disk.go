@@ -62,7 +62,7 @@ func (d *DiskOption) Validate() error {
 	}
 
 	if d.PayloadProcessNum == 0 {
-		return fmt.Errorf("unsupport process num : %d, DiskOption : %v", d.PayloadProcessNum, d)
+		return fmt.Errorf("unsupport process num : %d, DiskOption : %v", d.PayloadProcessNum, d.Action)
 	}
 
 	return nil

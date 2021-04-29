@@ -14,16 +14,17 @@
 package attack
 
 import (
-	"github.com/chaos-mesh/chaosd/pkg/utils"
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxtest"
 
 	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 type diskTest struct {
@@ -165,4 +166,166 @@ func TestServer_DiskPayload(t *testing.T) {
 			}
 		}),
 	)
+}
+
+type writeArgs struct {
+	Size              string
+	Path              string
+	PayloadProcessNum uint8
+}
+
+func writeArgsToDiskOption(args writeArgs) core.DiskOption {
+	return core.DiskOption{
+		CommonAttackConfig: core.CommonAttackConfig{
+			SchedulerConfig: core.SchedulerConfig{},
+			Action:          core.DiskWritePayloadAction,
+			Kind:            "",
+		},
+		Size:              args.Size,
+		Path:              args.Path,
+		Percent:           "",
+		FillByFallocate:   false,
+		FillDestroyFile:   false,
+		PayloadProcessNum: args.PayloadProcessNum,
+	}
+}
+
+func writeArgsAttack(args writeArgs) error {
+	opt := writeArgsToDiskOption(args)
+	return chaosd.DiskAttack.Attack(&opt, chaosd.Environment{})
+}
+
+func TestNewDiskWritePayloadCommand(t *testing.T) {
+	var opt core.DiskOption
+	var err error
+	opt = writeArgsToDiskOption(writeArgs{
+		Size:              "",
+		Path:              "",
+		PayloadProcessNum: 0,
+	})
+	err = opt.Validate()
+	assert.EqualError(t, err, "one of percent and size must not be empty, DiskOption : write-payload")
+
+	opt = writeArgsToDiskOption(writeArgs{
+		Size:              "1Ms",
+		Path:              "",
+		PayloadProcessNum: 0,
+	})
+	err = opt.Validate()
+	assert.EqualError(t, err, "unknown units of size : 1Ms, DiskOption : write-payload")
+
+	opt = writeArgsToDiskOption(writeArgs{
+		Size:              "0",
+		Path:              "",
+		PayloadProcessNum: 0,
+	})
+	err = opt.Validate()
+	assert.EqualError(t, err, "unsupport process num : 0, DiskOption : write-payload")
+
+	opt = writeArgsToDiskOption(writeArgs{
+		Size:              "0",
+		Path:              "",
+		PayloadProcessNum: 1,
+	})
+	err = opt.Validate()
+	assert.NoError(t, err)
+
+	assert.NoError(t, writeArgsAttack(writeArgs{
+		Size:              "0",
+		Path:              "",
+		PayloadProcessNum: 1,
+	}))
+
+	assert.NoError(t, writeArgsAttack(writeArgs{
+		Size:              "0",
+		Path:              "",
+		PayloadProcessNum: 255,
+	}))
+
+	assert.NoError(t, writeArgsAttack(writeArgs{
+		Size:              "1",
+		Path:              "",
+		PayloadProcessNum: 2,
+	}))
+
+	assert.Error(t, writeArgsAttack(writeArgs{
+		Size:              "1",
+		Path:              "&^%$#@#$%^&*(",
+		PayloadProcessNum: 5,
+	}))
+}
+
+type readArgs struct {
+	Size              string
+	Path              string
+	PayloadProcessNum uint8
+}
+
+func readArgsToDiskOption(args readArgs) core.DiskOption {
+	return core.DiskOption{
+		CommonAttackConfig: core.CommonAttackConfig{
+			SchedulerConfig: core.SchedulerConfig{},
+			Action:          core.DiskReadPayloadAction,
+			Kind:            "",
+		},
+		Size:              args.Size,
+		Path:              args.Path,
+		Percent:           "",
+		FillByFallocate:   false,
+		FillDestroyFile:   false,
+		PayloadProcessNum: args.PayloadProcessNum,
+	}
+}
+
+func readArgsAttack(args readArgs) error {
+	opt := readArgsToDiskOption(args)
+	return chaosd.DiskAttack.Attack(&opt, chaosd.Environment{})
+}
+
+func TestNewDiskReadPayloadCommand(t *testing.T) {
+	var opt core.DiskOption
+	var err error
+	opt = readArgsToDiskOption(readArgs{
+		Size:              "",
+		Path:              "",
+		PayloadProcessNum: 0,
+	})
+	err = opt.Validate()
+	assert.EqualError(t, err, "one of percent and size must not be empty, DiskOption : read-payload")
+
+	opt = readArgsToDiskOption(readArgs{
+		Size:              "1Ms",
+		Path:              "",
+		PayloadProcessNum: 0,
+	})
+	err = opt.Validate()
+	assert.EqualError(t, err, "unknown units of size : 1Ms, DiskOption : read-payload")
+
+	opt = readArgsToDiskOption(readArgs{
+		Size:              "0",
+		Path:              "",
+		PayloadProcessNum: 0,
+	})
+	err = opt.Validate()
+	assert.EqualError(t, err, "unsupport process num : 0, DiskOption : read-payload")
+
+	opt = readArgsToDiskOption(readArgs{
+		Size:              "0",
+		Path:              "",
+		PayloadProcessNum: 1,
+	})
+	err = opt.Validate()
+	assert.NoError(t, err)
+
+	assert.NoError(t, readArgsAttack(readArgs{
+		Size:              "0",
+		Path:              "/dev/zero",
+		PayloadProcessNum: 1,
+	}))
+
+	assert.NoError(t, readArgsAttack(readArgs{
+		Size:              "1",
+		Path:              "/dev/zero",
+		PayloadProcessNum: 2,
+	}))
 }

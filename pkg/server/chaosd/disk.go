@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
@@ -35,7 +36,7 @@ type diskAttack struct{}
 var DiskAttack AttackType = diskAttack{}
 
 const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
-const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync,direct,fullblock"
+const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync, fullblock, nocache"
 
 func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err error) {
 	attack := options.(*core.DiskOption)
@@ -91,9 +92,13 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 		log.Error(fmt.Sprintf("fail to get parse size per units , %s", payload.Size), zap.Error(err))
 		return err
 	}
-	sizeBlocks := utils.SplitByteSize(byteSize, payload.PayloadProcessNum)
-
+	sizeBlocks, err := utils.SplitByteSize(byteSize, payload.PayloadProcessNum)
+	if err != nil {
+		log.Error(fmt.Sprintf("split size ,process num %s", payload.PayloadProcessNum), zap.Error(err))
+		return err
+	}
 	var wg sync.WaitGroup
+	var locker uint32
 	wg.Add(len(sizeBlocks))
 	fatalErrors := make(chan error)
 	wgDone := make(chan bool)
@@ -101,11 +106,18 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 		cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, sizeBlock.BlockSize, sizeBlock.Size))
 
 		go func(cmd *exec.Cmd) {
+			if locker != 0 {
+				return
+			}
 			output, err := cmd.CombinedOutput()
-
 			if err != nil {
+				log.Info(cmd.String())
 				log.Error(string(output), zap.Error(err))
+				if !atomic.CompareAndSwapUint32(&locker, 0, 1) {
+					return
+				}
 				fatalErrors <- err
+				return
 			}
 			log.Info(string(output))
 			wg.Done()
@@ -173,7 +185,6 @@ func (diskAttack) attackDiskFill(fill *core.DiskOption) error {
 		cmd = exec.Command("bash", "-c", fmt.Sprintf(FallocateCommand, fill.Size, fill.Path))
 	} else {
 		//1Unit means the block size. The bytes size dd read | write is (block size) * (size).
-
 		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, fill.Size, "1"))
 	}
 
