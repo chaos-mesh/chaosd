@@ -30,6 +30,7 @@ const (
 	JVMExceptionAction = "exception"
 	JVMReturnAction    = "return"
 	JVMStressAction    = "stress"
+	JVMGCAction        = "gc"
 )
 
 type JVMCommand struct {
@@ -104,7 +105,7 @@ func (j *JVMCommand) Validate() error {
 			if j.CPUCount > 0 && j.MemorySize > 0 {
 				return errors.New("inject stress on both CPU and memory is not support now")
 			}
-		} else {
+		} else if j.Action != JVMGCAction {
 			if len(j.Class) == 0 {
 				return errors.New("class not provided")
 			}

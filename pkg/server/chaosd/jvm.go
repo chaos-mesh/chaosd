@@ -47,6 +47,12 @@ STRESS {{.StressType}}
 ENDRULE
 `
 
+const gcRuleTemplate = `
+RULE {{.Name}}
+GC
+ENDRULE
+`
+
 type jvmAttack struct{}
 
 var JVMAttack AttackType = jvmAttack{}
@@ -107,15 +113,24 @@ func (j jvmAttack) installRule(attack *core.JVMCommand) error {
 	}
 
 	buf := new(bytes.Buffer)
-	if attack.Action != core.JVMStressAction {
-		t := template.Must(template.New("byteman rule").Parse(ruleTemplate))
-		err = t.Execute(buf, attack)
 
-	} else {
-		t := template.Must(template.New("byteman rule").Parse(stressRuleTemplate))
-		err = t.Execute(buf, attack)
+	var t *template.Template
+	switch attack.Action {
+	case core.JVMStressAction:
+		t = template.Must(template.New("byteman rule").Parse(stressRuleTemplate))
+	case core.JVMExceptionAction, core.JVMLatencyAction, core.JVMReturnAction:
+		t = template.Must(template.New("byteman rule").Parse(ruleTemplate))
+	case core.JVMGCAction:
+		t = template.Must(template.New("byteman rule").Parse(gcRuleTemplate))
+	default:
+		return errors.Errorf("jvm action %s not supported", attack.Action)
 	}
 
+	if t == nil {
+		return errors.Errorf("parse byeman rule template failed")
+	}
+
+	err = t.Execute(buf, attack)
 	if err != nil {
 		log.Error("executing template", zap.Error(err))
 		return err
