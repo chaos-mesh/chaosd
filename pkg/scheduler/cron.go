@@ -52,6 +52,11 @@ func (cj *CronJob) Run() {
 			log.Error("scheduled run errored", zap.String("expId", cj.experiment.Uid), zap.Error(panicErr))
 			if newRun != nil {
 				updErr = cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunFailed, panicErr.Error())
+			} else {
+				// cannot even create a new run, maybe due to config error
+				// so better to set ERROR on the experiment and remove from scheduler
+				_ = cj.scheduler.Remove(cj.experiment.ID)
+				updErr = cj.scheduler.expStore.Update(context.Background(), cj.experiment.Uid, core.Error, "", cj.experiment.RecoverCommand)
 			}
 		} else {
 			log.Info("scheduled run success", zap.String("expId", cj.experiment.Uid))
@@ -62,7 +67,7 @@ func (cj *CronJob) Run() {
 			}
 		}
 		if updErr != nil {
-			log.Error("failed to update experiment run", zap.Error(updErr))
+			log.Error("failed to update in DB", zap.Error(updErr))
 		}
 	}()
 
