@@ -43,6 +43,10 @@ type NetworkCommand struct {
 
 	// used for DNS attack
 	DNSServer string
+
+	// only the packet which match the tcp flag can be accepted, others will be dropped.
+	// only set when the IPProtocol is tcp, used for partition.
+	AcceptTCPFlags string
 }
 
 var _ AttackConfig = &NetworkCommand{}
@@ -53,6 +57,7 @@ const (
 	NetworkCorruptAction   = "corrupt"
 	NetworkDuplicateAction = "duplicate"
 	NetworkDNSAction       = "dns"
+	NetworkPartitionAction = "partition"
 )
 
 func (n NetworkCommand) Validate() error {
@@ -63,6 +68,8 @@ func (n NetworkCommand) Validate() error {
 		return n.validNetworkCommon()
 	case NetworkDNSAction:
 		return n.validNetworkDNS()
+	case NetworkPartitionAction:
+		return nil
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -293,6 +300,8 @@ func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 		if netem, err = n.ToDuplicateNetem(); err != nil {
 			return nil, errors.WithStack(err)
 		}
+	case NetworkPartitionAction:
+
 	default:
 		return nil, errors.Errorf("action %s not supported", n.Action)
 	}
@@ -342,15 +351,37 @@ func (n *NetworkCommand) NeedApplyIptables() bool {
 
 func (n *NetworkCommand) NeedApplyTC() bool {
 	switch n.Action {
-	case NetworkDelayAction, NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
+	case NetworkDelayAction, NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction: //,NetworkPartitionAction:
 		return true
 	default:
 		return false
 	}
 }
 
-func (n *NetworkCommand) ToChain() (*pb.Chain, error) {
-	return nil, nil
+func (n *NetworkCommand) ToChain(ipset string) ([]*pb.Chain, error) {
+	fmt.Println("ToChain, ipset", ipset)
+
+	chainName := "INPUT/netwo_1b123aea33da9e_"
+	chains := make([]*pb.Chain, 0, 2)
+	if len(n.AcceptTCPFlags) > 0 {
+		chains = append(chains, &pb.Chain{
+			Name:      chainName,
+			Ipsets:    []string{ipset},
+			Direction: pb.Chain_OUTPUT,
+			Protocol:  n.IPProtocol,
+			TcpFlags:  n.AcceptTCPFlags,
+			Target:    "ACCEPT",
+		})
+	}
+
+	chains = append(chains, &pb.Chain{
+		Name:      chainName,
+		Ipsets:    []string{ipset},
+		Direction: pb.Chain_OUTPUT,
+		Target:    "DROP",
+	})
+
+	return chains, nil
 }
 
 func NewNetworkCommand() *NetworkCommand {
