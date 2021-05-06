@@ -15,7 +15,6 @@ package core
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/pingcap/errors"
 )
@@ -32,7 +31,6 @@ type StressCommand struct {
 	Workers     int
 	Size        string
 	Options     []string
-	Duration    time.Duration
 	StressngPid int32
 }
 
