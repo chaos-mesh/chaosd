@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
@@ -105,42 +105,30 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 	log.Info(string(output))
 
 	var wg sync.WaitGroup
-	var locker uint32
+	var mu sync.Mutex
+	var errs error
 	wg.Add(len(sizeBlocks))
-	fatalErrors := make(chan error)
-	wgDone := make(chan bool)
 	for _, sizeBlock := range sizeBlocks {
 		cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, sizeBlock.BlockSize, sizeBlock.Size))
 
 		go func(cmd *exec.Cmd) {
-			if locker != 0 {
-				return
-			}
+			defer wg.Done()
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				log.Error(cmd.String()+string(output), zap.Error(err))
-				if !atomic.CompareAndSwapUint32(&locker, 0, 1) {
-					return
-				}
-				fatalErrors <- err
+				mu.Lock()
+				defer mu.Unlock()
+				errs = multierror.Append(errs, err)
 				return
 			}
 			log.Info(string(output))
-			wg.Done()
 		}(cmd)
 	}
 
-	go func() {
-		wg.Wait()
-		close(wgDone)
-	}()
+	wg.Wait()
 
-	select {
-	case <-wgDone:
-		break
-	case err := <-fatalErrors:
-		close(fatalErrors)
-		return err
+	if errs != nil {
+		return errs
 	}
 
 	return nil

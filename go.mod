@@ -9,6 +9,7 @@ require (
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0
 	github.com/gin-gonic/gin v1.6.3
 	github.com/google/uuid v1.1.1
+	github.com/hashicorp/go-multierror v1.1.0
 	github.com/joomcode/errorx v1.0.1
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
 	github.com/olekukonko/tablewriter v0.0.4

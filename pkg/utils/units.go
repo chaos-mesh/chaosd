@@ -50,6 +50,12 @@ type SizeBlock struct {
 	Size      string
 }
 
+// for all b != 0 and b in uint64 and num in uint8
+// []SizeBlock is slice of Size : (b >> 20) / num, BlockSize : 1M
+// SizeBlock is the rest size witch not be calculated, rest is equal to Size : 1, BlockSize : b % (num * 1M) c
+// Since BlockSize can not be bigger than memory size on the machine and
+// b == BlockSize * Size , if b is a big prime number ,BlockSize or Size will be one which is not proper .
+// So we add a rest SizeBlock to split b into two part.
 func SplitByteSize(b uint64, num uint8) ([]SizeBlock, SizeBlock, error) {
 	if b == 0 {
 		return []SizeBlock{{
