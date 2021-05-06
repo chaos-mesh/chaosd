@@ -67,6 +67,7 @@ func TestSplitByteSize(t *testing.T) {
 		name    string
 		args    args
 		want    []SizeBlock
+		want1   SizeBlock
 		wantErr bool
 	}{
 		{
@@ -79,6 +80,7 @@ func TestSplitByteSize(t *testing.T) {
 				BlockSize: "1M",
 				Size:      "0",
 			}},
+			want1:   SizeBlock{},
 			wantErr: false,
 		},
 		{
@@ -88,6 +90,7 @@ func TestSplitByteSize(t *testing.T) {
 				num: 0,
 			},
 			want:    nil,
+			want1:   SizeBlock{},
 			wantErr: true,
 		},
 		{
@@ -103,6 +106,10 @@ func TestSplitByteSize(t *testing.T) {
 				BlockSize: "524288c",
 				Size:      "1",
 			}},
+			want1: SizeBlock{
+				BlockSize: "1",
+				Size:      "0c",
+			},
 			wantErr: false,
 		}, {
 			name: "3",
@@ -114,9 +121,13 @@ func TestSplitByteSize(t *testing.T) {
 				BlockSize: "524288c",
 				Size:      "1",
 			}, {
-				BlockSize: "524289c",
+				BlockSize: "524288c",
 				Size:      "1",
 			}},
+			want1: SizeBlock{
+				BlockSize: "1",
+				Size:      "1c",
+			},
 			wantErr: false,
 		}, {
 			name: "4",
@@ -129,8 +140,12 @@ func TestSplitByteSize(t *testing.T) {
 				Size:      "2",
 			}, {
 				BlockSize: "1M",
-				Size:      "3",
+				Size:      "2",
 			}},
+			want1: SizeBlock{
+				BlockSize: "1",
+				Size:      "1048576c",
+			},
 			wantErr: false,
 		}, {
 			name: "5",
@@ -142,21 +157,28 @@ func TestSplitByteSize(t *testing.T) {
 				BlockSize: "1M",
 				Size:      "2",
 			}, {
-				BlockSize: "3145729c",
-				Size:      "1",
+				BlockSize: "1M",
+				Size:      "2",
 			}},
+			want1: SizeBlock{
+				BlockSize: "1",
+				Size:      "1048577c",
+			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := SplitByteSize(tt.args.b, tt.args.num)
+			got, got1, err := SplitByteSize(tt.args.b, tt.args.num)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SplitByteSize() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("SplitByteSize() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("SplitByteSize() got1 = %v, want %v", got1, tt.want1)
 			}
 		})
 	}

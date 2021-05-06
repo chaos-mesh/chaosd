@@ -328,4 +328,10 @@ func TestNewDiskReadPayloadCommand(t *testing.T) {
 		Path:              "/dev/zero",
 		PayloadProcessNum: 2,
 	}))
+
+	assert.NoError(t, readArgsAttack(readArgs{
+		Size:              "100GB",
+		Path:              "/dev/zero",
+		PayloadProcessNum: 1,
+	}))
 }

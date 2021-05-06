@@ -36,7 +36,7 @@ type diskAttack struct{}
 var DiskAttack AttackType = diskAttack{}
 
 const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
-const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync, fullblock, nocache"
+const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync,fullblock,nocache"
 
 func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err error) {
 	attack := options.(*core.DiskOption)
@@ -92,11 +92,18 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 		log.Error(fmt.Sprintf("fail to get parse size per units , %s", payload.Size), zap.Error(err))
 		return err
 	}
-	sizeBlocks, err := utils.SplitByteSize(byteSize, payload.PayloadProcessNum)
+	sizeBlocks, rest, err := utils.SplitByteSize(byteSize, payload.PayloadProcessNum)
 	if err != nil {
 		log.Error(fmt.Sprintf("split size ,process num %d", payload.PayloadProcessNum), zap.Error(err))
 		return err
 	}
+	cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, rest.BlockSize, rest.Size))
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Error(cmd.String()+string(output), zap.Error(err))
+	}
+	log.Info(string(output))
+
 	var wg sync.WaitGroup
 	var locker uint32
 	wg.Add(len(sizeBlocks))
@@ -111,8 +118,7 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 			}
 			output, err := cmd.CombinedOutput()
 			if err != nil {
-				log.Info(cmd.String())
-				log.Error(string(output), zap.Error(err))
+				log.Error(cmd.String()+string(output), zap.Error(err))
 				if !atomic.CompareAndSwapUint32(&locker, 0, 1) {
 					return
 				}
