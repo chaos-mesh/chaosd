@@ -98,10 +98,7 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, ipset, uid string) e
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	for _, newChain := range newChains {
-		chains = append(chains, newChain)
-	}
+	chains = append(chains, newChains...)
 
 	if _, err := s.svr.SetIptablesChains(context.Background(), &pb.IptablesChainsRequest{
 		Chains:  chains,
