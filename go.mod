@@ -5,7 +5,7 @@ require (
 	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20210329064057-23471399d8f4
 	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0
 	github.com/containerd/containerd v1.2.3
-	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0
+	github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf
 	github.com/gin-gonic/gin v1.6.3
 	github.com/google/uuid v1.1.1
 	github.com/joomcode/errorx v1.0.1
@@ -28,9 +28,8 @@ require (
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
-	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
 	golang.org/x/text v0.3.3 // indirect
-	google.golang.org/grpc v1.27.0
+	google.golang.org/grpc v1.29.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.20.7
@@ -42,7 +41,7 @@ require (
 replace (
 	// github.com/chaos-mesh/chaos-mesh require /api/v1alpha1 v0.0.0, but v0.0.0 can not be found, so use replace here
 	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 => github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0-20210329070828-9be168b2b489
-	google.golang.org/grpc => google.golang.org/grpc v1.26.0
+	//google.golang.org/grpc => google.golang.org/grpc v1.26.0
 	k8s.io/api => k8s.io/api v0.17.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.17.1-beta.0
@@ -68,3 +67,5 @@ replace (
 )
 
 go 1.14
+
+replace github.com/chaos-mesh/chaos-mesh v0.9.1-0.20210329064057-23471399d8f4 => github.com/WangXiangUSTC/chaos-mesh v0.0.0-20210506131037-3d26a9a0272a

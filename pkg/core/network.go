@@ -375,7 +375,7 @@ func (n *NetworkCommand) ToChain(ipset string) ([]*pb.Chain, error) {
 	}
 
 	chains = append(chains, &pb.Chain{
-		Name:      chainName,
+		Name:      chainName+"2",
 		Ipsets:    []string{ipset},
 		Direction: pb.Chain_OUTPUT,
 		Target:    "DROP",
