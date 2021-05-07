@@ -19,6 +19,8 @@ import (
 	"github.com/spf13/cobra"
 	_ "github.com/swaggo/swag"
 	"go.uber.org/zap"
+	ctrl "sigs.k8s.io/controller-runtime"
+	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/chaos-mesh/chaosd/cmd/attack"
 	"github.com/chaos-mesh/chaosd/cmd/recover"
@@ -37,7 +39,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(setLogLevel)
+	cobra.OnInitialize(setLog)
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", "", "the log level of chaosd, the value can be 'debug', 'info', 'warn' and 'error'")
 
 	rootCmd.AddCommand(
@@ -49,7 +51,7 @@ func init() {
 	)
 }
 
-func setLogLevel() {
+func setLog() {
 	conf := &log.Config{Level: logLevel}
 	lg, r, err := log.InitLogger(conf)
 	if err != nil {
@@ -57,6 +59,9 @@ func setLogLevel() {
 		return
 	}
 	log.ReplaceGlobals(lg, r)
+
+	// set log of controller-runtime, so that can print logs in chaos mesh
+	ctrl.SetLogger(ctrlzap.New(ctrlzap.UseDevMode(true)))
 }
 
 func main() {

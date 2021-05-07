@@ -16,7 +16,6 @@ package core
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -73,20 +72,14 @@ type IptablesRule struct {
 	Experiment string `gorm:"index:experiment" json:"experiment"`
 
 	Protocol string `json:"protocol"`
-	//AcceptTCPFlags string `json:"accept-tcp-flags"`
-
-	// target can be DROP or ACCEPT
-	//Target string `json:"target"`
 }
 
 func (i *IptablesRule) ToChain() *pb.Chain {
-	fmt.Println("ToChain, direction", i.Direction)
 	ch := &pb.Chain{
 		Name:      i.Name,
 		Ipsets:    strings.Split(i.IPSets, ","),
 		Direction: pb.Chain_Direction(pb.Chain_Direction_value[i.Direction]),
 		Target:    "DROP",
-		//Target:    target,
 	}
 
 	return ch

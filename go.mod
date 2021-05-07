@@ -68,4 +68,4 @@ replace (
 
 go 1.14
 
-replace github.com/chaos-mesh/chaos-mesh v0.9.1-0.20210329064057-23471399d8f4 => github.com/WangXiangUSTC/chaos-mesh v0.0.0-20210506131037-3d26a9a0272a
+replace github.com/chaos-mesh/chaos-mesh v0.9.1-0.20210329064057-23471399d8f4 => github.com/WangXiangUSTC/chaos-mesh v0.0.0-20210507024610-887602852f33

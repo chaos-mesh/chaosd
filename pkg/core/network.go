@@ -351,7 +351,7 @@ func (n *NetworkCommand) NeedApplyIptables() bool {
 
 func (n *NetworkCommand) NeedApplyTC() bool {
 	switch n.Action {
-	case NetworkDelayAction, NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction: //,NetworkPartitionAction:
+	case NetworkDelayAction, NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
 		return true
 	default:
 		return false
@@ -359,13 +359,14 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 }
 
 func (n *NetworkCommand) ToChain(ipset string) ([]*pb.Chain, error) {
-	fmt.Println("ToChain, ipset", ipset)
+	if n.Action != NetworkPartitionAction {
+		return nil, nil
+	}
 
-	chainName := "INPUT/netwo_1b123aea33da9e_"
 	chains := make([]*pb.Chain, 0, 2)
 	if len(n.AcceptTCPFlags) > 0 {
 		chains = append(chains, &pb.Chain{
-			Name:      chainName,
+			Name:      "INPUT/0",
 			Ipsets:    []string{ipset},
 			Direction: pb.Chain_OUTPUT,
 			Protocol:  n.IPProtocol,
@@ -375,7 +376,7 @@ func (n *NetworkCommand) ToChain(ipset string) ([]*pb.Chain, error) {
 	}
 
 	chains = append(chains, &pb.Chain{
-		Name:      chainName+"2",
+		Name:      "INPUT/1",
 		Ipsets:    []string{ipset},
 		Direction: pb.Chain_OUTPUT,
 		Target:    "DROP",

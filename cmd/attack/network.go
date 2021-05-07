@@ -19,9 +19,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
 	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
@@ -36,9 +33,6 @@ func NewNetworkAttackCommand() *cobra.Command {
 			return options
 		}),
 	)
-
-	// set log of controller-runtime, so that can print logs in chaos mesh
-	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	cmd := &cobra.Command{
 		Use:   "network <subcommand>",
