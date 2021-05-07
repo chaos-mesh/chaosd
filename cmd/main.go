@@ -64,7 +64,7 @@ func setLog() {
 
 	// set log of controller-runtime, so that can print logs in chaos mesh
 	ctrl.SetLogger(ctrlzap.New(ctrlzap.UseDevMode(true)))
-	
+
 	// only in debug mode print log of go.uber.org/fx
 	if strings.ToLower(logLevel) == "debug" {
 		utils.PrintFxLog = true
