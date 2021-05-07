@@ -53,7 +53,7 @@ func NewStressCPUCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 		Short: "continuously stress CPU out",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.StressCPUAction
-			fx.New(dep, fx.Invoke(stressAttackF)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(stressAttackF)).Run()
 		},
 	}
 
@@ -70,7 +70,7 @@ func NewStressMemCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 		Short: "continuously stress virtual memory out",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.StressMemAction
-			fx.New(dep, fx.Invoke(stressAttackF)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(stressAttackF)).Run()
 		},
 	}
 

@@ -59,7 +59,7 @@ func NewNetworkDelayCommand(dep fx.Option, options *core.NetworkCommand) *cobra.
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkDelayAction
 			options.CompleteDefaults()
-			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
 		},
 	}
 
@@ -91,7 +91,7 @@ func NewNetworkLossCommand(dep fx.Option, options *core.NetworkCommand) *cobra.C
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkLossAction
 			options.CompleteDefaults()
-			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
 		},
 	}
 
@@ -120,7 +120,7 @@ func NewNetworkCorruptCommand(dep fx.Option, options *core.NetworkCommand) *cobr
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkCorruptAction
 			options.CompleteDefaults()
-			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
 		},
 	}
 
@@ -149,7 +149,7 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkDuplicateAction
 			options.CompleteDefaults()
-			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
 		},
 	}
 
@@ -200,7 +200,7 @@ func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkDNSAction
 			options.CompleteDefaults()
-			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
 		},
 	}
 

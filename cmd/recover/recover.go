@@ -46,7 +46,7 @@ func NewRecoverCommand() *cobra.Command {
 				utils.ExitWithMsg(utils.ExitBadArgs, "UID is required")
 			}
 			options.uid = args[0]
-			fx.New(dep, fx.Invoke(recoverCommandF)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(recoverCommandF)).Run()
 		},
 	}
 	return cmd
