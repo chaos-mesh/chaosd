@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	JVMAttachType      = "attach"
-	JVMInstallRuleType = "install_rule"
+	JVMInstallType = "install"
+	JVMSubmitType  = "submit"
 
 	JVMLatencyAction   = "latency"
 	JVMExceptionAction = "exception"
@@ -87,12 +87,12 @@ func (j *JVMCommand) Validate() error {
 		return errors.New("type not provided, type can be 'install' or 'attach'")
 	}
 
-	if j.Type == JVMAttachType {
+	if j.Type == JVMInstallType {
 		if j.Pid == 0 {
 			return errors.New("pid can't be 0")
 		}
 
-	} else if j.Type == JVMInstallRuleType {
+	} else if j.Type == JVMSubmitType {
 		if len(j.Action) == 0 {
 			return errors.New("action not provided, action can be 'latency', 'exception', 'return' or 'stress'")
 		}

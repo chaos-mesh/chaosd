@@ -63,16 +63,16 @@ const bmSubmitCommand = "bmsubmit.sh -p %d -%s %s"
 func (j jvmAttack) Attack(options core.AttackConfig, env Environment) (err error) {
 	attack := options.(*core.JVMCommand)
 
-	if attack.Type == core.JVMAttachType {
-		return j.attach(attack)
-	} else if attack.Type == core.JVMInstallRuleType {
-		return j.installRule(attack)
+	if attack.Type == core.JVMInstallType {
+		return j.install(attack)
+	} else if attack.Type == core.JVMSubmitType {
+		return j.submit(attack)
 	}
 
 	return errors.Errorf("attack type %s not supported", attack.Type)
 }
 
-func (j jvmAttack) attach(attack *core.JVMCommand) error {
+func (j jvmAttack) install(attack *core.JVMCommand) error {
 	var err error
 
 	bmInstallCmd := fmt.Sprintf(bmInstallCommand, attack.Port, attack.Pid)
@@ -87,7 +87,7 @@ func (j jvmAttack) attach(attack *core.JVMCommand) error {
 	return err
 }
 
-func (j jvmAttack) installRule(attack *core.JVMCommand) error {
+func (j jvmAttack) submit(attack *core.JVMCommand) error {
 	var err error
 
 	if len(attack.Do) == 0 {

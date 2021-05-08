@@ -40,19 +40,19 @@ func NewJVMAttackCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		NewJVMAttachCommand(dep, options),
-		NewJVMInstallRuleCommand(dep, options),
+		NewJVMInstallCommand(dep, options),
+		NewJVMSubmitCommand(dep, options),
 	)
 
 	return cmd
 }
 
-func NewJVMAttachCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
+func NewJVMInstallCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "attach [options]",
-		Short: "attach agent to Java process",
+		Use:   "install [options]",
+		Short: "install agent to Java process",
 		Run: func(*cobra.Command, []string) {
-			options.Type = core.JVMAttachType
+			options.Type = core.JVMInstallType
 			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
@@ -64,12 +64,12 @@ func NewJVMAttachCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 	return cmd
 }
 
-func NewJVMInstallRuleCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
+func NewJVMSubmitCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "install [options]",
-		Short: "install rules for byteman agent",
+		Use:   "submit [options]",
+		Short: "submit rules for byteman agent",
 	}
-	options.Type = core.JVMInstallRuleType
+	options.Type = core.JVMSubmitType
 
 	cmd.PersistentFlags().StringVarP(&options.Name, "name", "n", "", "rule name, should be unique, and will generate one automatically if it is empty")
 	cmd.PersistentFlags().IntVarP(&options.Port, "port", "", 9288, "the port of agent server")
