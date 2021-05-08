@@ -20,7 +20,7 @@ cd $cur
 
 bin_path=../../../bin
 
-# download && build && run Java example program
+echo "download && build && run Java example program"
 git clone https://github.com/WangXiangUSTC/byteman-example.git
 cd byteman-example/example.helloworld
 javac HelloWorld/Main.java
@@ -30,12 +30,13 @@ java -jar byteman-example/example.helloworld/HelloWorld.jar > helloworld.log &
 # TODO: get the PID more accurately
 pid=`pidof java`
 
-# download byteman && set environment variable
+echo "download byteman && set environment variable"
 curl -fsSL -o chaosd-byteman-download.tar.gz https://mirrors.chaos-mesh.org/jvm/chaosd-byteman-download.tar.gz
 tar zxvf chaosd-byteman-download.tar.gz
 export BYTEMAN_HOME=$cur/chaosd-byteman-download
 export PATH=$PATH:${BYTEMAN_HOME}/bin
 
+echo "run chaosd to inject failure into JVM, and check"
 $bin_path/chaosd attack jvm install --port 9288 --pid $pid
 
 $bin_path/chaosd attack jvm submit return --class Main --method getnum --port 9288  --value 99999
@@ -46,5 +47,5 @@ check_contains "BOOM" helloworld.log
 
 # TODO: add test for latency, stress and gc
 
-# clean
+echo "clean"
 kill $pid
