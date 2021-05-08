@@ -84,7 +84,7 @@ type JVMCommand struct {
 
 func (j *JVMCommand) Validate() error {
 	if len(j.Type) == 0 {
-		return errors.New("type not provided, type can be 'install' or 'attach'")
+		return errors.New("type not provided, type can be 'install' or 'submit'")
 	}
 
 	if j.Type == JVMInstallType {
@@ -94,7 +94,7 @@ func (j *JVMCommand) Validate() error {
 
 	} else if j.Type == JVMSubmitType {
 		if len(j.Action) == 0 {
-			return errors.New("action not provided, action can be 'latency', 'exception', 'return' or 'stress'")
+			return errors.New("action not provided, action can be 'latency', 'exception', 'return', 'stress' or 'gc'")
 		}
 
 		if j.Action == JVMStressAction {
@@ -123,14 +123,6 @@ func (j *JVMCommand) Validate() error {
 
 	return nil
 }
-
-/*
-func (j *JVMCommand) String() string {
-	data, _ := json.Marshal(j)
-
-	return string(data)
-}
-*/
 
 func (j *JVMCommand) RecoverData() string {
 	data, _ := json.Marshal(j)
