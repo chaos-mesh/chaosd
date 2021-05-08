@@ -68,23 +68,103 @@ func NewJVMInstallRuleCommand(dep fx.Option, options *core.JVMCommand) *cobra.Co
 	cmd := &cobra.Command{
 		Use:   "install [options]",
 		Short: "install rules for byteman agent",
+	}
+
+	cmd.PersistentFlags().StringVarP(&options.Name, "name", "n", "", "rule name, should be unique, and will generate one automatically if it is empty")
+	cmd.PersistentFlags().IntVarP(&options.Port, "port", "", 9288, "the port of agent server")
+
+	cmd.AddCommand(
+		NewJVMLatencyCommand(dep, options),
+		NewJVMReturnCommand(dep, options),
+		NewJVMExceptionCommand(dep, options),
+		NewJVMStressCommand(dep, options),
+		NewJVMGCCommand(dep, options),
+	)
+
+	return cmd
+}
+
+func NewJVMLatencyCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "latency [options]",
+		Short: "inject latency to specified method",
 		Run: func(*cobra.Command, []string) {
-			options.Type = core.JVMInstallRuleType
+			options.Action = core.JVMLatencyAction
 			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Name, "name", "n", "", "rule name, should be unique, and will generate one automatically if it is empty")
 	cmd.Flags().StringVarP(&options.Class, "class", "c", "", "Java class name")
 	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "the method name in Java class")
-	cmd.Flags().StringVarP(&options.Action, "action", "a", "", "fault action, values can be latency, exception, return or stress")
-	cmd.Flags().IntVarP(&options.Port, "port", "", 9288, "the port of agent server")
-	cmd.Flags().StringVarP(&options.ReturnValue, "value", "", "", "the return value for action 'return'")
+	cmd.Flags().StringVarP(&options.LatencyDuration, "latency", "", "", "the latency duration")
+
+	return cmd
+}
+
+func NewJVMReturnCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "return [options]",
+		Short: "return specified value for specified method",
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.JVMReturnAction
+			options.CompleteDefaults()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Class, "class", "c", "", "Java class name")
+	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "the method name in Java class")
+	cmd.Flags().StringVarP(&options.ReturnValue, "value", "", "", "the return value for action 'return', only support number and string type now")
+
+	return cmd
+}
+
+func NewJVMExceptionCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exception [options]",
+		Short: "throw specified exception for specified method",
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.JVMExceptionAction
+			options.CompleteDefaults()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Class, "class", "c", "", "Java class name")
+	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "the method name in Java class")
 	cmd.Flags().StringVarP(&options.ThrowException, "exception", "", "", "the exception which needs to throw for action 'exception'")
-	cmd.Flags().StringVarP(&options.LatencyDuration, "latency", "", "", "the latency duration for action 'latency'")
+
+	return cmd
+}
+
+func NewJVMStressCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "stress [options]",
+		Short: "inject stress to JVM",
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.JVMStressAction
+			options.CompleteDefaults()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
+		},
+	}
+
 	cmd.Flags().IntVarP(&options.CPUCount, "cpu-count", "", 0, "the CPU core number need to use, only set it when action is stress")
 	cmd.Flags().IntVarP(&options.MemorySize, "mem-size", "", 0, "the memory size need to locate, only set it when action is stress")
+
+	return cmd
+}
+
+func NewJVMGCCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "gc",
+		Short: "trigger GC for JVM",
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.JVMGCAction
+			options.CompleteDefaults()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
+		},
+	}
 
 	return cmd
 }
