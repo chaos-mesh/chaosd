@@ -69,6 +69,7 @@ func NewJVMInstallRuleCommand(dep fx.Option, options *core.JVMCommand) *cobra.Co
 		Use:   "install [options]",
 		Short: "install rules for byteman agent",
 	}
+	options.Type = core.JVMInstallRuleType
 
 	cmd.PersistentFlags().StringVarP(&options.Name, "name", "n", "", "rule name, should be unique, and will generate one automatically if it is empty")
 	cmd.PersistentFlags().IntVarP(&options.Port, "port", "", 9288, "the port of agent server")
