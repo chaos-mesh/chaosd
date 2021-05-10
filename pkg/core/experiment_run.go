@@ -21,9 +21,10 @@ import (
 )
 
 const (
-	RunStarted = "started"
-	RunFailed  = "failed"
-	RunSuccess = "success"
+	RunStarted   = "started"
+	RunFailed    = "failed"
+	RunSuccess   = "success"
+	RunRecovered = "recovered"
 )
 
 // ExperimentRunStore defines operations for working with experiment runs

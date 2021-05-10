@@ -86,7 +86,12 @@ func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig,
 
 	env := s.newEnvironment(uid)
 	if len(options.Cron()) > 0 {
-		if err = s.Cron.Schedule(exp, options.Cron(), func() error { return attackType.Attack(options, env) }); err != nil {
+		if err = s.Cron.Schedule(
+			exp,
+			options.Cron(),
+			func() error { return attackType.Attack(options, env) },
+			func() error { return attackType.Recover(*exp, env) },
+		); err != nil {
 			err = perr.WithStack(err)
 			return
 		}

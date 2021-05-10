@@ -15,6 +15,7 @@ package scheduler
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/go-logr/zapr"
@@ -32,26 +33,66 @@ type Scheduler struct {
 	expRunStore core.ExperimentRunStore
 	cronStore   CronStore
 }
-
 type CronJob struct {
-	scheduler  *Scheduler
-	experiment *core.Experiment
-	run        func() error
+	// immutable fields
+	scheduler   *Scheduler
+	experiment  *core.Experiment
+	attackFunc  func() error
+	recoverFunc func() error
+
+	// mutable fields protected by sync.Locker
+	waitForRecovery bool
+	lock            sync.Mutex
 }
 
 func hasCronDurationExceeded(startedAt time.Time, duration time.Duration) bool {
 	return time.Until(startedAt.Add(duration)).Milliseconds() < 0
 }
 
+func (cj *CronJob) RecoverRun(expRun *core.ExperimentRun) {
+	defer cj.setWaitForRecovery(false)
+	log.Info("recovering attack on exp run", zap.String("expRunUID", expRun.UID))
+	if err := cj.recoverFunc(); err != nil {
+		log.Warn("recovery failed", zap.Error(err))
+	} else {
+		if err := cj.scheduler.expRunStore.Update(context.Background(), expRun.UID, core.RunRecovered, ""); err != nil {
+			log.Error("failed to update in DB", zap.Error(err))
+		}
+	}
+}
+
+func (cj *CronJob) assertNoRecovery() bool {
+	cj.lock.Lock()
+	waitingForRecovery := cj.waitForRecovery
+	cj.lock.Unlock()
+	return !waitingForRecovery
+}
+
+func (cj *CronJob) setWaitForRecovery(waitForRecovery bool) {
+	cj.lock.Lock()
+	cj.waitForRecovery = waitForRecovery
+	cj.lock.Unlock()
+}
+
 // TODO: write tests for it
 func (cj *CronJob) Run() {
+	if !cj.assertNoRecovery() {
+		log.Info("skipping scheduled execution of attack since recovery in progress", zap.String("expId", cj.experiment.Uid))
+		return
+	}
+
 	var newRun *core.ExperimentRun
+	var recoverTimer *time.Timer
 	defer func() {
 		var updErr error
 		if panicErr, ok := recover().(error); panicErr != nil && ok {
 			log.Error("scheduled run errored", zap.String("expId", cj.experiment.Uid), zap.Error(panicErr))
 			if newRun != nil {
 				updErr = cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunFailed, panicErr.Error())
+				if recoverTimer != nil {
+					cj.setWaitForRecovery(false)
+					recoverTimer.Stop()
+				}
 			} else {
 				// cannot even create a new run, maybe due to config error
 				// so better to set ERROR on the experiment and remove from scheduler
@@ -62,8 +103,6 @@ func (cj *CronJob) Run() {
 			log.Info("scheduled run success", zap.String("expId", cj.experiment.Uid))
 			if newRun != nil {
 				updErr = cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunSuccess, "")
-			} else {
-				log.Info("cron run finished")
 			}
 		}
 		if updErr != nil {
@@ -80,23 +119,21 @@ func (cj *CronJob) Run() {
 	if err != nil {
 		panic(perr.WithStack(err))
 	}
-	if cronDuration != nil && hasCronDurationExceeded(cj.experiment.CreatedAt, *cronDuration) {
-		if err = cj.scheduler.Remove(cj.experiment.ID); err != nil {
-			panic(perr.WithStack(err))
-		}
-		if err = cj.scheduler.expStore.Update(context.Background(), cj.experiment.Uid, core.Success, "", cj.experiment.RecoverCommand); err != nil {
-			panic(perr.WithStack(err))
-		}
-		return
-	}
 
 	newRun = cj.experiment.NewRun()
 	if err = cj.scheduler.expRunStore.NewRun(context.Background(), newRun); err != nil {
 		panic(perr.WithStack(err))
 	}
 
+	if cronDuration != nil {
+		cj.setWaitForRecovery(true)
+		recoverTimer = time.AfterFunc(*cronDuration, func() {
+			cj.RecoverRun(newRun)
+		})
+	}
+
 	log.Info("executing attack on new exp run", zap.String("expRunUID", newRun.UID))
-	if err = cj.run(); err != nil {
+	if err = cj.attackFunc(); err != nil {
 		panic(perr.WithMessage(err, "attack failed"))
 	}
 }
@@ -114,11 +151,13 @@ func NewScheduler(expRunStore core.ExperimentRunStore, expStore core.ExperimentS
 	}
 }
 
-func (scheduler *Scheduler) Schedule(exp *core.Experiment, spec string, task func() error) error {
+func (scheduler *Scheduler) Schedule(
+	exp *core.Experiment, spec string, attackFunc func() error, recoverFunc func() error) error {
 	cj := CronJob{
-		scheduler:  scheduler,
-		experiment: exp,
-		run:        task,
+		scheduler:   scheduler,
+		experiment:  exp,
+		attackFunc:  attackFunc,
+		recoverFunc: recoverFunc,
 	}
 	entryId, err := scheduler.AddJob(spec, &cj)
 	if err != nil {
@@ -137,6 +176,6 @@ func (scheduler Scheduler) Remove(expId uint) error {
 }
 
 func (scheduler Scheduler) Start() {
-	log.Info("starting Scheduler")
+	log.Info("Starting Scheduler")
 	scheduler.Cron.Start()
 }
