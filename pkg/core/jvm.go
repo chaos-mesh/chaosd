@@ -83,20 +83,12 @@ type JVMCommand struct {
 }
 
 func (j *JVMCommand) Validate() error {
-	if len(j.Type) == 0 {
-		return errors.New("type not provided, type can be 'install' or 'submit'")
-	}
-
-	if j.Type == JVMInstallType {
+	switch j.Type {
+	case JVMInstallType:
 		if j.Pid == 0 {
 			return errors.New("pid can't be 0")
 		}
-
-	} else if j.Type == JVMSubmitType {
-		if len(j.Action) == 0 {
-			return errors.New("action not provided, action can be 'latency', 'exception', 'return', 'stress' or 'gc'")
-		}
-
+	case JVMSubmitType:
 		switch j.Action {
 		case JVMStressAction:
 			if j.CPUCount == 0 && j.MemorySize == 0 {
@@ -116,6 +108,8 @@ func (j *JVMCommand) Validate() error {
 			if len(j.Method) == 0 {
 				return errors.New("method not provided")
 			}
+		case "":
+			return errors.New("action not provided, action can be 'latency', 'exception', 'return', 'stress' or 'gc'")
 		default:
 			return errors.New(fmt.Sprintf("action %s not supported, action can be 'latency', 'exception', 'return', 'stress' or 'gc'", j.Action))
 		}
@@ -123,6 +117,10 @@ func (j *JVMCommand) Validate() error {
 		if len(j.Name) == 0 {
 			j.Name = fmt.Sprintf("%s-%s-%s-%s-%s", j.Class, j.Method, j.Action, j.Type, utils.RandomStringWithCharset(5))
 		}
+	case "":
+		return errors.New("type not provided, type can be 'install' or 'submit'")
+	default:
+		return errors.New(fmt.Sprintf("type %s not supported, type can be 'install' or 'submit'", j.Type))
 	}
 
 	return nil
