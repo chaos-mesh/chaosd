@@ -185,7 +185,7 @@ func writeArgsToDiskOption(args writeArgs) core.DiskOption {
 		Path:              args.Path,
 		Percent:           "",
 		FillByFallocate:   false,
-		FillDestroyFile:   false,
+		DestroyFile:       false,
 		PayloadProcessNum: args.PayloadProcessNum,
 	}
 }
@@ -272,7 +272,7 @@ func readArgsToDiskOption(args readArgs) core.DiskOption {
 		Path:              args.Path,
 		Percent:           "",
 		FillByFallocate:   false,
-		FillDestroyFile:   false,
+		DestroyFile:       false,
 		PayloadProcessNum: args.PayloadProcessNum,
 	}
 }

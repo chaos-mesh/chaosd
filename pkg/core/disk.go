@@ -34,7 +34,7 @@ type DiskOption struct {
 	Path              string `json:"path"`
 	Percent           string `json:"percent"`
 	FillByFallocate   bool   `json:"fill_by_fallocate"`
-	FillDestroyFile   bool   `json:"fill_destroy_file"`
+	DestroyFile       bool   `json:"destroy_file"`
 	PayloadProcessNum uint8  `json:"payload_process_num"`
 }
 

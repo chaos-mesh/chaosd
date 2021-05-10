@@ -47,6 +47,31 @@ func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err e
 	return disk.diskPayload(attack)
 }
 
+func initWritePayloadPath(payload *core.DiskOption) error {
+	var err error
+	payload.Path, err = utils.CreateTempFile()
+	if err != nil {
+		log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", payload.Action))
+		return err
+	}
+	return nil
+}
+
+func initReadPayloadPath(payload *core.DiskOption) error {
+	path, err := utils.GetRootDevice()
+	if err != nil {
+		log.Error("err when GetRootDevice in reading payload", zap.Error(err))
+		return err
+	}
+	if path == "" {
+		err = errors.Errorf("can not get root device path")
+		log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
+		return err
+	}
+	payload.Path = path
+	return nil
+}
+
 // diskPayload will execute a dd command (DDWritePayloadCommand or DDReadPayloadCommand)
 // to add a write or read payload.
 func (diskAttack) diskPayload(payload *core.DiskOption) error {
@@ -55,10 +80,8 @@ func (diskAttack) diskPayload(payload *core.DiskOption) error {
 	case core.DiskWritePayloadAction:
 		cmdFormat = DDWritePayloadCommand
 		if payload.Path == "" {
-			var err error
-			payload.Path, err = utils.CreateTempFile()
+			err := initWritePayloadPath(payload)
 			if err != nil {
-				log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", payload.Action))
 				return err
 			}
 			defer func() {
@@ -71,17 +94,10 @@ func (diskAttack) diskPayload(payload *core.DiskOption) error {
 	case core.DiskReadPayloadAction:
 		cmdFormat = DDReadPayloadCommand
 		if payload.Path == "" {
-			path, err := utils.GetRootDevice()
+			err := initReadPayloadPath(payload)
 			if err != nil {
-				log.Error("err when GetRootDevice in reading payload", zap.Error(err))
 				return err
 			}
-			if path == "" {
-				err = errors.Errorf("can not get root device path")
-				log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
-				return err
-			}
-			payload.Path = path
 		}
 	default:
 		err := errors.Errorf("invalid payload action")
@@ -157,7 +173,7 @@ func (diskAttack) diskFill(fill *core.DiskOption) error {
 	}
 
 	defer func() {
-		if fill.FillDestroyFile {
+		if fill.DestroyFile {
 			err := os.Remove(fill.Path)
 			if err != nil {
 				log.Error(fmt.Sprintf("unexpected err when removing file %s", fill.Path), zap.Error(err))
