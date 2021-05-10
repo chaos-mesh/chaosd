@@ -42,12 +42,14 @@ func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err e
 	attack := options.(*core.DiskOption)
 
 	if options.String() == core.DiskFillAction {
-		return disk.attackDiskFill(attack)
+		return disk.diskFill(attack)
 	}
-	return disk.attackDiskPayload(attack)
+	return disk.diskPayload(attack)
 }
 
-func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
+// diskPayload will execute a dd command (DDWritePayloadCommand or DDReadPayloadCommand)
+// to add a write or read payload.
+func (diskAttack) diskPayload(payload *core.DiskOption) error {
 	var cmdFormat string
 	switch payload.Action {
 	case core.DiskWritePayloadAction:
@@ -92,12 +94,17 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 		log.Error(fmt.Sprintf("fail to get parse size per units , %s", payload.Size), zap.Error(err))
 		return err
 	}
-	sizeBlocks, rest, err := utils.SplitByteSize(byteSize, payload.PayloadProcessNum)
+	ddBlocks, err := utils.SplitBytesByProcessNum(byteSize, payload.PayloadProcessNum)
 	if err != nil {
 		log.Error(fmt.Sprintf("split size ,process num %d", payload.PayloadProcessNum), zap.Error(err))
 		return err
 	}
-	cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, rest.BlockSize, rest.Size))
+	if len(ddBlocks) == 0 {
+		return nil
+	}
+	rest := ddBlocks[len(ddBlocks)-1]
+	ddBlocks = ddBlocks[:len(ddBlocks)-1]
+	cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, rest.BlockSize, rest.Count))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Error(cmd.String()+string(output), zap.Error(err))
@@ -107,9 +114,9 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var errs error
-	wg.Add(len(sizeBlocks))
-	for _, sizeBlock := range sizeBlocks {
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, sizeBlock.BlockSize, sizeBlock.Size))
+	wg.Add(len(ddBlocks))
+	for _, sizeBlock := range ddBlocks {
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, sizeBlock.BlockSize, sizeBlock.Count))
 
 		go func(cmd *exec.Cmd) {
 			defer wg.Done()
@@ -137,7 +144,9 @@ func (diskAttack) attackDiskPayload(payload *core.DiskOption) error {
 const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock"
 const FallocateCommand = "fallocate -l %s %s"
 
-func (diskAttack) attackDiskFill(fill *core.DiskOption) error {
+// diskFill will execute a dd command (DDFillCommand or FallocateCommand)
+// to fill the disk.
+func (diskAttack) diskFill(fill *core.DiskOption) error {
 	if fill.Path == "" {
 		var err error
 		fill.Path, err = utils.CreateTempFile()

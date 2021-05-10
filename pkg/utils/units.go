@@ -27,6 +27,9 @@ var (
 	decimalUnitMap     = units.MakeUnitMap("B", "c", 1000)
 )
 
+// ParseUnit parse a digit with unit such as "K" , "KiB", "KB", "c", "MiB", "MB", "M".
+// If input string is a digit without unit ,
+// it will be regarded as a digit with unit M(1024*1024 bytes).
 func ParseUnit(s string) (uint64, error) {
 	if _, err := strconv.Atoi(s); err == nil {
 		s += "M"
@@ -45,45 +48,49 @@ func ParseUnit(s string) (uint64, error) {
 	return 0, fmt.Errorf("units: unknown unit %s", s)
 }
 
-type SizeBlock struct {
+// DdArgBlock is command arg for dd. BlockSize is bs.Count is count.
+type DdArgBlock struct {
 	BlockSize string
-	Size      string
+	Count     string
 }
 
-// for all b != 0 and b in uint64 and num in uint8
-// []SizeBlock is slice of Size : (b >> 20) / num, BlockSize : 1M
-// SizeBlock is the rest size witch not be calculated, rest is equal to Size : 1, BlockSize : b % (num * 1M) c
-// Since BlockSize can not be bigger than memory size on the machine and
-// b == BlockSize * Size , if b is a big prime number ,BlockSize or Size will be one which is not proper .
-// So we add a rest SizeBlock to split b into two part.
-func SplitByteSize(b uint64, num uint8) ([]SizeBlock, SizeBlock, error) {
-	if b == 0 {
-		return []SizeBlock{{
+// This func split bytes in to processNum + 1 dd arg blocks.
+// Every ddArgBlock can generate one dd command.
+// If bytes is bigger than processNum M ,
+// bytes will be split into processNum dd commands with bs = 1M ,count = bytes/ processNum M.
+// If bytes is not bigger than processNum M ,
+// bytes will be split into processNum dd commands with bs = bytes / uint64(processNum) ,count = 1.
+// And one ddArgBlock stand by the rest bytes will also add to the end of slice,
+// even if rest bytes = 0.
+func SplitBytesByProcessNum(bytes uint64, processNum uint8) ([]DdArgBlock, error) {
+	if bytes == 0 {
+		return []DdArgBlock{{
 			BlockSize: "1M",
-			Size:      "0",
-		}}, SizeBlock{}, nil
+			Count:     "0",
+		}}, nil
 	}
-	if num == 0 {
-		return nil, SizeBlock{}, fmt.Errorf("num must not be zero")
+	if processNum == 0 {
+		return nil, fmt.Errorf("num must not be zero")
 	}
-	sizeBlocks := make([]SizeBlock, num)
-	if b > uint64(num)*(1<<20) {
-		splitSize := (b >> 20) / uint64(num)
-		for i := range sizeBlocks {
-			sizeBlocks[i].Size = strconv.FormatUint(splitSize, 10)
-			sizeBlocks[i].BlockSize = "1M"
-			b -= splitSize << 20
+	ddArgBlocks := make([]DdArgBlock, processNum)
+	if bytes > uint64(processNum)*(1<<20) {
+		count := (bytes >> 20) / uint64(processNum)
+		for i := range ddArgBlocks {
+			ddArgBlocks[i].Count = strconv.FormatUint(count, 10)
+			ddArgBlocks[i].BlockSize = "1M"
+			bytes -= count << 20
 		}
 	} else {
-		splitSize := b / uint64(num)
-		for i := range sizeBlocks {
-			sizeBlocks[i].Size = "1"
-			sizeBlocks[i].BlockSize = strconv.FormatUint(splitSize, 10) + "c"
-			b -= splitSize
+		blockSize := bytes / uint64(processNum)
+		for i := range ddArgBlocks {
+			ddArgBlocks[i].Count = "1"
+			ddArgBlocks[i].BlockSize = strconv.FormatUint(blockSize, 10) + "c"
+			bytes -= blockSize
 		}
 	}
-	return sizeBlocks, SizeBlock{
+	ddArgBlocks = append(ddArgBlocks, DdArgBlock{
 		BlockSize: "1",
-		Size:      strconv.FormatUint(b, 10) + "c",
-	}, nil
+		Count:     strconv.FormatUint(bytes, 10) + "c",
+	})
+	return ddArgBlocks, nil
 }

@@ -66,8 +66,7 @@ func TestSplitByteSize(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    []SizeBlock
-		want1   SizeBlock
+		want    []DdArgBlock
 		wantErr bool
 	}{
 		{
@@ -76,11 +75,16 @@ func TestSplitByteSize(t *testing.T) {
 				b:   0,
 				num: 0,
 			},
-			want: []SizeBlock{{
-				BlockSize: "1M",
-				Size:      "0",
-			}},
-			want1:   SizeBlock{},
+			want: []DdArgBlock{
+				{
+					BlockSize: "1M",
+					Count:     "0",
+				},
+				{
+					BlockSize: "",
+					Count:     "",
+				},
+			},
 			wantErr: false,
 		},
 		{
@@ -90,7 +94,6 @@ func TestSplitByteSize(t *testing.T) {
 				num: 0,
 			},
 			want:    nil,
-			want1:   SizeBlock{},
 			wantErr: true,
 		},
 		{
@@ -99,17 +102,16 @@ func TestSplitByteSize(t *testing.T) {
 				b:   1 << 20,
 				num: 2,
 			},
-			want: []SizeBlock{{
+			want: []DdArgBlock{{
 				BlockSize: "524288c",
-				Size:      "1",
+				Count:     "1",
 			}, {
 				BlockSize: "524288c",
-				Size:      "1",
-			}},
-			want1: SizeBlock{
+				Count:     "1",
+			}, {
 				BlockSize: "1",
-				Size:      "0c",
-			},
+				Count:     "0c",
+			}},
 			wantErr: false,
 		}, {
 			name: "3",
@@ -117,17 +119,16 @@ func TestSplitByteSize(t *testing.T) {
 				b:   1<<20 + 1,
 				num: 2,
 			},
-			want: []SizeBlock{{
+			want: []DdArgBlock{{
 				BlockSize: "524288c",
-				Size:      "1",
+				Count:     "1",
 			}, {
 				BlockSize: "524288c",
-				Size:      "1",
-			}},
-			want1: SizeBlock{
+				Count:     "1",
+			}, {
 				BlockSize: "1",
-				Size:      "1c",
-			},
+				Count:     "1c",
+			}},
 			wantErr: false,
 		}, {
 			name: "4",
@@ -135,17 +136,16 @@ func TestSplitByteSize(t *testing.T) {
 				b:   5 << 20,
 				num: 2,
 			},
-			want: []SizeBlock{{
+			want: []DdArgBlock{{
 				BlockSize: "1M",
-				Size:      "2",
+				Count:     "2",
 			}, {
 				BlockSize: "1M",
-				Size:      "2",
-			}},
-			want1: SizeBlock{
+				Count:     "2",
+			}, {
 				BlockSize: "1",
-				Size:      "1048576c",
-			},
+				Count:     "1048576c",
+			}},
 			wantErr: false,
 		}, {
 			name: "5",
@@ -153,32 +153,28 @@ func TestSplitByteSize(t *testing.T) {
 				b:   5<<20 + 1,
 				num: 2,
 			},
-			want: []SizeBlock{{
+			want: []DdArgBlock{{
 				BlockSize: "1M",
-				Size:      "2",
+				Count:     "2",
 			}, {
 				BlockSize: "1M",
-				Size:      "2",
-			}},
-			want1: SizeBlock{
+				Count:     "2",
+			}, {
 				BlockSize: "1",
-				Size:      "1048577c",
-			},
+				Count:     "1048577c",
+			}},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := SplitByteSize(tt.args.b, tt.args.num)
+			got, err := SplitBytesByProcessNum(tt.args.b, tt.args.num)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SplitByteSize() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SplitBytesByProcessNum() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("SplitByteSize() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("SplitByteSize() got1 = %v, want %v", got1, tt.want1)
+				t.Errorf("SplitBytesByProcessNum() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

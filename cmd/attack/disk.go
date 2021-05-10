@@ -70,12 +70,12 @@ func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.
 	}
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
-		"'size' specifies how many units of data will write into the file path.\n"+
+		"'size' specifies how many units of data will write into the file path."+
 			"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
-			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES\n"+
+			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES"+
 			"example : 1M | 512kB")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
-		"'path' specifies the location to fill data in.\n"+
+		"'path' specifies the location to fill data in."+
 			"If path not provided, payload will write into a temp file, temp file will be deleted after writing")
 	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
 		"'process-num' specifies the number of process work on writing , default 1, only 1-255 is valid value")
@@ -93,12 +93,12 @@ func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.C
 	}
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
-		"'size' specifies how many units of data will read from the file path.\n"+
+		"'size' specifies how many units of data will read from the file path."+
 			"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
-			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES\n"+
+			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES"+
 			"example : 1M | 512kB")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
-		"'path' specifies the location to read data.\n"+
+		"'path' specifies the location to read data."+
 			"If path not provided, payload will read from disk mount on \"/\"")
 	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
 		"'process-num' specifies the number of process work on reading , default 1, only 1-255 is valid value")
@@ -116,12 +116,12 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskOption) *cobra.Command 
 	}
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
-		"'size' specifies how many units of data will fill in the file path.\n"+
+		"'size' specifies how many units of data will fill in the file path."+
 			"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
-			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES\n"+
+			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES"+
 			"example : 1M | 512kB")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
-		"'path' specifies the location to fill data in.\n"+
+		"'path' specifies the location to fill data in."+
 			"If path not provided, a temp file will be generated and deleted immediately after data filled in or allocated")
 	cmd.Flags().StringVarP(&options.Percent, "percent", "c", "",
 		"'percent' how many percent data of disk will fill in the file path")

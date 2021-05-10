@@ -31,6 +31,7 @@ func GetDiskTotalSize(path string) (total uint64, err error) {
 	return total, nil
 }
 
+// GetRootDevice returns the device which "/" mount on.
 func GetRootDevice() (string, error) {
 	mapStat, err := disk.Partitions(false)
 	if err != nil {
