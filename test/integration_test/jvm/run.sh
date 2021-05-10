@@ -27,6 +27,9 @@ javac HelloWorld/Main.java
 jar cfme HelloWorld.jar Manifest.txt HelloWorld.Main HelloWorld/Main.class
 cd -
 java -jar byteman-example/example.helloworld/HelloWorld.jar > helloworld.log &
+# make sure it works
+sleep 3
+cat helloworld.log
 # TODO: get the PID more accurately
 pid=`pgrep -n java`
 
