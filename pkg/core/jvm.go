@@ -36,7 +36,7 @@ const (
 type JVMCommand struct {
 	CommonAttackConfig
 
-	// rule name, should be unique
+	// rule name, should be unique, and will generate by chaosd automatically
 	Name string
 
 	// Java class
@@ -97,7 +97,8 @@ func (j *JVMCommand) Validate() error {
 			return errors.New("action not provided, action can be 'latency', 'exception', 'return', 'stress' or 'gc'")
 		}
 
-		if j.Action == JVMStressAction {
+		switch j.Action {
+		case JVMStressAction:
 			if j.CPUCount == 0 && j.MemorySize == 0 {
 				return errors.New("must set one of cpu-count and mem-size when action is 'stress'")
 			}
@@ -105,7 +106,9 @@ func (j *JVMCommand) Validate() error {
 			if j.CPUCount > 0 && j.MemorySize > 0 {
 				return errors.New("inject stress on both CPU and memory is not support now")
 			}
-		} else if j.Action != JVMGCAction {
+		case JVMGCAction:
+			// do nothing
+		case JVMExceptionAction, JVMReturnAction, JVMLatencyAction:
 			if len(j.Class) == 0 {
 				return errors.New("class not provided")
 			}
@@ -113,7 +116,10 @@ func (j *JVMCommand) Validate() error {
 			if len(j.Method) == 0 {
 				return errors.New("method not provided")
 			}
-
+		case "":
+			return errors.New("action not provided, action can be 'latency', 'exception', 'return', 'stress' or 'gc'")
+		default:
+			return errors.New(fmt.Sprintf("action %s not supported", j.Action))
 		}
 
 		if len(j.Name) == 0 {

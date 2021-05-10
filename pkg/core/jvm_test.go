@@ -52,6 +52,13 @@ func TestJVMCommand(t *testing.T) {
 		{
 			&JVMCommand{
 				Type:   JVMSubmitType,
+				Action: "test",
+			},
+			"action test not supported",
+		},
+		{
+			&JVMCommand{
+				Type:   JVMSubmitType,
 				Action: JVMLatencyAction,
 			},
 			"class not provided",

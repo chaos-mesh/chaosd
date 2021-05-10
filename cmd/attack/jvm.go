@@ -71,7 +71,6 @@ func NewJVMSubmitCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 	}
 	options.Type = core.JVMSubmitType
 
-	cmd.PersistentFlags().StringVarP(&options.Name, "name", "n", "", "rule name, should be unique, and will generate one automatically if it is empty")
 	cmd.PersistentFlags().IntVarP(&options.Port, "port", "", 9288, "the port of agent server")
 
 	cmd.AddCommand(
