@@ -20,9 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pingcap/errors"
-
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+	"github.com/pingcap/errors"
 
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
@@ -40,6 +39,8 @@ type NetworkCommand struct {
 	IPAddress   string
 	IPProtocol  string
 	Hostname    string
+
+	Direction string
 
 	// used for DNS attack
 	DNSServer string
@@ -363,12 +364,24 @@ func (n *NetworkCommand) ToChain(ipset string) ([]*pb.Chain, error) {
 		return nil, nil
 	}
 
+	var directionStr string
+	var directionChain pb.Chain_Direction
+	if n.Direction == "to" {
+		directionStr = "OUTPUT"
+		directionChain = pb.Chain_OUTPUT
+	} else if n.Direction == "from" {
+		directionStr = "INPUT"
+		directionChain = pb.Chain_INPUT
+	} else {
+		return nil, errors.New(fmt.Sprintf("direction %s not supported", n.Direction))
+	}
+
 	chains := make([]*pb.Chain, 0, 2)
 	if len(n.AcceptTCPFlags) > 0 {
 		chains = append(chains, &pb.Chain{
-			Name:      "INPUT/0",
+			Name:      fmt.Sprintf("%s/0", directionStr),
 			Ipsets:    []string{ipset},
-			Direction: pb.Chain_OUTPUT,
+			Direction: directionChain,
 			Protocol:  n.IPProtocol,
 			TcpFlags:  n.AcceptTCPFlags,
 			Target:    "ACCEPT",
@@ -376,9 +389,9 @@ func (n *NetworkCommand) ToChain(ipset string) ([]*pb.Chain, error) {
 	}
 
 	chains = append(chains, &pb.Chain{
-		Name:      "INPUT/1",
+		Name:      fmt.Sprintf("%s/1", directionStr),
 		Ipsets:    []string{ipset},
-		Direction: pb.Chain_OUTPUT,
+		Direction: directionChain,
 		Target:    "DROP",
 	})
 

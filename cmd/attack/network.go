@@ -184,6 +184,7 @@ func NetworkPartitionCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 
 	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+	cmd.Flags().StringVarP(&options.Direction, "direction", "", "", "specifies the partition direction, values can be from, to")
 	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
