@@ -2,12 +2,14 @@ module github.com/chaos-mesh/chaosd
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf
 	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20210329064057-23471399d8f4
 	github.com/chaos-mesh/chaos-mesh/api/v1alpha1 v0.0.0
 	github.com/containerd/containerd v1.2.3
 	github.com/docker/docker v0.7.3-0.20190327010347-be7ac8be2ae0
 	github.com/gin-gonic/gin v1.6.3
 	github.com/google/uuid v1.1.1
+	github.com/hashicorp/go-multierror v1.1.0
 	github.com/joomcode/errorx v1.0.1
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
 	github.com/olekukonko/tablewriter v0.0.4
@@ -20,7 +22,7 @@ require (
 	github.com/shirou/gopsutil v0.0.0-20180427012116-c95755e4bcd7
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/swaggo/swag v1.6.7

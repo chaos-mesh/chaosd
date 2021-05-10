@@ -187,13 +187,13 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 // @Description Create disk attack.
 // @Tags attack
 // @Produce json
-// @Param request body core.DiskCommand true "Request body"
+// @Param request body core.DiskOption true "Request body"
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/disk [post]
 func (s *httpServer) createDiskAttack(c *gin.Context) {
-	attack := &core.DiskCommand{
+	attack := &core.DiskOption{
 		CommonAttackConfig: core.CommonAttackConfig{
 			Kind: core.ProcessAttack,
 		},
