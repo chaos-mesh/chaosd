@@ -116,10 +116,8 @@ func (j *JVMCommand) Validate() error {
 			if len(j.Method) == 0 {
 				return errors.New("method not provided")
 			}
-		case "":
-			return errors.New("action not provided, action can be 'latency', 'exception', 'return', 'stress' or 'gc'")
 		default:
-			return errors.New(fmt.Sprintf("action %s not supported", j.Action))
+			return errors.New(fmt.Sprintf("action %s not supported, action can be 'latency', 'exception', 'return', 'stress' or 'gc'", j.Action))
 		}
 
 		if len(j.Name) == 0 {
