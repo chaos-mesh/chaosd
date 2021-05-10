@@ -88,7 +88,7 @@ func (exp *Experiment) GetRequestCommand() (AttackConfig, error) {
 	case StressAttack:
 		attackConfig = &StressCommand{}
 	case DiskAttack:
-		attackConfig = &DiskCommand{}
+		attackConfig = &DiskOption{}
 	default:
 		return nil, perr.Errorf("chaos experiment kind %s not found", exp.Kind)
 	}
