@@ -28,7 +28,7 @@ jar cfme HelloWorld.jar Manifest.txt HelloWorld.Main HelloWorld/Main.class
 cd -
 java -jar byteman-example/example.helloworld/HelloWorld.jar > helloworld.log &
 # TODO: get the PID more accurately
-pid=`pidof java`
+pid=`pgrep -n java`
 
 echo "download byteman && set environment variable"
 curl -fsSL -o chaosd-byteman-download.tar.gz https://mirrors.chaos-mesh.org/jvm/chaosd-byteman-download.tar.gz
