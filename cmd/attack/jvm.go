@@ -53,7 +53,6 @@ func NewJVMInstallCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comman
 		Short: "install agent to Java process",
 		Run: func(*cobra.Command, []string) {
 			options.Type = core.JVMInstallType
-			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
@@ -90,7 +89,6 @@ func NewJVMLatencyCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comman
 		Short: "inject latency to specified method",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMLatencyAction
-			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
@@ -108,7 +106,6 @@ func NewJVMReturnCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 		Short: "return specified value for specified method",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMReturnAction
-			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
@@ -126,7 +123,6 @@ func NewJVMExceptionCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comm
 		Short: "throw specified exception for specified method",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMExceptionAction
-			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
@@ -144,7 +140,6 @@ func NewJVMStressCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 		Short: "inject stress to JVM",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMStressAction
-			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
@@ -161,7 +156,6 @@ func NewJVMGCCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 		Short: "trigger GC for JVM",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMGCAction
-			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
@@ -170,6 +164,8 @@ func NewJVMGCCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 }
 
 func jvmCommandFunc(options *core.JVMCommand, chaos *chaosd.Server) {
+	options.CompleteDefaults()
+
 	if err := options.Validate(); err != nil {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
