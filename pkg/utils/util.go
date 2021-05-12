@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,24 +11,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package attack
+package utils
 
-import "github.com/spf13/cobra"
+import (
+	"math/rand"
+	"time"
+)
 
-func NewAttackCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
+const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+
+func RandomStringWithCharset(length int) string {
+	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
 	}
-
-	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-		NewStressAttackCommand(),
-		NewDiskAttackCommand(),
-		NewHostAttackCommand(),
-		NewJVMAttackCommand(),
-	)
-
-	return cmd
+	return string(b)
 }

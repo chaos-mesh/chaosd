@@ -56,6 +56,8 @@ func (s *Server) RecoverAttack(uid string) error {
 		attackType = StressAttack
 	case core.DiskAttack:
 		attackType = DiskAttack
+	case core.JVMAttack:
+		attackType = JVMAttack
 	default:
 		return perr.Errorf("chaos experiment kind %s not found", exp.Kind)
 	}
