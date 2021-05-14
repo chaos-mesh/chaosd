@@ -41,6 +41,9 @@ type DiskOption struct {
 var _ AttackConfig = &DiskOption{}
 
 func (d *DiskOption) Validate() error {
+	if err := d.CommonAttackConfig.Validate(); err != nil {
+		return err
+	}
 	var byteSize uint64
 	var err error
 	if d.Size == "" {

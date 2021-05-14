@@ -41,7 +41,10 @@ type ProcessCommand struct {
 	// User         string
 }
 
-func (p ProcessCommand) Validate() error {
+func (p *ProcessCommand) Validate() error {
+	if err := p.CommonAttackConfig.Validate(); err != nil {
+		return err
+	}
 	if len(p.Process) == 0 {
 		return errors.New("process not provided")
 	}

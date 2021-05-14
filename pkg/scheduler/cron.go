@@ -74,7 +74,7 @@ func (cj *CronJob) setWaitForRecovery(waitForRecovery bool) {
 	cj.lock.Unlock()
 }
 
-// TODO: write tests for it
+// Run implements cron.Job interface, used when scheduling cron jobs
 func (cj *CronJob) Run() {
 	if !cj.assertNoRecovery() {
 		log.Info("skipping scheduled execution of attack since recovery in progress", zap.String("expId", cj.experiment.Uid))

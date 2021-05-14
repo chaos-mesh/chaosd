@@ -13,7 +13,11 @@
 
 package core
 
-import "time"
+import (
+	"time"
+
+	"github.com/pingcap/errors"
+)
 
 type AttackConfig interface {
 	Validate() error
@@ -65,3 +69,13 @@ func (config CommonAttackConfig) AttackKind() string {
 
 // CompleteDefaults no-op implementation
 func (config *CommonAttackConfig) CompleteDefaults() {}
+
+// Validate does a basic validation of common parameters
+func (config *CommonAttackConfig) Validate() error {
+	if len(config.Schedule) > 0 {
+		if dur, err := config.ScheduleDuration(); dur == nil || err != nil {
+			return errors.New("Provide a valid duration for the scheduled attack")
+		}
+	}
+	return nil
+}

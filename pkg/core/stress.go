@@ -36,7 +36,10 @@ type StressCommand struct {
 
 var _ AttackConfig = &StressCommand{}
 
-func (s StressCommand) Validate() error {
+func (s *StressCommand) Validate() error {
+	if err := s.CommonAttackConfig.Validate(); err != nil {
+		return err
+	}
 	if len(s.Action) == 0 {
 		return errors.New("action not provided")
 	}
