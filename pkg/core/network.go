@@ -43,6 +43,8 @@ type NetworkCommand struct {
 
 	// used for DNS attack
 	DNSServer string
+	DNSIp     string
+	DNSHost   string
 }
 
 var _ AttackConfig = &NetworkCommand{}
@@ -123,6 +125,18 @@ func (n *NetworkCommand) validNetworkCommon() error {
 }
 
 func (n *NetworkCommand) validNetworkDNS() error {
+	if !utils.CheckIPs(n.DNSServer) {
+		return errors.Errorf("server addresse %s not valid", n.DNSServer)
+	}
+
+	if !utils.CheckIPs(n.DNSIp) {
+		return errors.Errorf("ip addresse %s not valid", n.DNSIp)
+	}
+
+	if (len(n.DNSHost) != 0 && len(n.DNSIp) == 0) || (len(n.DNSHost) == 0 && len(n.DNSIp) != 0) {
+		return errors.Errorf("DNS host %s must match a DNS ip %s", n.DNSHost, n.DNSIp)
+	}
+
 	return nil
 }
 
@@ -347,6 +361,14 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 	default:
 		return false
 	}
+}
+
+func (n *NetworkCommand) NeedApplyEtcHosts() bool {
+	if len(n.DNSHost) > 0 || len(n.DNSIp) > 0 {
+		return true
+	}
+
+	return false
 }
 
 func (n *NetworkCommand) ToChain() (*pb.Chain, error) {

@@ -14,9 +14,14 @@
 package chaosd
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/pingcap/errors"
@@ -38,6 +43,12 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 
 	switch attack.Action {
 	case core.NetworkDNSAction:
+		if attack.NeedApplyEtcHosts() {
+			if err = env.Chaos.applyEtcHosts(attack, env.AttackUid); err != nil {
+				return errors.WithStack(err)
+			}
+		}
+
 		return env.Chaos.updateDNSServer(attack)
 
 	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction:
@@ -194,6 +205,53 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	return nil
 }
 
+func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string) error {
+	backupCmd := exec.Command("/bin/bash", "-c", "mv /etc/hosts /etc/hosts.chaosd && touch /etc/hosts")
+	if err := backupCmd.Run(); err != nil {
+		return errors.WithStack(err)
+	}
+
+	fileBytes, err := ioutil.ReadFile("/etc/hosts.chaosd")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	lines := strings.Split(string(fileBytes), "\n")
+
+	needle := "^(\\d{1,3})(\\.\\d{1,3}){3}.*\\b" + attack.DNSHost + "\\b.*"
+	re, err := regexp.Compile(needle)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	reIp, err := regexp.Compile(`^(\d{1,3})(\.\d{1,3}){3}`)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	fd, err := os.OpenFile("/etc/hosts", os.O_RDWR|os.O_APPEND, 0666)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer fd.Close()
+
+	w := bufio.NewWriter(fd)
+
+	for _, line := range lines {
+		match := re.MatchString(line)
+		if match {
+			line = reIp.ReplaceAllString(line, attack.DNSIp)
+		}
+		line = line + "\n"
+		_, err := w.WriteString(line)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	w.Flush()
+	fd.Sync()
+	return nil
+}
+
 func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 	attack := &core.NetworkCommand{}
 	if err := json.Unmarshal([]byte(exp.RecoverCommand), attack); err != nil {
@@ -201,6 +259,11 @@ func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 	}
 	switch attack.Action {
 	case core.NetworkDNSAction:
+		if attack.NeedApplyEtcHosts() {
+			if err := env.Chaos.recoverEtcHosts(attack); err != nil {
+				return errors.WithStack(err)
+			}
+		}
 		return env.Chaos.recoverDNSServer(attack)
 
 	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction:
@@ -294,5 +357,13 @@ func (s *Server) recoverDNSServer(attack *core.NetworkCommand) error {
 		return errors.WithStack(err)
 	}
 
+	return nil
+}
+
+func (s *Server) recoverEtcHosts(attack *core.NetworkCommand) error {
+	recoverCmd := exec.Command("/bin/bash", "-c", "mv /etc/hosts.chaosd /etc/hosts")
+	if err := recoverCmd.Start(); err != nil {
+		return errors.WithStack(err)
+	}
 	return nil
 }
