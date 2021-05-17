@@ -24,7 +24,11 @@ import (
 	"regexp"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"github.com/pingcap/errors"
+
+	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 
@@ -228,11 +232,15 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string) error {
 		return errors.WithStack(err)
 	}
 
-	fd, err := os.OpenFile("/etc/hosts", os.O_RDWR|os.O_APPEND, 0666)
+	fd, err := os.OpenFile("/etc/hosts", os.O_RDWR|os.O_APPEND, 0600)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer fd.Close()
+	defer func() {
+		if err := fd.Close(); err != nil {
+			log.Error("Error closing file: %s\n", zap.Error(err))
+		}
+	}()
 
 	w := bufio.NewWriter(fd)
 
@@ -247,8 +255,14 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string) error {
 			return errors.WithStack(err)
 		}
 	}
-	w.Flush()
-	fd.Sync()
+	err = w.Flush()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	err = fd.Sync()
+	if err != nil {
+		return errors.WithStack(err)
+	}
 	return nil
 }
 
