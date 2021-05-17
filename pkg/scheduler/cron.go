@@ -85,7 +85,11 @@ func (cj *CronJob) Run() {
 	var recoverTimer *time.Timer
 	defer func() {
 		var updErr error
-		if panicErr, ok := recover().(error); panicErr != nil && ok {
+		if panicRec := recover(); panicRec != nil {
+			var panicErr error
+			if panicErr, _ = panicRec.(error); panicErr == nil {
+				panicErr = perr.New(panicRec.(string))
+			}
 			log.Error("scheduled run errored", zap.String("expId", cj.experiment.Uid), zap.Error(panicErr))
 			if newRun != nil {
 				updErr = cj.scheduler.expRunStore.Update(context.Background(), newRun.UID, core.RunFailed, panicErr.Error())
