@@ -309,19 +309,27 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 	}
 
 	//todo:修改对已启用端口检测
-   err, flag := checkPortIsListened(attack.Port)
-    if err == nil && flag == false  {
-		c := fmt.Sprintf("nc -l %s", attack.Port)
-		cmd := exec.Command("sh", "-c", c)
+   //err, flag := checkPortIsListened(attack.Port)
 
-		err = cmd.Start()
+	checkStatement := fmt.Sprintf("array=lsof -i:%s | awk '{print $2}' | grep -v PID;echo ${array[@]}", attack.Port)
+	cmd := exec.Command("sh","-c", checkStatement)
+
+	output, err := cmd.Output()
+	fmt.Println(string(output))
+	return errors.WithStack(err)
+
+    if len(output) == 0  {
+		c := fmt.Sprintf("nc -l %s", attack.Port)
+		cmd1 := exec.Command("sh", "-c", c)
+
+		err := cmd1.Start()
 		if err != nil {
 			errors.WithStack(err)
 		}
 		fmt.Println("exec cmd success")
 		return nil
 	} else {
-		return err
+		return errors.Errorf("port has been occupied", attack.Port)
 	}
 
 }
