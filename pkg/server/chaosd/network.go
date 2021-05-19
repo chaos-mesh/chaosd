@@ -14,9 +14,11 @@
 package chaosd
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 
@@ -308,44 +310,46 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 		return nil
 	}
 
-	//todo:修改对已启用端口检测
-   //err, flag := checkPortIsListened(attack.Port)
-
-	checkStatement := fmt.Sprintf("array=lsof -i:%s | awk '{print $2}' | grep -v PID;echo ${array[@]}", attack.Port)
-	cmd := exec.Command("sh","-c", checkStatement)
-
-	output, err := cmd.Output()
-	fmt.Println(string(output))
-	return errors.WithStack(err)
-
-    if len(output) == 0  {
-		c := fmt.Sprintf("nc -l %s", attack.Port)
-		cmd1 := exec.Command("sh", "-c", c)
-
-		err := cmd1.Start()
-		if err != nil {
-			errors.WithStack(err)
-		}
-		fmt.Println("exec cmd success")
-		return nil
-	} else {
-		return errors.Errorf("port has been occupied", attack.Port)
+    err, flag := checkPortIsListened(attack.Port)
+    if err == nil && flag == true  {
+    	return errors.Errorf("port %s has been occupied", attack.Port)
 	}
-
+	
+	c := fmt.Sprintf("nc -l %s", attack.Port)
+	cmd1 := exec.Command("sh", "-c", c)
+	err = cmd1.Start()
+    if err != nil {
+        errors.WithStack(err)
+    }
+    fmt.Println("exec cmd success")
+	return nil
 }
 
 func checkPortIsListened(port string) (error, bool) {
-	checkStatement := fmt.Sprintf("array=lsof -i:%s | awk '{print $2}' | grep -v PID;echo ${array[@]}", port)
+	checkStatement := fmt.Sprintf("lsof -i:%s | awk '{print $2}' | grep -v PID", port)
 	cmd := exec.Command("sh","-c", checkStatement)
 
-	output, err1 := cmd.Output()
-	if err1 != nil {
-		fmt.Println(err1)
-		return err1, false
+    stdout, err  := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Println("cmd stdoutpipe get err")
+		return err, false
 	}
-	if len(output) != 0 {
-		return nil, true
+	cmd.Start()
+
+	reader := bufio.NewReader(stdout)
+
+    for {
+        line, err := reader.ReadString('\n')
+        if err != nil || io.EOF == err {
+        	return err, false
+        	break
+		}
+		if line != "" {
+			return nil, true
+		}
 	}
+
+	cmd.Wait()
 	return nil, false
 }
 
