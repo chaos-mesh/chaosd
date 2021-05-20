@@ -88,7 +88,34 @@ func (j jvmAttack) install(attack *core.JVMCommand) error {
 }
 
 func (j jvmAttack) submit(attack *core.JVMCommand) error {
+	ruleFile, err := j.generateRuleFile(attack)
+	if err != nil {
+		return err
+	}
+
+	bmSubmitCmd := fmt.Sprintf(bmSubmitCommand, attack.Port, "l", ruleFile)
+	cmd := exec.Command("bash", "-c", bmSubmitCmd)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Error(string(output), zap.Error(err))
+		return err
+	}
+
+	log.Info(string(output))
+	return nil
+}
+
+func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 	var err error
+	if len(attack.RuleFile) > 0 {
+		attack.RuleData, err = ioutil.ReadFile(attack.RuleFile)
+		if err != nil {
+			return "", err
+		}
+		log.Info(string(attack.RuleData))
+
+		return attack.RuleFile, nil
+	}
 
 	if len(attack.Do) == 0 {
 		switch attack.Action {
@@ -108,7 +135,6 @@ func (j jvmAttack) submit(attack *core.JVMCommand) error {
 				attack.StressValueName = "MEMORYSIZE"
 				attack.StressValue = attack.MemorySize
 			}
-
 		}
 	}
 
@@ -123,24 +149,24 @@ func (j jvmAttack) submit(attack *core.JVMCommand) error {
 	case core.JVMGCAction:
 		t = template.Must(template.New("byteman rule").Parse(gcRuleTemplate))
 	default:
-		return errors.Errorf("jvm action %s not supported", attack.Action)
+		return "", errors.Errorf("jvm action %s not supported", attack.Action)
 	}
 
 	if t == nil {
-		return errors.Errorf("parse byeman rule template failed")
+		return "", errors.Errorf("parse byeman rule template failed")
 	}
 
 	err = t.Execute(buf, attack)
 	if err != nil {
 		log.Error("executing template", zap.Error(err))
-		return err
+		return "", err
 	}
 
 	log.Info("byteman rule", zap.String("rule", buf.String()))
 
 	tmpfile, err := ioutil.TempFile("", "rule.btm")
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	log.Info("create btm file", zap.String("file", tmpfile.Name()))
@@ -148,23 +174,16 @@ func (j jvmAttack) submit(attack *core.JVMCommand) error {
 	defer os.Remove(tmpfile.Name()) // clean up
 
 	if _, err := tmpfile.Write(buf.Bytes()); err != nil {
-		return err
+		return "", err
 	}
+
+	attack.RuleData = buf.Bytes()
 
 	if err := tmpfile.Close(); err != nil {
-		return err
+		return "", err
 	}
 
-	bmSubmitCmd := fmt.Sprintf(bmSubmitCommand, attack.Port, "l", tmpfile.Name())
-	cmd := exec.Command("bash", "-c", bmSubmitCmd)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Error(string(output), zap.Error(err))
-		return err
-	}
-
-	log.Info(string(output))
-	return nil
+	return tmpfile.Name(), nil
 }
 
 func (j jvmAttack) Recover(exp core.Experiment, env Environment) error {
@@ -173,16 +192,6 @@ func (j jvmAttack) Recover(exp core.Experiment, env Environment) error {
 		return err
 	}
 
-	// Create a new template and parse the letter into it.
-	t := template.Must(template.New("byteman rule").Parse(ruleTemplate))
-
-	buf := new(bytes.Buffer)
-	err := t.Execute(buf, attack)
-	if err != nil {
-		log.Error("executing template", zap.Error(err))
-		return err
-	}
-
 	tmpfile, err := ioutil.TempFile("", "rule.btm")
 	if err != nil {
 		return err
@@ -190,7 +199,7 @@ func (j jvmAttack) Recover(exp core.Experiment, env Environment) error {
 
 	defer os.Remove(tmpfile.Name()) // clean up
 
-	if _, err := tmpfile.Write(buf.Bytes()); err != nil {
+	if _, err := tmpfile.Write(attack.RuleData); err != nil {
 		return err
 	}
 
