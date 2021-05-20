@@ -112,7 +112,7 @@ func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		log.Info(string(attack.RuleData))
+		log.Info("rule file data:" + string(attack.RuleData))
 
 		return attack.RuleFile, nil
 	}
