@@ -134,7 +134,7 @@ func processDiskAttack(options *core.DiskOption, chaos *chaosd.Server) {
 	if err := options.Validate(); err != nil {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
-	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, options)
+	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, options, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

@@ -170,7 +170,7 @@ func jvmCommandFunc(options *core.JVMCommand, chaos *chaosd.Server) {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
-	uid, err := chaos.ExecuteAttack(chaosd.JVMAttack, options)
+	uid, err := chaos.ExecuteAttack(chaosd.JVMAttack, options, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

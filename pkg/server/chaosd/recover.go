@@ -38,37 +38,43 @@ func (s *Server) RecoverAttack(uid string) error {
 		return perr.Errorf("can not recover %s experiment", exp.Status)
 	}
 
-	if len(exp.Cron) > 0 {
+	attemptRecovery := true
+	if exp.Status == core.Scheduled {
 		if err = s.Cron.Remove(exp.ID); err != nil {
 			return perr.WithMessage(err, "failed to remove scheduled task")
 		}
+		// it makes sense to not execute recovery for scheduled attacks
+		// by their nature, each run would recover on its own after the given duration
+		attemptRecovery = false
 	}
 
-	var attackType AttackType
-	switch exp.Kind {
-	case core.ProcessAttack:
-		attackType = ProcessAttack
-	case core.NetworkAttack:
-		attackType = NetworkAttack
-	case core.HostAttack:
-		attackType = HostAttack
-	case core.StressAttack:
-		attackType = StressAttack
-	case core.DiskAttack:
-		attackType = DiskAttack
-	case core.JVMAttack:
-		attackType = JVMAttack
-	default:
-		return perr.Errorf("chaos experiment kind %s not found", exp.Kind)
-	}
-
-	env := s.newEnvironment(uid)
-	if err = attackType.Recover(*exp, env); err != nil {
-		if errorx.IsOfType(err, core.ErrNonRecoverableAttack) {
-			log.Warn(err.Error(), zap.String("uid", uid), zap.String("kind", exp.Kind))
-			return nil
+	if attemptRecovery {
+		var attackType AttackType
+		switch exp.Kind {
+		case core.ProcessAttack:
+			attackType = ProcessAttack
+		case core.NetworkAttack:
+			attackType = NetworkAttack
+		case core.HostAttack:
+			attackType = HostAttack
+		case core.StressAttack:
+			attackType = StressAttack
+		case core.DiskAttack:
+			attackType = DiskAttack
+		case core.JVMAttack:
+			attackType = JVMAttack
+		default:
+			return perr.Errorf("chaos experiment kind %s not found", exp.Kind)
 		}
-		return perr.WithMessagef(err, "Recover experiment %s failed", uid)
+
+		env := s.newEnvironment(uid)
+		if err = attackType.Recover(*exp, env); err != nil {
+			if errorx.IsOfType(err, core.ErrNonRecoverableAttack) {
+				log.Warn(err.Error(), zap.String("uid", uid), zap.String("kind", exp.Kind))
+				return nil
+			}
+			return perr.WithMessagef(err, "Recover experiment %s failed", uid)
+		}
 	}
 
 	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", exp.RecoverCommand); err != nil {

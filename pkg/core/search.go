@@ -27,7 +27,7 @@ type SearchCommand struct {
 	UID    string
 }
 
-func (s *SearchCommand) Validate() error {
+func (s SearchCommand) Validate() error {
 	if len(s.UID) > 0 {
 		return nil
 	}

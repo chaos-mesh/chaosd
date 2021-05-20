@@ -62,7 +62,7 @@ func hostAttackF(chaos *chaosd.Server, options *core.HostCommand) {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
-	uid, err := chaos.ExecuteAttack(chaosd.HostAttack, options)
+	uid, err := chaos.ExecuteAttack(chaosd.HostAttack, options, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

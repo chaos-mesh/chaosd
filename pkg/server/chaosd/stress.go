@@ -14,7 +14,6 @@
 package chaosd
 
 import (
-	"encoding/json"
 	"errors"
 	"strings"
 	"syscall"
@@ -85,10 +84,11 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 }
 
 func (stressAttack) Recover(exp core.Experiment, _ Environment) error {
-	attack := &core.StressCommand{}
-	if err := json.Unmarshal([]byte(exp.RecoverCommand), attack); err != nil {
+	config, err := exp.GetRequestCommand()
+	if err != nil {
 		return err
 	}
+	attack := config.(*core.StressCommand)
 	proc, err := process.NewProcess(attack.StressngPid)
 	if err != nil {
 		return err

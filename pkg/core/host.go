@@ -27,8 +27,8 @@ type HostCommand struct {
 
 var _ AttackConfig = &HostCommand{}
 
-func (h HostCommand) Validate() error {
-	return nil
+func (h *HostCommand) Validate() error {
+	return h.CommonAttackConfig.Validate()
 }
 
 func (h HostCommand) RecoverData() string {
