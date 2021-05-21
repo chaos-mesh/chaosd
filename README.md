@@ -1,5 +1,7 @@
 # chaosd
 
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/chaos-mesh/chaosd)
+
 chaosd is an easy-to-use Chaos Engineering tool used to inject failures to a physical node. Currently, two modes are supported:
 
 - **Command mode** - Using chaosd as a command-line tool. Supported failure types are:
@@ -362,3 +364,10 @@ Sample usage:
 ```bash
 $ curl -X DELETE "127.0.0.1:31767/api/attack/20df86e9-96e7-47db-88ce-dd31bc70c4f0"
 ```
+
+
+## Development
+
+You can develop chaosd directly from your browser in a pre-configured development environment in the cloud:
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/chaos-mesh/chaosd)
