@@ -18,6 +18,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap/log"
+	"go.uber.org/zap"
 	"io"
 	"os/exec"
 	"strings"
@@ -310,47 +312,53 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 		return nil
 	}
 
-    err, flag := checkPortIsListened(attack.Port)
-    if err == nil && flag == true  {
+    flag, err := checkPortIsListened(attack.Port)
+    if flag && err == nil{
     	return errors.Errorf("port %s has been occupied", attack.Port)
 	}
 	
 	c := fmt.Sprintf("nc -l %s", attack.Port)
-	cmd1 := exec.Command("sh", "-c", c)
-	err = cmd1.Start()
+	cmd := exec.Command("sh", "-c", c)
+	err = cmd.Start()
     if err != nil {
-        errors.WithStack(err)
+        return errors.WithStack(err)
     }
-    fmt.Println("exec cmd success")
 	return nil
 }
 
-func checkPortIsListened(port string) (error, bool) {
+func checkPortIsListened(port string) (bool, error) {
 	checkStatement := fmt.Sprintf("lsof -i:%s | awk '{print $2}' | grep -v PID", port)
 	cmd := exec.Command("sh","-c", checkStatement)
 
     stdout, err  := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Println("cmd stdoutpipe get err")
-		return err, false
+		log.Error("checkPortIsListened get cmd stdoutpipe error", zap.Error(err))
+		return false, err
 	}
-	cmd.Start()
+	err = cmd.Start()
+	if err != nil {
+		log.Error("checkPortIsListened cmd start error", zap.Error(err))
+		return false, err
+	}
 
 	reader := bufio.NewReader(stdout)
 
     for {
         line, err := reader.ReadString('\n')
         if err != nil || io.EOF == err {
-        	return err, false
+        	return false, err
         	break
 		}
 		if line != "" {
-			return nil, true
+			return true, err
 		}
 	}
 
-	cmd.Wait()
-	return nil, false
+	err = cmd.Wait()
+	if err != nil {
+		log.Error("checkPortIsListened cmd wait error", zap.Error(err))
+	}
+	return false, err
 }
 
 func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) error {
@@ -361,7 +369,7 @@ func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) er
 
 	err := cmd.Start()
 	if err != nil {
-		errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
 	return nil
