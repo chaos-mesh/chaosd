@@ -48,7 +48,7 @@ function request() {
 }
 
 echo "Generating certificates"
-# bash +ex ./gen_certs.sh
+bash +ex ./gen_certs.sh
 
 echo "Starting Server in mTLS mode"
 ${bin_path}/chaosd server \
@@ -64,6 +64,7 @@ sleep 2
 
 if ! kill -0 $server_pid > /dev/null 2>&1; then
     echo -e "${RED}ERROR: Couldn't start server$NC"
+    cat server.out
     exit 1
 fi
 
