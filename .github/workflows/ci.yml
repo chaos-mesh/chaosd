@@ -33,8 +33,12 @@ jobs:
       - name: ${{ matrix.job }}
         run: |
           # workaround for https://github.com/actions/setup-go/issues/14
-          #export GOPATH=${GITHUB_WORKSPACE}/go
-          #export PATH=$PATH:$GOPATH/bin
+          export GOPATH=${GITHUB_WORKSPACE}/go
+          export PATH=$PATH:$GOPATH/bin
+
+          # preload go modules before goimports
+          go mod download -x
+
           make groupimports || echo 0
           #use sh function
           if [[ "$job" == "verify" ]]; then
