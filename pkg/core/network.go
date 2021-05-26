@@ -61,7 +61,10 @@ const (
 	NetworkPartitionAction = "partition"
 )
 
-func (n NetworkCommand) Validate() error {
+func (n *NetworkCommand) Validate() error {
+	if err := n.CommonAttackConfig.Validate(); err != nil {
+		return err
+	}
 	switch n.Action {
 	case NetworkDelayAction:
 		return n.validNetworkDelay()

@@ -26,10 +26,10 @@ import (
 )
 
 func NewDiskAttackCommand() *cobra.Command {
-	options := core.NewDiskCommand()
+	options := core.NewDiskOption()
 	dep := fx.Options(
 		server.Module,
-		fx.Provide(func() *core.DiskCommand {
+		fx.Provide(func() *core.DiskOption {
 			return options
 		}),
 	)
@@ -45,7 +45,7 @@ func NewDiskAttackCommand() *cobra.Command {
 	return cmd
 }
 
-func NewDiskPayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra.Command {
+func NewDiskPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-payload <subcommand>",
 		Short: "add disk payload",
@@ -59,7 +59,7 @@ func NewDiskPayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra.Comm
 	return cmd
 }
 
-func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra.Command {
+func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "write",
 		Short: "write payload",
@@ -70,14 +70,19 @@ func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra
 	}
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
-		"'size' specifies how many data will fill in the file path with unit MB.")
-	cmd.Flags().StringVarP(&options.Path, "path", "p", "/dev/null",
-		"'path' specifies the location to fill data in.\n"+
-			"If path not provided, payload will write into /dev/null")
+		"'size' specifies how many units of data will write into the file path."+
+			"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
+			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES"+
+			"example : 1M | 512kB")
+	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
+		"'path' specifies the location to fill data in."+
+			"If path not provided, payload will write into a temp file, temp file will be deleted after writing")
+	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
+		"'process-num' specifies the number of process work on writing , default 1, only 1-255 is valid value")
 	return cmd
 }
 
-func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra.Command {
+func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "read",
 		Short: "read payload",
@@ -88,14 +93,19 @@ func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskCommand) *cobra.
 	}
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
-		"'size' specifies how many data will read from the file path with unit MB.")
+		"'size' specifies how many units of data will read from the file path."+
+			"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
+			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES"+
+			"example : 1M | 512kB")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
-		"'path' specifies the location to read data.\n"+
-			"If path not provided, payload will raise an error")
+		"'path' specifies the location to read data."+
+			"If path not provided, payload will read from disk mount on \"/\"")
+	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
+		"'process-num' specifies the number of process work on reading , default 1, only 1-255 is valid value")
 	return cmd
 }
 
-func NewDiskFillCommand(dep fx.Option, options *core.DiskCommand) *cobra.Command {
+func NewDiskFillCommand(dep fx.Option, options *core.DiskOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fill",
 		Short: "fill disk",
@@ -106,21 +116,25 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskCommand) *cobra.Command
 	}
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
-		"'size' specifies how many data will fill in the file path with unit MB.")
+		"'size' specifies how many units of data will fill in the file path."+
+			"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
+			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES"+
+			"example : 1M | 512kB")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
-		"'path' specifies the location to fill data in.\n"+
+		"'path' specifies the location to fill data in."+
 			"If path not provided, a temp file will be generated and deleted immediately after data filled in or allocated")
 	cmd.Flags().StringVarP(&options.Percent, "percent", "c", "",
 		"'percent' how many percent data of disk will fill in the file path")
 	cmd.Flags().BoolVarP(&options.FillByFallocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
+	cmd.Flags().BoolVarP(&options.DestroyFile, "destroy", "d", false, "destroy file after filled in or allocated")
 	return cmd
 }
 
-func processDiskAttack(options *core.DiskCommand, chaos *chaosd.Server) {
+func processDiskAttack(options *core.DiskOption, chaos *chaosd.Server) {
 	if err := options.Validate(); err != nil {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
-	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, options)
+	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, options, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

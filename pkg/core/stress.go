@@ -15,7 +15,6 @@ package core
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/pingcap/errors"
 )
@@ -32,13 +31,15 @@ type StressCommand struct {
 	Workers     int
 	Size        string
 	Options     []string
-	Duration    time.Duration
 	StressngPid int32
 }
 
 var _ AttackConfig = &StressCommand{}
 
-func (s StressCommand) Validate() error {
+func (s *StressCommand) Validate() error {
+	if err := s.CommonAttackConfig.Validate(); err != nil {
+		return err
+	}
 	if len(s.Action) == 0 {
 		return errors.New("action not provided")
 	}

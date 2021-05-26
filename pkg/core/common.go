@@ -13,9 +13,16 @@
 
 package core
 
+import (
+	"time"
+
+	"github.com/pingcap/errors"
+)
+
 type AttackConfig interface {
 	Validate() error
 	Cron() string
+	ScheduleDuration() (*time.Duration, error)
 	// String is replacement of .Action
 	String() string
 	// RecoverData is replacement of earlier .String()
@@ -37,6 +44,14 @@ func (config SchedulerConfig) Cron() string {
 	return config.Schedule
 }
 
+func (config SchedulerConfig) ScheduleDuration() (*time.Duration, error) {
+	if len(config.Duration) == 0 {
+		return nil, nil
+	}
+	duration, err := time.ParseDuration(config.Duration)
+	return &duration, err
+}
+
 type CommonAttackConfig struct {
 	SchedulerConfig
 
@@ -54,3 +69,13 @@ func (config CommonAttackConfig) AttackKind() string {
 
 // CompleteDefaults no-op implementation
 func (config *CommonAttackConfig) CompleteDefaults() {}
+
+// Validate does a basic validation of common parameters
+func (config *CommonAttackConfig) Validate() error {
+	if len(config.Schedule) > 0 {
+		if dur, err := config.ScheduleDuration(); dur == nil || err != nil {
+			return errors.New("Provide a valid duration for the scheduled attack")
+		}
+	}
+	return nil
+}

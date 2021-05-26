@@ -18,13 +18,32 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 func (s *httpServer) listExperiments(c *gin.Context) {
-	chaosList, err := s.exp.List(context.Background())
+	mode, ok := c.GetQuery("launch_mode")
+	var chaosList []*core.Experiment
+	var err error
+	if ok {
+		chaosList, err = s.exp.ListByLaunchMode(context.Background(), mode)
+	} else {
+		chaosList, err = s.exp.List(context.Background())
+	}
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, chaosList)
+}
+
+func (s *httpServer) listExperimentRuns(c *gin.Context) {
+	uid := c.Param("uid")
+	runsList, err := s.chaos.ExpRun.ListByExperimentUID(context.Background(), uid)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, runsList)
 }
