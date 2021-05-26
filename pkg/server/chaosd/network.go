@@ -48,12 +48,16 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 	switch attack.Action {
 	case core.NetworkDNSAction:
 		if attack.NeedApplyEtcHosts() {
-			if err = env.Chaos.applyEtcHosts(attack, env.AttackUid); err != nil {
+			if err = env.Chaos.applyEtcHosts(attack, env.AttackUid, env); err != nil {
 				return errors.WithStack(err)
 			}
 		}
 
-		return env.Chaos.updateDNSServer(attack)
+		if attack.NeedApplyDNSServer() {
+			if err = env.Chaos.updateDNSServer(attack); err != nil {
+				return errors.WithStack(err)
+			}
+		}
 
 	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction:
 		if attack.NeedApplyIPSet() {
@@ -209,9 +213,21 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	return nil
 }
 
-func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string) error {
+func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Environment) error {
+	recoverFlag := true
 	backupCmd := exec.Command("/bin/bash", "-c", "mv /etc/hosts /etc/hosts.chaosd && touch /etc/hosts")
-	if err := backupCmd.Run(); err != nil {
+
+	defer func() {
+		if recoverFlag {
+			if err := env.Chaos.recoverEtcHosts(attack); err != nil {
+				log.Error("Error recover env: %s\n", zap.Error(err))
+			}
+		}
+	}()
+
+	stdout, err := backupCmd.CombinedOutput()
+	if err != nil {
+		log.Error(backupCmd.String()+string(stdout), zap.Error(err))
 		return errors.WithStack(err)
 	}
 
@@ -222,11 +238,17 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string) error {
 
 	lines := strings.Split(string(fileBytes), "\n")
 
+	// Filter out the line of the hostname in /etc/hosts
+	// example:
+	// 10.86.33.102    qunarzz.com     q.qunarzz.com   common.qunarzz.com
+	// 127.0.0.1       localhost
 	needle := "^(\\d{1,3})(\\.\\d{1,3}){3}.*\\b" + attack.DNSHost + "\\b.*"
 	re, err := regexp.Compile(needle)
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
+	// match IP address, eg: 127.0.0.1
 	reIp, err := regexp.Compile(`^(\d{1,3})(\.\d{1,3}){3}`)
 	if err != nil {
 		return errors.WithStack(err)
@@ -263,6 +285,7 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	recoverFlag = false
 	return nil
 }
 
@@ -376,7 +399,9 @@ func (s *Server) recoverDNSServer(attack *core.NetworkCommand) error {
 
 func (s *Server) recoverEtcHosts(attack *core.NetworkCommand) error {
 	recoverCmd := exec.Command("/bin/bash", "-c", "mv /etc/hosts.chaosd /etc/hosts")
-	if err := recoverCmd.Start(); err != nil {
+	stdout, err := recoverCmd.CombinedOutput()
+	if err != nil {
+		log.Error(recoverCmd.String()+string(stdout), zap.Error(err))
 		return errors.WithStack(err)
 	}
 	return nil
