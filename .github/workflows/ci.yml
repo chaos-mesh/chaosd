@@ -37,7 +37,7 @@ jobs:
           export PATH=$PATH:$GOPATH/bin
 
           # preload go modules before goimports
-          go mod download -x github.com/chaos-mesh/chaos-mesh
+          go mod download -x
 
           make groupimports || echo 0
           #use sh function
