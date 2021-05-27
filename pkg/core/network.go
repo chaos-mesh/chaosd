@@ -73,7 +73,7 @@ func (n *NetworkCommand) Validate() error {
 	case NetworkDNSAction:
 		return n.validNetworkDNS()
 	case NetworkPartitionAction:
-		return nil
+		return n.validNetworkPartition()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -131,6 +131,26 @@ func (n *NetworkCommand) validNetworkCommon() error {
 	}
 
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
+}
+
+func (n *NetworkCommand) validNetworkPartition() error {
+	if len(n.Device) == 0 {
+		return errors.New("device is required")
+	}
+
+	if !utils.CheckIPs(n.IPAddress) {
+		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
+	}
+
+	if n.Direction != "to" && n.Direction != "from" {
+		return errors.Errorf("direction should be one of 'to' and 'from'")
+	}
+
+	if !utils.CheckIPProtocols(n.IPProtocol) {
+		return errors.Errorf("ip protocols %s not valid", n.IPProtocol)
+	}
+
+	return nil
 }
 
 func (n *NetworkCommand) validNetworkDNS() error {
