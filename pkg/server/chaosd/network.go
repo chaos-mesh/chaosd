@@ -314,9 +314,8 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 	if err != nil {
 		if flag {
 			return errors.Errorf("port %s has been occupied", attack.Port)
-		} else {
-			return errors.WithStack(err)
 		}
+		return errors.WithStack(err)
 	}
 
 	if flag {
@@ -325,9 +324,9 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 
 	c := fmt.Sprintf("nc -l %s", attack.Port)
 	cmd := exec.Command("sh", "-c", c)
-	err1 := cmd.Start()
-	if err1 != nil {
-		return errors.WithStack(err1)
+	err = cmd.Start()
+	if err != nil {
+		return errors.WithStack(err)
 	}
 	return nil
 }
@@ -341,16 +340,14 @@ func checkPortIsListened(port string) (bool, error) {
 		log.Error(cmd.String()+string(stdout), zap.Error(err))
 		if err.Error() == "exit status 1" && string(stdout) == "" {
 			return false, nil
-		} else {
-			return true, errors.WithStack(err)
 		}
+		return true, errors.WithStack(err)
 	}
 
 	if string(stdout) == "" {
 		return false, nil
-	} else {
-		return true, nil
 	}
+	return true, nil
 }
 
 func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) error {
