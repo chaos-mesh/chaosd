@@ -14,15 +14,14 @@
 package chaosd
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap/log"
-	"go.uber.org/zap"
-	"io"
 	"os/exec"
 	"strings"
+
+	"github.com/pingcap/log"
+	"go.uber.org/zap"
 
 	"github.com/pingcap/errors"
 
@@ -305,60 +304,53 @@ func (s *Server) recoverDNSServer(attack *core.NetworkCommand) error {
 	return nil
 }
 
-
 func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 
 	if len(attack.Port) == 0 {
 		return nil
 	}
 
-    flag, err := checkPortIsListened(attack.Port)
-    if flag && err == nil{
-    	return errors.Errorf("port %s has been occupied", attack.Port)
+	flag, err := checkPortIsListened(attack.Port)
+	if err != nil {
+		if flag {
+			return errors.Errorf("port %s has been occupied", attack.Port)
+		} else {
+			return errors.WithStack(err)
+		}
 	}
-	
+
+	if flag {
+		return errors.Errorf("port %s has been occupied", attack.Port)
+	}
+
 	c := fmt.Sprintf("nc -l %s", attack.Port)
 	cmd := exec.Command("sh", "-c", c)
-	err = cmd.Start()
-    if err != nil {
-        return errors.WithStack(err)
-    }
+	err1 := cmd.Start()
+	if err1 != nil {
+		return errors.WithStack(err1)
+	}
 	return nil
 }
 
 func checkPortIsListened(port string) (bool, error) {
 	checkStatement := fmt.Sprintf("lsof -i:%s | awk '{print $2}' | grep -v PID", port)
-	cmd := exec.Command("sh","-c", checkStatement)
+	cmd := exec.Command("sh", "-c", checkStatement)
 
-    stdout, err  := cmd.StdoutPipe()
+	stdout, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Error("checkPortIsListened get cmd stdoutpipe error", zap.Error(err))
-		return false, err
-	}
-	err = cmd.Start()
-	if err != nil {
-		log.Error("checkPortIsListened cmd start error", zap.Error(err))
-		return false, err
-	}
-
-	reader := bufio.NewReader(stdout)
-
-    for {
-        line, err := reader.ReadString('\n')
-        if err != nil || io.EOF == err {
-        	return false, err
-        	break
-		}
-		if line != "" {
-			return true, err
+		log.Error(cmd.String()+string(stdout), zap.Error(err))
+		if err.Error() == "exit status 1" && string(stdout) == "" {
+			return false, nil
+		} else {
+			return true, errors.WithStack(err)
 		}
 	}
 
-	err = cmd.Wait()
-	if err != nil {
-		log.Error("checkPortIsListened cmd wait error", zap.Error(err))
+	if string(stdout) == "" {
+		return false, nil
+	} else {
+		return true, nil
 	}
-	return false, err
 }
 
 func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) error {
@@ -367,8 +359,9 @@ func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) er
 
 	cmd := exec.Command("sh", "-c", c)
 
-	err := cmd.Start()
+	stdout, err := cmd.CombinedOutput()
 	if err != nil {
+		log.Error(cmd.String()+string(stdout), zap.Error(err))
 		return errors.WithStack(err)
 	}
 
