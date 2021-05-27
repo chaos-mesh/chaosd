@@ -372,11 +372,7 @@ func (n *NetworkCommand) NeedApplyEtcHosts() bool {
 }
 
 func (n *NetworkCommand) NeedApplyDNSServer() bool {
-	if len(n.DNSServer) > 0 {
-		return true
-	}
-
-	return false
+	return len(n.DNSServer) > 0
 }
 
 func (n *NetworkCommand) ToChain() (*pb.Chain, error) {
