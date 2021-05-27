@@ -36,13 +36,12 @@ jobs:
           export GOPATH=${GITHUB_WORKSPACE}/go
           export PATH=$PATH:$GOPATH/bin
 
-          # preload go modules before goimports
-          go mod download -x
-
-          make groupimports || echo 0
           #use sh function
           if [[ "$job" == "verify" ]]; then
+            # preload go modules before goimports
+            go mod download -x
             make check
+            make groupimports || echo 0
             echo "Please make check before creating a PR"
             git diff --quiet -- . || (git diff | cat && false)
           elif [[ "$job" == "build" ]]; then
