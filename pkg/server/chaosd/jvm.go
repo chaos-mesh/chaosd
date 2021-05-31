@@ -145,8 +145,6 @@ func (j jvmAttack) submit(attack *core.JVMCommand) error {
 
 	log.Info("create btm file", zap.String("file", tmpfile.Name()))
 
-	defer os.Remove(tmpfile.Name()) // clean up
-
 	if _, err := tmpfile.Write(buf.Bytes()); err != nil {
 		return err
 	}
