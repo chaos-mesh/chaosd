@@ -27,4 +27,10 @@ jobs:
         run: make build
       - name: Upload files
         run: |
-          aws s3 cp bin/chaosd ${{ secrets.AWS_BUCKET_NAME }}/latest/chaosd
+          curl -fsSL -o chaosd-tools.tar.gz https://mirrors.chaos-mesh.org/chaosd-tools.tar.gz
+          tar zxvf chaosd-tools.tar.gz
+          mkdir chaosd-latest-linux-amd64
+          mv bin/chaosd chaosd-latest-linux-amd64/
+          mv chaosd-tools chaosd-latest-linux-amd64/tools
+          tar czvf chaosd-latest-linux-amd64.tar.gz chaosd-latest-linux-amd64
+          aws s3 cp chaosd-latest-linux-amd64.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-latest-linux-amd64.tar.gz

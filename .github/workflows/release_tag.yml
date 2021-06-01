@@ -28,4 +28,10 @@ jobs:
       - name: Upload files
         run: |
           GIT_TAG=${GITHUB_REF##*/}
-          aws s3 cp bin/chaosd ${{ secrets.AWS_BUCKET_NAME }}/${GIT_TAG}/chaosd
+          curl -fsSL -o chaosd-tools.tar.gz https://mirrors.chaos-mesh.org/chaosd-tools.tar.gz
+          tar zxvf chaosd-tools.tar.gz
+          mkdir chaosd-latest-linux-amd64
+          mv bin/chaosd chaosd-latest-linux-amd64/
+          mv chaosd-tools chaosd-latest-linux-amd64/tools
+          tar czvf chaosd-latest-linux-amd64.tar.gz chaosd-latest-linux-amd64
+          aws s3 cp chaosd-latest-linux-amd64.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-${GIT_TAG}-linux-amd64.tar.gz
