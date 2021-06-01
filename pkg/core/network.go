@@ -146,7 +146,7 @@ func (n *NetworkCommand) validNetworkPartition() error {
 		return errors.Errorf("direction should be one of 'to' and 'from'")
 	}
 
-	if len(n.AcceptTCPFlags) > 0 && len(n.IPProtocol) != "tcp" {
+	if len(n.AcceptTCPFlags) > 0 && n.IPProtocol != "tcp" {
 		return errors.Errorf("protocol should be 'tcp' when set accept-tcp-flags")
 	}
 
