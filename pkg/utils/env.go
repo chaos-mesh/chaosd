@@ -16,15 +16,16 @@ package utils
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 func SetRuntimeEnv() {
-	wd, err := os.Getwd()
+	wd, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		return
 	}
 
-	_, err = os.Stat("./tools")
+	_, err = os.Stat(fmt.Sprintf("%s/tools", wd))
 	if os.IsNotExist(err) {
 		return
 	}
