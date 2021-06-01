@@ -1,4 +1,4 @@
-// Copyright 2020 Chaos Mesh Authors.
+// Copyright 2021 Chaos Mesh Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,22 +19,27 @@ import (
 	"path/filepath"
 )
 
-func SetRuntimeEnv() {
+func SetRuntimeEnv() error {
 	wd, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		return
+		return err
 	}
 
 	_, err = os.Stat(fmt.Sprintf("%s/tools", wd))
 	if os.IsNotExist(err) {
-		return
+		return err
 	}
 
 	path := os.Getenv("PATH")
 	bytemanHome := fmt.Sprintf("%s/tools/byteman", wd)
-	os.Setenv("BYTEMAN_HOME", bytemanHome)
-	os.Setenv("PATH", fmt.Sprintf("%s/tools:%s/bin:%s", wd, bytemanHome, path))
+	err = os.Setenv("BYTEMAN_HOME", bytemanHome)
+	if err != nil {
+		return err
+	}
+	err = os.Setenv("PATH", fmt.Sprintf("%s/tools:%s/bin:%s", wd, bytemanHome, path))
+	if err != nil {
+		return err
+	}
 
-	//fmt.Println("BYTEMAN_HOME:", os.Getenv("BYTEMAN_HOME"))
-	//fmt.Println("PATH:", os.Getenv("PATH"))
+	return nil
 }

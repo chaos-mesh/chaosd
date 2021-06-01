@@ -50,7 +50,7 @@ func init() {
 		version.NewVersionCommand(),
 	)
 
-	utils.SetRuntimeEnv()
+	_ = utils.SetRuntimeEnv()
 }
 
 func setLogLevel() {
