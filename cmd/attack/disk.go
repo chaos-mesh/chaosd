@@ -127,6 +127,9 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskOption) *cobra.Command 
 		"'percent' how many percent data of disk will fill in the file path")
 	cmd.Flags().BoolVarP(&options.FillByFallocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
 	cmd.Flags().BoolVarP(&options.DestroyFile, "destroy", "d", false, "destroy file after filled in or allocated")
+	cmd.Flags().BoolVarP(&options.ForceOverwrite, "force_overwrite", "o", false,
+		"'force_overwrite' is a flag means overwrite a file is valid now."+
+			"'force_overwrite' only works when `fallocate` is false.")
 	return cmd
 }
 

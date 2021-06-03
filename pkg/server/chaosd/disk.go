@@ -196,26 +196,42 @@ func (diskAttack) diskFill(fill *core.DiskOption) error {
 			log.Error("fail to get disk total size", zap.Error(err))
 			return err
 		}
-		fill.Size = strconv.FormatUint(totalSize*percent/100, 10)
+		fill.Size = strconv.FormatUint(totalSize*percent/100, 10) + "c"
 	}
-
 	var cmd *exec.Cmd
 	if fill.FillByFallocate {
 		cmd = exec.Command("bash", "-c", fmt.Sprintf(FallocateCommand, fill.Size, fill.Path))
-	} else {
-		//1Unit means the block size. The bytes size dd read | write is (block size) * (size).
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, fill.Size, "1"))
-	}
-
-	output, err := cmd.CombinedOutput()
-
-	if err != nil {
-		log.Error(string(output), zap.Error(err))
-	} else {
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Error(string(output), zap.Error(err))
+			return err
+		}
 		log.Info(string(output))
+	} else {
+		byteSize, err := utils.ParseUnit(fill.Size)
+		if err != nil {
+			log.Error("fail to parse disk size", zap.Error(err))
+			return err
+		}
+
+		ddBlocks, err := utils.SplitBytesByProcessNum(byteSize, 1)
+		if err != nil {
+			log.Error("fail to split disk size", zap.Error(err))
+			return err
+		}
+		for _, block := range ddBlocks {
+			cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, block.BlockSize, block.Count))
+			output, err := cmd.CombinedOutput()
+
+			if err != nil {
+				log.Error(string(output), zap.Error(err))
+				return err
+			}
+			log.Info(string(output))
+		}
 	}
 
-	return err
+	return nil
 }
 
 func (diskAttack) Recover(exp core.Experiment, _ Environment) error {
