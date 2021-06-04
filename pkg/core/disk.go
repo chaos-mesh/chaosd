@@ -38,7 +38,6 @@ type DiskOption struct {
 	PayloadProcessNum uint8  `json:"payload_process_num"`
 
 	FillByFallocate bool `json:"fill_by_fallocate"`
-	DestroyFile     bool `json:"destroy_file"`
 }
 
 var _ AttackConfig = &DiskOption{}
@@ -85,7 +84,7 @@ func (d *DiskOption) Validate() error {
 				return err
 			}
 		} else {
-			return fmt.Errorf("write into a existing file when not forcing overwrite")
+			return fmt.Errorf("fill into a existing file")
 		}
 	}
 

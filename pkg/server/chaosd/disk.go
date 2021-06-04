@@ -84,12 +84,6 @@ func (diskAttack) diskPayload(payload *core.DiskOption) error {
 			if err != nil {
 				return err
 			}
-			defer func() {
-				err := os.Remove(payload.Path)
-				if err != nil {
-					log.Error(fmt.Sprintf("unexpected err when removing temp file %s", payload.Path), zap.Error(err))
-				}
-			}()
 		}
 	case core.DiskReadPayloadAction:
 		cmdFormat = DDReadPayloadCommand
@@ -157,7 +151,7 @@ func (diskAttack) diskPayload(payload *core.DiskOption) error {
 	return nil
 }
 
-const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock"
+const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock oflag=append conv=notrunc"
 const FallocateCommand = "fallocate -l %s %s"
 
 // diskFill will execute a dd command (DDFillCommand or FallocateCommand)
@@ -171,15 +165,6 @@ func (diskAttack) diskFill(fill *core.DiskOption) error {
 			return err
 		}
 	}
-
-	defer func() {
-		if fill.DestroyFile {
-			err := os.Remove(fill.Path)
-			if err != nil {
-				log.Error(fmt.Sprintf("unexpected err when removing file %s", fill.Path), zap.Error(err))
-			}
-		}
-	}()
 
 	if fill.Size != "" {
 		fill.Size = strings.Trim(fill.Size, " ")
@@ -235,6 +220,17 @@ func (diskAttack) diskFill(fill *core.DiskOption) error {
 }
 
 func (diskAttack) Recover(exp core.Experiment, _ Environment) error {
-	log.Info("Recover disk attack will do nothing, because delete | truncate data is too dangerous.")
+	config, err := exp.GetRequestCommand()
+	if err != nil {
+		return err
+	}
+	option := *config.(*core.DiskOption)
+	switch option.Action {
+	case core.DiskFillAction, core.DiskWritePayloadAction:
+		err = os.Remove(option.Path)
+		if err != nil {
+			log.Warn(fmt.Sprintf("recover disk: remove %s failed", option.Path), zap.Error(err))
+		}
+	}
 	return nil
 }
