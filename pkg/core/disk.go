@@ -20,9 +20,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/pingcap/log"
-	"go.uber.org/zap"
-
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
@@ -42,7 +39,6 @@ type DiskOption struct {
 
 	FillByFallocate bool `json:"fill_by_fallocate"`
 	DestroyFile     bool `json:"destroy_file"`
-	ForceOverwrite  bool `json:"force_overwrite"`
 }
 
 var _ AttackConfig = &DiskOption{}
@@ -71,22 +67,11 @@ func (d *DiskOption) Validate() error {
 			return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
 				"if you want allocate a 0 size file please set fallocate=false, DiskOption : %v", d)
 		}
-		//	check if file exist
-		//		if exist check if ForceOverwrite is true
-		//			if true check if with dd to fill file
-		//				if true	log a warning
-		//				else return error
-		//			else return error
-		// 		if return error
-		//		chexk if is a not-exist error
-		//			if not a not-exist error
-		//			return error
-		//			if file is not exist check if Path of file is valid when Path is not empty
-		//			if valid than pass
-		//			else return error
+
 		_, err := os.Stat(d.Path)
 		if err != nil {
 			if os.IsNotExist(err) {
+				// check if Path of file is valid when Path is not empty
 				if d.Path != "" {
 					var b []byte
 					if err := ioutil.WriteFile(d.Path, b, 0644); err != nil {
@@ -100,14 +85,7 @@ func (d *DiskOption) Validate() error {
 				return err
 			}
 		} else {
-			if d.ForceOverwrite {
-				if d.FillByFallocate {
-					return fmt.Errorf("overwrite file with fallocate is invalid")
-				}
-				log.Warn("overwriting file ", zap.String("file", d.Path))
-			} else {
-				return fmt.Errorf("write into a existing file when not forcing overwrite")
-			}
+			return fmt.Errorf("write into a existing file when not forcing overwrite")
 		}
 	}
 
