@@ -215,11 +215,12 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 
 func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Environment) error {
 	recoverFlag := true
-	backupCmd := exec.Command("/bin/bash", "-c", "mv /etc/hosts /etc/hosts.chaosd && touch /etc/hosts")
+	cmd := "mv /etc/hosts /etc/hosts.chaosd." + uid + " && touch /etc/hosts"
+	backupCmd := exec.Command("/bin/bash", "-c", cmd)
 
 	defer func() {
 		if recoverFlag {
-			if err := env.Chaos.recoverEtcHosts(attack); err != nil {
+			if err := env.Chaos.recoverEtcHosts(attack, uid); err != nil {
 				log.Error("Error recover env: %s\n", zap.Error(err))
 			}
 		}
@@ -231,7 +232,7 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 		return errors.WithStack(err)
 	}
 
-	fileBytes, err := ioutil.ReadFile("/etc/hosts.chaosd")
+	fileBytes, err := ioutil.ReadFile("/etc/hosts.chaosd." + uid)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -266,10 +267,13 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 
 	w := bufio.NewWriter(fd)
 
+	new_flag := true
+	// if match one line, then replace it.
 	for _, line := range lines {
 		match := re.MatchString(line)
 		if match {
 			line = reIp.ReplaceAllString(line, attack.DNSIp)
+			new_flag = false
 		}
 		line = line + "\n"
 		_, err := w.WriteString(line)
@@ -277,6 +281,14 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 			return errors.WithStack(err)
 		}
 	}
+	// if not match any, then add a new line.
+	if new_flag {
+		_, err := w.WriteString(attack.DNSIp + "\t" + attack.DNSHost + "\n")
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
 	err = w.Flush()
 	if err != nil {
 		return errors.WithStack(err)
@@ -297,7 +309,7 @@ func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 	switch attack.Action {
 	case core.NetworkDNSAction:
 		if attack.NeedApplyEtcHosts() {
-			if err := env.Chaos.recoverEtcHosts(attack); err != nil {
+			if err := env.Chaos.recoverEtcHosts(attack, env.AttackUid); err != nil {
 				return errors.WithStack(err)
 			}
 		}
@@ -397,8 +409,9 @@ func (s *Server) recoverDNSServer(attack *core.NetworkCommand) error {
 	return nil
 }
 
-func (s *Server) recoverEtcHosts(attack *core.NetworkCommand) error {
-	recoverCmd := exec.Command("/bin/bash", "-c", "mv /etc/hosts.chaosd /etc/hosts")
+func (s *Server) recoverEtcHosts(attack *core.NetworkCommand, uid string) error {
+	cmd := "mv /etc/hosts.chaosd." + uid + " /etc/hosts"
+	recoverCmd := exec.Command("/bin/bash", "-c", cmd)
 	stdout, err := recoverCmd.CombinedOutput()
 	if err != nil {
 		log.Error(recoverCmd.String()+string(stdout), zap.Error(err))
