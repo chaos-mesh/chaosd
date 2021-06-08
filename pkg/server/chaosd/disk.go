@@ -151,6 +151,7 @@ func (diskAttack) diskPayload(payload *core.DiskOption) error {
 	return nil
 }
 
+// dd command with 'oflag=append conv=notrunc' will append new data in the file.
 const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock oflag=append conv=notrunc"
 const FallocateCommand = "fallocate -l %s %s"
 

@@ -84,7 +84,7 @@ func (d *DiskOption) Validate() error {
 				return err
 			}
 		} else {
-			return fmt.Errorf("fill into a existing file")
+			return fmt.Errorf("fill into an existing file")
 		}
 	}
 
