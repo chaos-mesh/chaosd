@@ -48,7 +48,7 @@ func TestServer_DiskFill(t *testing.T) {
 						},
 						Size:              "1024M",
 						Path:              "./temp",
-						FillByFallocate:   true,
+						FillByFAllocate:   true,
 						PayloadProcessNum: 1,
 					},
 					wantErr: false,
@@ -61,7 +61,7 @@ func TestServer_DiskFill(t *testing.T) {
 						},
 						Size:              "24MB",
 						Path:              "./temp",
-						FillByFallocate:   false,
+						FillByFAllocate:   false,
 						PayloadProcessNum: 1,
 					},
 					wantErr: false,
@@ -138,7 +138,7 @@ func TestServer_DiskPayload(t *testing.T) {
 						PayloadProcessNum: 1,
 						Size:              tt.option.Size,
 						Path:              "./temp",
-						FillByFallocate:   true,
+						FillByFAllocate:   true,
 					}, core.CommandMode)
 					if err != nil {
 						t.Error(err)
@@ -172,7 +172,7 @@ func writeArgsToDiskOption(args writeArgs) core.DiskOption {
 		Size:              args.Size,
 		Path:              args.Path,
 		Percent:           "",
-		FillByFallocate:   false,
+		FillByFAllocate:   false,
 		PayloadProcessNum: args.PayloadProcessNum,
 	}
 }
@@ -258,7 +258,7 @@ func readArgsToDiskOption(args readArgs) core.DiskOption {
 		Size:              args.Size,
 		Path:              args.Path,
 		Percent:           "",
-		FillByFallocate:   false,
+		FillByFAllocate:   false,
 		PayloadProcessNum: args.PayloadProcessNum,
 	}
 }

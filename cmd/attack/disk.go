@@ -125,7 +125,7 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskOption) *cobra.Command 
 			"If path not provided, a temp file will be generated and deleted immediately after data filled in or allocated")
 	cmd.Flags().StringVarP(&options.Percent, "percent", "c", "",
 		"'percent' how many percent data of disk will fill in the file path")
-	cmd.Flags().BoolVarP(&options.FillByFallocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
+	cmd.Flags().BoolVarP(&options.FillByFAllocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
 	return cmd
 }
 

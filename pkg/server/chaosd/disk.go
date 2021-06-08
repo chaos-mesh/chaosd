@@ -15,6 +15,7 @@ package chaosd
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -35,12 +36,126 @@ type diskAttack struct{}
 
 var DiskAttack AttackType = diskAttack{}
 
+type DiskAttackConfig struct {
+	core.CommonAttackConfig
+	DdOptions        []DdOption
+	FAllocateOptions []FAllocateOption
+	Path             string
+}
+
+var ddCommand = utils.Command{Name: "dd"}
+
+type DdOption struct {
+	ReadPath  string `dd:"if"`
+	WritePath string `dd:"of"`
+	BlockSize string `dd:"bs"`
+	Count     string `dd:"count"`
+	Iflag     string `dd:"iflag"`
+	Oflag     string `dd:"oflag"`
+}
+
+var fAllocateCommand = utils.Command{Name: "fallocate"}
+
+type FAllocateOption struct {
+	LengthOpt string `fallocate:"-"`
+	Length    string `fallocate:"-"`
+	FileName  string `fallocate:"-"`
+}
+
+func (cfg *DiskAttackConfig) Init(o *core.DiskOption) error {
+
+}
+
+func (cfg *DiskAttackConfig) path(opt *core.DiskOption) (string, error) {
+	switch opt.Action {
+	case DDFillCommand:
+		if opt.Path == "" {
+			var err error
+			opt.Path, err = utils.CreateTempFile()
+			if err != nil {
+				log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", opt.Action))
+				return "", err
+			}
+		} else {
+			_, err := os.Stat(opt.Path)
+			if err != nil {
+				// check if Path of file is valid when Path is not empty
+				if os.IsNotExist(err) {
+					var b []byte
+					if err := ioutil.WriteFile(opt.Path, b, 0644); err != nil {
+						return "", err
+					}
+					if err := os.Remove(opt.Path); err != nil {
+						return "", err
+					}
+				} else {
+					return "", err
+				}
+			} else {
+				return "", fmt.Errorf("fill into a existing file")
+			}
+		}
+		return opt.Path, nil
+	case DDReadPayloadCommand:
+		path, err := utils.GetRootDevice()
+		if err != nil {
+			log.Error("err when GetRootDevice in reading payload", zap.Error(err))
+			return "", err
+		}
+		if path == "" {
+			err = errors.Errorf("can not get root device path")
+			log.Error(fmt.Sprintf("payload action: %s", opt.Action), zap.Error(err))
+			return "", err
+		}
+		return path, nil
+	case DDWritePayloadCommand:
+		path, err := utils.CreateTempFile()
+		if err != nil {
+			log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", opt.Action))
+			return "", err
+		}
+		return path, nil
+	default:
+		return "", errors.Errorf("unsupported action %s", opt.Action)
+	}
+}
+
+func (cfg *DiskAttackConfig) size(opt *core.DiskOption) (uint64, error) {
+	if opt.Size != "" {
+		byteSize, err := utils.ParseUnit(opt.Size)
+		if err != nil {
+			log.Error(fmt.Sprintf("fail to get parse size per units , %s", opt.Size), zap.Error(err))
+			return 0, err
+		}
+		return byteSize, nil
+	} else if opt.Percent != "" {
+		opt.Percent = strings.Trim(opt.Percent, " ")
+		percent, err := strconv.ParseUint(opt.Percent, 10, 0)
+		if err != nil {
+			log.Error(fmt.Sprintf(" unexcepted err when parsing disk percent '%s'", opt.Percent), zap.Error(err))
+			return 0, err
+		}
+		dir := filepath.Dir(opt.Path)
+		totalSize, err := utils.GetDiskTotalSize(dir)
+		if err != nil {
+			log.Error("fail to get disk total size", zap.Error(err))
+			return 0, err
+		}
+		return totalSize * percent / 100, nil
+	}
+	if opt.Action == DDFillCommand {
+		return 0, fmt.Errorf("return fmt.Errorf(\"one of percent and size must not be empty, DiskOption : %v\", d)")
+	} else {
+		return 0, fmt.Errorf("return fmt.Errorf(\"one of percent and size must not be empty, DiskOption : %v\", d)")
+	}
+
+}
+
 const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
 const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync,fullblock,nocache"
 
 func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err error) {
 	attack := options.(*core.DiskOption)
-
 	if options.String() == core.DiskFillAction {
 		return disk.diskFill(attack)
 	}
@@ -184,7 +299,7 @@ func (diskAttack) diskFill(fill *core.DiskOption) error {
 		fill.Size = strconv.FormatUint(totalSize*percent/100, 10) + "c"
 	}
 	var cmd *exec.Cmd
-	if fill.FillByFallocate {
+	if fill.FillByFAllocate {
 		cmd = exec.Command("bash", "-c", fmt.Sprintf(FallocateCommand, fill.Size, fill.Path))
 		output, err := cmd.CombinedOutput()
 		if err != nil {

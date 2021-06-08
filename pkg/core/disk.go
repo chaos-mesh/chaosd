@@ -16,6 +16,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -37,10 +38,17 @@ type DiskOption struct {
 	Percent           string `json:"percent"`
 	PayloadProcessNum uint8  `json:"payload_process_num"`
 
-	FillByFallocate bool `json:"fill_by_fallocate"`
+	FillByFAllocate bool `json:"fill_by_fallocate"`
 }
 
 var _ AttackConfig = &DiskOption{}
+
+func (d *DiskOption) PreProcess() (*chaosd.DiskAttackConfig, error) {
+	if err := d.CommonAttackConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+}
 
 func (d *DiskOption) Validate() error {
 	if err := d.CommonAttackConfig.Validate(); err != nil {
@@ -62,7 +70,7 @@ func (d *DiskOption) Validate() error {
 	}
 
 	if d.Action == DiskFillAction {
-		if d.FillByFallocate && byteSize == 0 {
+		if d.FillByFAllocate && byteSize == 0 {
 			return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
 				"if you want allocate a 0 size file please set fallocate=false, DiskOption : %v", d)
 		}

@@ -116,6 +116,12 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 		return
 	}
 
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
 	uid, err := s.chaos.ExecuteAttack(chaosd.ProcessAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
@@ -138,6 +144,12 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 	attack := core.NewNetworkCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
 		return
 	}
 
@@ -166,6 +178,12 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 		return
 	}
 
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
 	uid, err := s.chaos.ExecuteAttack(chaosd.StressAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
@@ -188,6 +206,12 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 	attack := core.NewDiskOption()
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
 		return
 	}
 
