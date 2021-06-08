@@ -78,6 +78,7 @@ func NewJVMSubmitCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 		NewJVMExceptionCommand(dep, options),
 		NewJVMStressCommand(dep, options),
 		NewJVMGCCommand(dep, options),
+		NewJVMRuleFileCommand(dep, options),
 	)
 
 	return cmd
@@ -159,6 +160,21 @@ func NewJVMGCCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
+
+	return cmd
+}
+
+func NewJVMRuleFileCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "rule-file [options]",
+		Short: "inject fault with configured byteman rule file",
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.JVMRuleFileAction
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.RuleFile, "path", "p", "", "the path of configured byteman rule file")
 
 	return cmd
 }
