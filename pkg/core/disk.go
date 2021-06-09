@@ -61,8 +61,8 @@ func (d *DiskOption) Validate() error {
 		}
 	}
 
-	if d.Action == DiskFillAction {
-		if d.FillByFallocate && byteSize == 0 {
+	if d.Action == DiskFillAction || d.Action == DiskWritePayloadAction {
+		if d.Action == DiskFillAction && d.FillByFallocate && byteSize == 0 {
 			return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
 				"if you want allocate a 0 size file please set fallocate=false, DiskOption : %v", d)
 		}
@@ -84,7 +84,10 @@ func (d *DiskOption) Validate() error {
 				return err
 			}
 		} else {
-			return fmt.Errorf("fill into an existing file")
+			if d.Action == DiskFillAction {
+				return fmt.Errorf("fill into an existing file")
+			}
+			return fmt.Errorf("write into an existing file")
 		}
 	}
 
