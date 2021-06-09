@@ -79,6 +79,7 @@ func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.
 			"If path not provided, payload will write into a temp file, temp file will be deleted after writing")
 	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
 		"'process-num' specifies the number of process work on writing , default 1, only 1-255 is valid value")
+	SetScheduleFlags(cmd, &options.SchedulerConfig)
 	return cmd
 }
 
@@ -102,6 +103,7 @@ func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.C
 			"If path not provided, payload will read from disk mount on \"/\"")
 	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
 		"'process-num' specifies the number of process work on reading , default 1, only 1-255 is valid value")
+	SetScheduleFlags(cmd, &options.SchedulerConfig)
 	return cmd
 }
 

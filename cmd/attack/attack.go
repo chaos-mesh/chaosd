@@ -13,7 +13,10 @@
 
 package attack
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/spf13/cobra"
+)
 
 func NewAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -31,4 +34,26 @@ func NewAttackCommand() *cobra.Command {
 	)
 
 	return cmd
+}
+
+func SetScheduleFlags(cmd *cobra.Command, conf *core.SchedulerConfig) {
+	cmd.Flags().StringVar(&conf.Duration, "duration", "",
+		`Work duration of attacks.A duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m".Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
+	cmd.Flags().StringVar(&conf.Schedule, "schedule", "",
+		`Work schedule of attacks.
+It panics if more than one Optional is given, since it would be impossible to
+correctly infer which optional is provided or missing in general.
+Examples
+
+Standard parser without descriptors
+specParser := NewParser(Minute | Hour | Dom | Month | Dow)
+sched, err := specParser.Parse("0 0 15 */3 *")
+
+Same as above, just excludes time fields
+subsParser := NewParser(Dom | Month | Dow)
+sched, err := specParser.Parse("15 */3 *")
+
+Same as above, just makes Dow optional
+subsParser := NewParser(Dom | Month | DowOptional)
+sched, err := specParser.Parse("15 */3")`)
 }

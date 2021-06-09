@@ -15,13 +15,14 @@ package chaosd
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"sync"
-
+	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
+	"os"
+	"os/exec"
+	"sync"
+	"time"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -31,6 +32,7 @@ type diskAttack struct{}
 var DiskAttack AttackType = diskAttack{}
 
 func (disk diskAttack) Attack(options core.AttackConfig, env Environment) error {
+
 	if attackConf, ok := options.(*core.DiskAttackConfig); ok {
 		if attackConf.Action == core.DiskFillAction {
 			if attackConf.FAllocateOption != nil {
@@ -59,6 +61,8 @@ func (disk diskAttack) Attack(options core.AttackConfig, env Environment) error 
 		}
 
 		if attackConf.DdOptions != nil {
+			t, _ := options.ScheduleDuration()
+			deadline := time.After(*t)
 			if len(*attackConf.DdOptions) == 0 {
 				return nil
 			}
@@ -66,13 +70,10 @@ func (disk diskAttack) Attack(options core.AttackConfig, env Environment) error 
 			*attackConf.DdOptions = (*attackConf.DdOptions)[:len(*attackConf.DdOptions)-1]
 
 			cmd := core.DdCommand.Unmarshal(rest)
-			output, err := cmd.CombinedOutput()
-
+			err := utils.ExecWithDeadline(deadline, cmd)
 			if err != nil {
-				log.Error(cmd.String()+string(output), zap.Error(err))
 				return err
 			}
-			log.Info(string(output))
 
 			var wg sync.WaitGroup
 			var mu sync.Mutex
@@ -83,15 +84,14 @@ func (disk diskAttack) Attack(options core.AttackConfig, env Environment) error 
 
 				go func(cmd *exec.Cmd) {
 					defer wg.Done()
-					output, err := cmd.CombinedOutput()
+					err := utils.ExecWithDeadline(deadline, cmd)
 					if err != nil {
-						log.Error(cmd.String()+string(output), zap.Error(err))
+						log.Error(cmd.String(), zap.Error(err))
 						mu.Lock()
 						defer mu.Unlock()
 						errs = multierror.Append(errs, err)
 						return
 					}
-					log.Info(string(output))
 				}(cmd)
 			}
 
