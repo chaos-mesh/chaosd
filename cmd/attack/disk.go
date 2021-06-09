@@ -130,10 +130,12 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskOption) *cobra.Command 
 }
 
 func processDiskAttack(options *core.DiskOption, chaos *chaosd.Server) {
-	if err := options.Validate(); err != nil {
+	attackConfig, err := options.PreProcess()
+	if err != nil {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
-	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, options, core.CommandMode)
+
+	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, attackConfig, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

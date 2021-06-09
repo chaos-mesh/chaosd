@@ -16,10 +16,14 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
+
+	"github.com/pingcap/log"
+	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
@@ -29,6 +33,41 @@ const (
 	DiskWritePayloadAction = "write-payload"
 	DiskReadPayloadAction  = "read-payload"
 )
+
+var _ AttackConfig = &DiskAttackConfig{}
+
+type DiskAttackConfig struct {
+	CommonAttackConfig
+	DdOptions       *[]DdOption
+	FAllocateOption *FAllocateOption
+	Path            string
+}
+
+func (d DiskAttackConfig) RecoverData() string {
+	data, _ := json.Marshal(d)
+
+	return string(data)
+}
+
+var DdCommand = utils.Command{Name: "dd"}
+
+type DdOption struct {
+	ReadPath  string `dd:"if"`
+	WritePath string `dd:"of"`
+	BlockSize string `dd:"bs"`
+	Count     string `dd:"count"`
+	Iflag     string `dd:"iflag"`
+	Oflag     string `dd:"oflag"`
+	Conv      string `dd:"conv"`
+}
+
+var FAllocateCommand = utils.Command{Name: "fallocate"}
+
+type FAllocateOption struct {
+	LengthOpt string `fallocate:"-"`
+	Length    string `fallocate:"-"`
+	FileName  string `fallocate:"-"`
+}
 
 type DiskOption struct {
 	CommonAttackConfig
@@ -41,78 +80,179 @@ type DiskOption struct {
 	FillByFAllocate bool `json:"fill_by_fallocate"`
 }
 
-var _ AttackConfig = &DiskOption{}
-
-func (d *DiskOption) PreProcess() (*chaosd.DiskAttackConfig, error) {
-	if err := d.CommonAttackConfig.Validate(); err != nil {
-		return nil, err
-	}
-
-}
-
-func (d *DiskOption) Validate() error {
-	if err := d.CommonAttackConfig.Validate(); err != nil {
-		return err
-	}
-	var byteSize uint64
-	var err error
-	if d.Size == "" {
-		if d.Percent == "" {
-			return fmt.Errorf("one of percent and size must not be empty, DiskOption : %v", d)
-		}
-		if byteSize, err = strconv.ParseUint(d.Percent, 10, 0); err != nil {
-			return fmt.Errorf("unsupport percent : %s, DiskOption : %v", d.Percent, d)
-		}
-	} else {
-		if byteSize, err = utils.ParseUnit(d.Size); err != nil {
-			return fmt.Errorf("unknown units of size : %s, DiskOption : %v", d.Size, d)
-		}
-	}
-
-	if d.Action == DiskFillAction {
-		if d.FillByFAllocate && byteSize == 0 {
-			return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
-				"if you want allocate a 0 size file please set fallocate=false, DiskOption : %v", d)
-		}
-
-		_, err := os.Stat(d.Path)
-		if err != nil {
-			if os.IsNotExist(err) {
-				// check if Path of file is valid when Path is not empty
-				if d.Path != "" {
-					var b []byte
-					if err := ioutil.WriteFile(d.Path, b, 0644); err != nil {
-						return err
-					}
-					if err := os.Remove(d.Path); err != nil {
-						return err
-					}
-				}
-			} else {
-				return err
-			}
-		} else {
-			return fmt.Errorf("fill into a existing file")
-		}
-	}
-
-	if d.PayloadProcessNum == 0 {
-		return fmt.Errorf("unsupport process num : %d, DiskOption : %v", d.PayloadProcessNum, d.Action)
-	}
-
-	return nil
-}
-
-func (d DiskOption) RecoverData() string {
-	data, _ := json.Marshal(d)
-
-	return string(data)
-}
-
 func NewDiskOption() *DiskOption {
 	return &DiskOption{
 		CommonAttackConfig: CommonAttackConfig{
 			Kind: DiskAttack,
 		},
 	}
+}
+
+func (opt *DiskOption) PreProcess() (*DiskAttackConfig, error) {
+	if err := opt.CommonAttackConfig.Validate(); err != nil {
+		return nil, err
+	}
+
+	path, err := initPath(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	byteSize, err := initSize(opt)
+	if err != nil {
+		return nil, err
+	}
+
+	if opt.Action == DiskFillAction && opt.FillByFAllocate && byteSize != 0 {
+		return &DiskAttackConfig{
+			CommonAttackConfig: opt.CommonAttackConfig,
+			DdOptions:          nil,
+			FAllocateOption: &FAllocateOption{
+				LengthOpt: "-l",
+				Length:    strconv.FormatUint(byteSize, 10) + "c",
+				FileName:  path,
+			},
+			Path: path,
+		}, nil
+	}
+
+	ddOptions, err := initDdOptions(opt, path, byteSize)
+	if err != nil {
+		return nil, err
+	}
+	return &DiskAttackConfig{
+		CommonAttackConfig: opt.CommonAttackConfig,
+		DdOptions:          &ddOptions,
+		FAllocateOption:    nil,
+		Path:               path,
+	}, nil
+}
+
+func initDdOptions(opt *DiskOption, path string, byteSize uint64) ([]DdOption, error) {
+	ddBlocks, err := utils.SplitBytesByProcessNum(byteSize, opt.PayloadProcessNum)
+	if err != nil {
+		log.Error("fail to split disk size", zap.Error(err))
+		return nil, err
+	}
+	var ddOpts []DdOption
+	switch opt.Action {
+	case DiskFillAction:
+		for _, block := range ddBlocks {
+			ddOpts = append(ddOpts, DdOption{
+				ReadPath:  "/dev/zero",
+				WritePath: path,
+				BlockSize: block.BlockSize,
+				Count:     block.Count,
+				Iflag:     "fullblock",
+				Oflag:     "append",
+				Conv:      "notrunc",
+			})
+		}
+	case DiskWritePayloadAction:
+		for _, block := range ddBlocks {
+			ddOpts = append(ddOpts, DdOption{
+				ReadPath:  "/dev/zero",
+				WritePath: path,
+				BlockSize: block.BlockSize,
+				Count:     block.Count,
+				Oflag:     "append",
+			})
+		}
+	case DiskReadPayloadAction:
+		for _, block := range ddBlocks {
+			ddOpts = append(ddOpts, DdOption{
+				ReadPath:  path,
+				WritePath: "/dev/null",
+				BlockSize: block.BlockSize,
+				Count:     block.Count,
+				Iflag:     "dsync,fullblock,nocache",
+			})
+		}
+	}
+	return ddOpts, nil
+}
+
+func initPath(opt *DiskOption) (string, error) {
+	switch opt.Action {
+	case DiskFillAction:
+		if opt.Path == "" {
+			var err error
+			opt.Path, err = utils.CreateTempFile()
+			if err != nil {
+				log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", opt.Action))
+				return "", err
+			}
+		} else {
+			_, err := os.Stat(opt.Path)
+			if err != nil {
+				// check if Path of file is valid when Path is not empty
+				if os.IsNotExist(err) {
+					var b []byte
+					if err := ioutil.WriteFile(opt.Path, b, 0644); err != nil {
+						return "", err
+					}
+					if err := os.Remove(opt.Path); err != nil {
+						return "", err
+					}
+				} else {
+					return "", err
+				}
+			} else {
+				return "", fmt.Errorf("fill into a existing file")
+			}
+		}
+		return opt.Path, nil
+	case DiskReadPayloadAction:
+		path, err := utils.GetRootDevice()
+		if err != nil {
+			log.Error("err when GetRootDevice in reading payload", zap.Error(err))
+			return "", err
+		}
+		if path == "" {
+			err = fmt.Errorf("can not get root device path")
+			log.Error(fmt.Sprintf("payload action: %s", opt.Action), zap.Error(err))
+			return "", err
+		}
+		return path, nil
+	case DiskWritePayloadAction:
+		path, err := utils.CreateTempFile()
+		if err != nil {
+			log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", opt.Action))
+			return "", err
+		}
+		return path, nil
+	default:
+		return "", fmt.Errorf("unsupported action %s", opt.Action)
+	}
+}
+
+func initSize(opt *DiskOption) (uint64, error) {
+	if opt.Size != "" {
+		byteSize, err := utils.ParseUnit(opt.Size)
+		if err != nil {
+			log.Error(fmt.Sprintf("fail to get parse size per units , %s", opt.Size), zap.Error(err))
+			return 0, err
+		}
+		return byteSize, nil
+	} else if opt.Percent != "" {
+		opt.Percent = strings.Trim(opt.Percent, " ")
+		percent, err := strconv.ParseUint(opt.Percent, 10, 0)
+		if err != nil {
+			log.Error(fmt.Sprintf(" unexcepted err when parsing disk percent '%s'", opt.Percent), zap.Error(err))
+			return 0, err
+		}
+		dir := filepath.Dir(opt.Path)
+		totalSize, err := utils.GetDiskTotalSize(dir)
+		if err != nil {
+			log.Error("fail to get disk total size", zap.Error(err))
+			return 0, err
+		}
+		return totalSize * percent / 100, nil
+	}
+	if opt.Action == DiskFillAction {
+		return 0, fmt.Errorf("one of percent and size must not be empty, DiskOption : %v", opt)
+	} else {
+		return 0, fmt.Errorf("one of size must not be empty, DiskOption : %v", opt)
+	}
+
 }
