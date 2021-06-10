@@ -23,7 +23,8 @@ jobs:
         run: |
           curl -fsSL -o glibc-2.17.tar.gz https://ftp.gnu.org/gnu/glibc/glibc-2.17.tar.gz
           tar zxvf glibc-2.17.tar.gz
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/glibc-2.17/lib
+          pwd
+          export LD_LIBRARY_PATH=/glibc-2.17/lib:$LD_LIBRARY_PATH
 
       - uses: actions/checkout@master
         with:
