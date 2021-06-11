@@ -47,7 +47,7 @@ func TestServer_DiskFill(t *testing.T) {
 							Kind:   core.DiskAttack,
 						},
 						Size:              "1024M",
-						Path:              "temp",
+						Path:              "./temp",
 						FillByFallocate:   true,
 						PayloadProcessNum: 1,
 					},
@@ -60,7 +60,7 @@ func TestServer_DiskFill(t *testing.T) {
 							Kind:   core.DiskAttack,
 						},
 						Size:              "24MB",
-						Path:              "temp",
+						Path:              "./temp",
 						FillByFallocate:   false,
 						PayloadProcessNum: 1,
 					},
@@ -71,15 +71,7 @@ func TestServer_DiskFill(t *testing.T) {
 		fx.Invoke(func(s *chaosd.Server, tests []diskTest) {
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
-					f, err := os.Create(tt.option.Path)
-					if err != nil {
-						t.Errorf("unexpected err %v when creating temp file", err)
-						return
-					}
-					if f != nil {
-						_ = f.Close()
-					}
-					_, err = s.ExecuteAttack(chaosd.DiskAttack, tt.option, core.CommandMode)
+					_, err := s.ExecuteAttack(chaosd.DiskAttack, tt.option, core.CommandMode)
 					if (err != nil) != tt.wantErr {
 						t.Errorf("DiskFill() error = %v, wantErr %v", err, tt.wantErr)
 						return
@@ -116,7 +108,7 @@ func TestServer_DiskPayload(t *testing.T) {
 							Kind:   core.DiskAttack,
 						},
 						Size:              "24M",
-						Path:              "temp",
+						Path:              "./temp",
 						PayloadProcessNum: 1,
 					},
 					wantErr: false,
@@ -128,7 +120,7 @@ func TestServer_DiskPayload(t *testing.T) {
 							Kind:   core.DiskAttack,
 						},
 						Size:              "24M",
-						Path:              "temp",
+						Path:              "./temp",
 						PayloadProcessNum: 1,
 					},
 					wantErr: false,
@@ -138,24 +130,20 @@ func TestServer_DiskPayload(t *testing.T) {
 		fx.Invoke(func(s *chaosd.Server, tests []diskTest) {
 			for _, tt := range tests {
 				t.Run(tt.name, func(t *testing.T) {
-					f, err := os.Create(tt.option.Path)
-					if err != nil {
-						t.Errorf("unexpected err %v when creating temp file", err)
-						return
-					}
-					if f != nil {
-						_ = f.Close()
-					}
-
-					_, err = s.ExecuteAttack(chaosd.DiskAttack, &core.DiskOption{
+					_, err := s.ExecuteAttack(chaosd.DiskAttack, &core.DiskOption{
 						CommonAttackConfig: core.CommonAttackConfig{
 							Action: core.DiskFillAction,
 							Kind:   core.DiskAttack,
 						},
-						Size:            tt.option.Size,
-						Path:            "temp",
-						FillByFallocate: true,
+						PayloadProcessNum: 1,
+						Size:              tt.option.Size,
+						Path:              "./temp",
+						FillByFallocate:   true,
 					}, core.CommandMode)
+					if err != nil {
+						t.Error(err)
+						return
+					}
 					_, err = s.ExecuteAttack(chaosd.DiskAttack, tt.option, core.CommandMode)
 					if (err != nil) != tt.wantErr {
 						t.Errorf("DiskPayload() error = %v, wantErr %v", err, tt.wantErr)
@@ -185,7 +173,6 @@ func writeArgsToDiskOption(args writeArgs) core.DiskOption {
 		Path:              args.Path,
 		Percent:           "",
 		FillByFallocate:   false,
-		DestroyFile:       false,
 		PayloadProcessNum: args.PayloadProcessNum,
 	}
 }
@@ -272,7 +259,6 @@ func readArgsToDiskOption(args readArgs) core.DiskOption {
 		Path:              args.Path,
 		Percent:           "",
 		FillByFallocate:   false,
-		DestroyFile:       false,
 		PayloadProcessNum: args.PayloadProcessNum,
 	}
 }

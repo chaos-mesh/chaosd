@@ -31,6 +31,7 @@ const (
 	JVMReturnAction    = "return"
 	JVMStressAction    = "stress"
 	JVMGCAction        = "gc"
+	JVMRuleFileAction  = "rule_file"
 )
 
 type JVMCommand struct {
@@ -80,6 +81,12 @@ type JVMCommand struct {
 	StressValueName string
 
 	StressValue int
+
+	// btm rule file path
+	RuleFile string
+
+	// RuleData used to save the rule file's data, will use it when recover
+	RuleData []byte
 }
 
 func (j *JVMCommand) Validate() error {
@@ -107,6 +114,10 @@ func (j *JVMCommand) Validate() error {
 
 			if len(j.Method) == 0 {
 				return errors.New("method not provided")
+			}
+		case JVMRuleFileAction:
+			if len(j.RuleFile) == 0 {
+				return errors.New("rule file not provided")
 			}
 		case "":
 			return errors.New("action not provided, action can be 'latency', 'exception', 'return', 'stress' or 'gc'")

@@ -16,6 +16,8 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strconv"
 
 	"github.com/chaos-mesh/chaosd/pkg/utils"
@@ -33,9 +35,9 @@ type DiskOption struct {
 	Size              string `json:"size"`
 	Path              string `json:"path"`
 	Percent           string `json:"percent"`
-	FillByFallocate   bool   `json:"fill_by_fallocate"`
-	DestroyFile       bool   `json:"destroy_file"`
 	PayloadProcessNum uint8  `json:"payload_process_num"`
+
+	FillByFallocate bool `json:"fill_by_fallocate"`
 }
 
 var _ AttackConfig = &DiskOption{}
@@ -58,10 +60,34 @@ func (d *DiskOption) Validate() error {
 			return fmt.Errorf("unknown units of size : %s, DiskOption : %v", d.Size, d)
 		}
 	}
-	if d.Action == DiskFillAction {
-		if d.FillByFallocate && byteSize == 0 {
+
+	if d.Action == DiskFillAction || d.Action == DiskWritePayloadAction {
+		if d.Action == DiskFillAction && d.FillByFallocate && byteSize == 0 {
 			return fmt.Errorf("fallocate not suppurt 0 size or 0 percent data, "+
 				"if you want allocate a 0 size file please set fallocate=false, DiskOption : %v", d)
+		}
+
+		_, err := os.Stat(d.Path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				// check if Path of file is valid when Path is not empty
+				if d.Path != "" {
+					var b []byte
+					if err := ioutil.WriteFile(d.Path, b, 0644); err != nil {
+						return err
+					}
+					if err := os.Remove(d.Path); err != nil {
+						return err
+					}
+				}
+			} else {
+				return err
+			}
+		} else {
+			if d.Action == DiskFillAction {
+				return fmt.Errorf("fill into an existing file")
+			}
+			return fmt.Errorf("write into an existing file")
 		}
 	}
 
