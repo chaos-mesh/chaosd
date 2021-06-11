@@ -40,7 +40,7 @@ timeout 5s tail --pid=$PID -f /dev/null
 ps aux | grep stress-ng
 
 # test mem stress
-${bin_path}/chaosd attack stress mem -w 1 > mem.out
+${bin_path}/chaosd attack stress mem --size 10M > mem.out
 
 PID=`cat mem.out | grep "stress-ng" | sed 's/.*Pid=\([0-9]*\).*/\1/g'`
 
