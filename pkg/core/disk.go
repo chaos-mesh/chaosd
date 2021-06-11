@@ -155,7 +155,7 @@ func initDdOptions(opt *DiskOption, path string, byteSize uint64) ([]DdOption, e
 				WritePath: path,
 				BlockSize: block.BlockSize,
 				Count:     block.Count,
-				Oflag:     "append",
+				Oflag:     "dsync",
 			})
 		}
 	case DiskReadPayloadAction:
@@ -174,12 +174,15 @@ func initDdOptions(opt *DiskOption, path string, byteSize uint64) ([]DdOption, e
 
 func initPath(opt *DiskOption) (string, error) {
 	switch opt.Action {
-	case DiskFillAction:
+	case DiskFillAction, DiskWritePayloadAction:
 		if opt.Path == "" {
 			var err error
 			opt.Path, err = utils.CreateTempFile()
 			if err != nil {
 				log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", opt.Action))
+				return "", err
+			}
+			if err := os.Remove(opt.Path); err != nil {
 				return "", err
 			}
 		} else {
@@ -188,7 +191,7 @@ func initPath(opt *DiskOption) (string, error) {
 				// check if Path of file is valid when Path is not empty
 				if os.IsNotExist(err) {
 					var b []byte
-					if err := ioutil.WriteFile(opt.Path, b, 0644); err != nil {
+					if err := ioutil.WriteFile(opt.Path, b, 0600); err != nil {
 						return "", err
 					}
 					if err := os.Remove(opt.Path); err != nil {
@@ -203,24 +206,36 @@ func initPath(opt *DiskOption) (string, error) {
 		}
 		return opt.Path, nil
 	case DiskReadPayloadAction:
-		path, err := utils.GetRootDevice()
+		if opt.Path == "" {
+			path, err := utils.GetRootDevice()
+			if err != nil {
+				log.Error("err when GetRootDevice in reading payload", zap.Error(err))
+				return "", err
+			}
+			if path == "" {
+				err = fmt.Errorf("can not get root device path")
+				log.Error(fmt.Sprintf("payload action: %s", opt.Action), zap.Error(err))
+				return "", err
+			}
+			return path, nil
+		}
+		var fi os.FileInfo
+		var err error
+		if fi, err = os.Stat(opt.Path); err != nil {
+			return "", err
+		}
+		if fi.IsDir() {
+			return "", fmt.Errorf("path is a dictory, path : %s", opt.Path)
+		}
+		f, err := os.Open(opt.Path)
 		if err != nil {
-			log.Error("err when GetRootDevice in reading payload", zap.Error(err))
 			return "", err
 		}
-		if path == "" {
-			err = fmt.Errorf("can not get root device path")
-			log.Error(fmt.Sprintf("payload action: %s", opt.Action), zap.Error(err))
-			return "", err
-		}
-		return path, nil
-	case DiskWritePayloadAction:
-		path, err := utils.CreateTempFile()
+		err = f.Close()
 		if err != nil {
-			log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", opt.Action))
-			return "", err
+			return "", nil
 		}
-		return path, nil
+		return opt.Path, nil
 	default:
 		return "", fmt.Errorf("unsupported action %s", opt.Action)
 	}
@@ -235,7 +250,7 @@ func initSize(opt *DiskOption) (uint64, error) {
 		}
 		return byteSize, nil
 	} else if opt.Percent != "" {
-		opt.Percent = strings.Trim(opt.Percent, " ")
+		opt.Percent = strings.Trim(opt.Percent, " %")
 		percent, err := strconv.ParseUint(opt.Percent, 10, 0)
 		if err != nil {
 			log.Error(fmt.Sprintf(" unexcepted err when parsing disk percent '%s'", opt.Percent), zap.Error(err))
@@ -251,8 +266,6 @@ func initSize(opt *DiskOption) (uint64, error) {
 	}
 	if opt.Action == DiskFillAction {
 		return 0, fmt.Errorf("one of percent and size must not be empty, DiskOption : %v", opt)
-	} else {
-		return 0, fmt.Errorf("one of size must not be empty, DiskOption : %v", opt)
 	}
-
+	return 0, fmt.Errorf("one of size must not be empty, DiskOption : %v", opt)
 }

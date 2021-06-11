@@ -15,14 +15,16 @@ package chaosd
 
 import (
 	"fmt"
-	"github.com/chaos-mesh/chaosd/pkg/server/utils"
-	"github.com/hashicorp/go-multierror"
-	"github.com/pingcap/log"
-	"go.uber.org/zap"
 	"os"
 	"os/exec"
 	"sync"
 	"time"
+
+	"github.com/hashicorp/go-multierror"
+	"github.com/pingcap/log"
+	"go.uber.org/zap"
+
+	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -32,7 +34,6 @@ type diskAttack struct{}
 var DiskAttack AttackType = diskAttack{}
 
 func (disk diskAttack) Attack(options core.AttackConfig, env Environment) error {
-
 	if attackConf, ok := options.(*core.DiskAttackConfig); ok {
 		if attackConf.Action == core.DiskFillAction {
 			if attackConf.FAllocateOption != nil {
@@ -56,13 +57,17 @@ func (disk diskAttack) Attack(options core.AttackConfig, env Environment) error 
 					return err
 				}
 				log.Info(string(output))
-				return nil
 			}
+			return nil
 		}
 
 		if attackConf.DdOptions != nil {
-			t, _ := options.ScheduleDuration()
-			deadline := time.After(*t)
+			duration, _ := options.ScheduleDuration()
+			var deadline <-chan time.Time
+			if duration != nil {
+				deadline = time.After(*duration)
+			}
+
 			if len(*attackConf.DdOptions) == 0 {
 				return nil
 			}

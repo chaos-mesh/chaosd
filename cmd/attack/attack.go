@@ -14,8 +14,9 @@
 package attack
 
 import (
-	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/spf13/cobra"
+
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 func NewAttackCommand() *cobra.Command {
