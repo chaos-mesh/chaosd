@@ -53,6 +53,7 @@ func NewStressCPUCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 		Short: "continuously stress CPU out",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.StressCPUAction
+			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(stressAttackF)).Run()
 		},
 	}
@@ -70,11 +71,11 @@ func NewStressMemCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 		Short: "continuously stress virtual memory out",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.StressMemAction
+			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(stressAttackF)).Run()
 		},
 	}
 
-	cmd.Flags().IntVarP(&options.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "", "Size specifies N bytes consumed per vm worker, default is the total available memory. One can specify the size as % of total available memory or in units of B, KB/KiB, MB/MiB, GB/GiB, TB/TiB..")
 	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "extend stress-ng options.")
 
