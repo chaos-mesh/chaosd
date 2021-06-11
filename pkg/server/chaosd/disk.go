@@ -84,12 +84,6 @@ func (diskAttack) diskPayload(payload *core.DiskOption) error {
 			if err != nil {
 				return err
 			}
-			defer func() {
-				err := os.Remove(payload.Path)
-				if err != nil {
-					log.Error(fmt.Sprintf("unexpected err when removing temp file %s", payload.Path), zap.Error(err))
-				}
-			}()
 		}
 	case core.DiskReadPayloadAction:
 		cmdFormat = DDReadPayloadCommand
@@ -157,7 +151,8 @@ func (diskAttack) diskPayload(payload *core.DiskOption) error {
 	return nil
 }
 
-const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock"
+// dd command with 'oflag=append conv=notrunc' will append new data in the file.
+const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock oflag=append conv=notrunc"
 const FallocateCommand = "fallocate -l %s %s"
 
 // diskFill will execute a dd command (DDFillCommand or FallocateCommand)
@@ -171,15 +166,6 @@ func (diskAttack) diskFill(fill *core.DiskOption) error {
 			return err
 		}
 	}
-
-	defer func() {
-		if fill.DestroyFile {
-			err := os.Remove(fill.Path)
-			if err != nil {
-				log.Error(fmt.Sprintf("unexpected err when removing file %s", fill.Path), zap.Error(err))
-			}
-		}
-	}()
 
 	if fill.Size != "" {
 		fill.Size = strings.Trim(fill.Size, " ")
@@ -196,29 +182,56 @@ func (diskAttack) diskFill(fill *core.DiskOption) error {
 			log.Error("fail to get disk total size", zap.Error(err))
 			return err
 		}
-		fill.Size = strconv.FormatUint(totalSize*percent/100, 10)
+		fill.Size = strconv.FormatUint(totalSize*percent/100, 10) + "c"
 	}
-
 	var cmd *exec.Cmd
 	if fill.FillByFallocate {
 		cmd = exec.Command("bash", "-c", fmt.Sprintf(FallocateCommand, fill.Size, fill.Path))
-	} else {
-		//1Unit means the block size. The bytes size dd read | write is (block size) * (size).
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, fill.Size, "1"))
-	}
-
-	output, err := cmd.CombinedOutput()
-
-	if err != nil {
-		log.Error(string(output), zap.Error(err))
-	} else {
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Error(string(output), zap.Error(err))
+			return err
+		}
 		log.Info(string(output))
+	} else {
+		byteSize, err := utils.ParseUnit(fill.Size)
+		if err != nil {
+			log.Error("fail to parse disk size", zap.Error(err))
+			return err
+		}
+
+		ddBlocks, err := utils.SplitBytesByProcessNum(byteSize, 1)
+		if err != nil {
+			log.Error("fail to split disk size", zap.Error(err))
+			return err
+		}
+		for _, block := range ddBlocks {
+			cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, block.BlockSize, block.Count))
+			output, err := cmd.CombinedOutput()
+
+			if err != nil {
+				log.Error(string(output), zap.Error(err))
+				return err
+			}
+			log.Info(string(output))
+		}
 	}
 
-	return err
+	return nil
 }
 
 func (diskAttack) Recover(exp core.Experiment, _ Environment) error {
-	log.Info("Recover disk attack will do nothing, because delete | truncate data is too dangerous.")
+	config, err := exp.GetRequestCommand()
+	if err != nil {
+		return err
+	}
+	option := *config.(*core.DiskOption)
+	switch option.Action {
+	case core.DiskFillAction, core.DiskWritePayloadAction:
+		err = os.Remove(option.Path)
+		if err != nil {
+			log.Warn(fmt.Sprintf("recover disk: remove %s failed", option.Path), zap.Error(err))
+		}
+	}
 	return nil
 }
