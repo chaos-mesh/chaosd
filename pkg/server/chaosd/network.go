@@ -216,7 +216,7 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Environment) error {
 	recoverFlag := true
 	cmd := "mv /etc/hosts /etc/hosts.chaosd." + uid + " && touch /etc/hosts"
-	backupCmd := exec.Command("/bin/bash", "-c", cmd)
+	backupCmd := exec.Command("/bin/bash", "-c", cmd) // #nosec
 
 	defer func() {
 		if recoverFlag {
@@ -232,7 +232,7 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 		return errors.WithStack(err)
 	}
 
-	fileBytes, err := ioutil.ReadFile("/etc/hosts.chaosd." + uid)
+	fileBytes, err := ioutil.ReadFile("/etc/hosts.chaosd." + uid) // #nosec
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -411,7 +411,7 @@ func (s *Server) recoverDNSServer(attack *core.NetworkCommand) error {
 
 func (s *Server) recoverEtcHosts(attack *core.NetworkCommand, uid string) error {
 	cmd := "mv /etc/hosts.chaosd." + uid + " /etc/hosts"
-	recoverCmd := exec.Command("/bin/bash", "-c", cmd)
+	recoverCmd := exec.Command("/bin/bash", "-c", cmd) // #nosec
 	stdout, err := recoverCmd.CombinedOutput()
 	if err != nil {
 		log.Error(recoverCmd.String()+string(stdout), zap.Error(err))
