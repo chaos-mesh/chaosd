@@ -201,7 +201,7 @@ func initPath(opt *DiskOption) (string, error) {
 					return "", err
 				}
 			} else {
-				return "", fmt.Errorf("fill into a existing file")
+				return "", fmt.Errorf("fill into an existing file")
 			}
 		}
 		return opt.Path, nil
@@ -253,7 +253,7 @@ func initSize(opt *DiskOption) (uint64, error) {
 		opt.Percent = strings.Trim(opt.Percent, " %")
 		percent, err := strconv.ParseUint(opt.Percent, 10, 0)
 		if err != nil {
-			log.Error(fmt.Sprintf(" unexcepted err when parsing disk percent '%s'", opt.Percent), zap.Error(err))
+			log.Error(fmt.Sprintf("unexcepted err when parsing disk percent '%s'", opt.Percent), zap.Error(err))
 			return 0, err
 		}
 		dir := filepath.Dir(opt.Path)
