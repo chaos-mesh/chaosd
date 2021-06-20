@@ -17,11 +17,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
-	"strings"
-
+	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
+	"os/exec"
+	"strings"
+	"syscall"
 
 	"github.com/pingcap/errors"
 
@@ -322,12 +323,16 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 		return errors.Errorf("port %s has been occupied", attack.Port)
 	}
 
-	c := fmt.Sprintf("nc -l %s", attack.Port)
-	cmd := exec.Command("sh", "-c", c)
-	err = cmd.Start()
+	cmd := bpm.DefaultProcessBuilder("../../../tools/main/httpStartTool start", "-p", attack.Port).Build()
+
+	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
+
+	backgroundProcessManager := bpm.NewBackgroundProcessManager()
+	err = backgroundProcessManager.StartProcess(cmd)
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
 	return nil
 }
 
@@ -337,10 +342,10 @@ func checkPortIsListened(port string) (bool, error) {
 
 	stdout, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Error(cmd.String()+string(stdout), zap.Error(err))
 		if err.Error() == "exit status 1" && string(stdout) == "" {
 			return false, nil
 		}
+		log.Error(cmd.String()+string(stdout), zap.Error(err))
 		return true, errors.WithStack(err)
 	}
 

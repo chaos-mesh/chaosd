@@ -1,4 +1,4 @@
-package tools
+package main
 
 import (
 	"fmt"
@@ -41,5 +41,5 @@ func startHttp(porttoOccupy string) {
 
 
 func main() {
-  
+  PortOccupyTool("")
 }
