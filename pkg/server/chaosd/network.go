@@ -325,7 +325,7 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 	}
 
 	args := fmt.Sprintf("-p %s", attack.Port)
-	cmd := bpm.DefaultProcessBuilder("../../../tools/main/PortOccupyTool", args).Build()
+	cmd := bpm.DefaultProcessBuilder("PortOccupyTool", args).Build()
 
 	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
 
