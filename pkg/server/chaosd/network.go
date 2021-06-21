@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 	"github.com/pingcap/log"
+	"github.com/shirou/gopsutil/process"
 	"go.uber.org/zap"
 	"os/exec"
 	"strings"
@@ -323,8 +324,8 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 		return errors.Errorf("port %s has been occupied", attack.Port)
 	}
 
-	args := fmt.Sprintf("../../../tools/main/httpStartTool start -p %s", attack.Port)
-	cmd := bpm.DefaultProcessBuilder("sh", "-c", args).Build()
+	args := fmt.Sprintf("-p %s", attack.Port)
+	cmd := bpm.DefaultProcessBuilder("../../../tools/main/PortOccupyTool", args).Build()
 
 	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
 
@@ -360,15 +361,24 @@ func checkPortIsListened(port string) (bool, error) {
 
 func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) error {
 
-	//c := fmt.Sprintf("lsof -i:%s | awk '{print $2}' | grep -v PID | xargs kill -9", attack.Port)
-	c := fmt.Sprintf("kill -9 %d", attack.PortPid)
-
-	cmd := exec.Command("sh", "-c", c)
-
-	stdout, err := cmd.CombinedOutput()
+	proc, err := process.NewProcess(attack.PortPid)
 	if err != nil {
-		log.Error(cmd.String()+string(stdout), zap.Error(err))
-		return errors.WithStack(err)
+		return err
+	}
+
+	procName, err := proc.Name()
+	if err != nil {
+		return err
+	}
+
+	if !strings.Contains(procName, "PortOccupyTool") {
+		log.Warn("the process is not PortOccupyTool, maybe it is killed by manual")
+		return nil
+	}
+
+	if err := proc.Kill(); err != nil {
+		log.Error("the stress-ng process kill failed", zap.Error(err))
+		return err
 	}
 
 	return nil
