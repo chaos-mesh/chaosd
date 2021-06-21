@@ -377,7 +377,7 @@ func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) er
 	}
 
 	if err := proc.Kill(); err != nil {
-		log.Error("the stress-ng process kill failed", zap.Error(err))
+		log.Error("the port occupy process kill failed", zap.Error(err))
 		return err
 	}
 
