@@ -44,6 +44,7 @@ type NetworkCommand struct {
 	// used for DNS attack
 	DNSServer string
 	Port      string
+	PortPid   int32
 }
 
 var _ AttackConfig = &NetworkCommand{}

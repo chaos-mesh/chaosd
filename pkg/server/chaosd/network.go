@@ -323,7 +323,8 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 		return errors.Errorf("port %s has been occupied", attack.Port)
 	}
 
-	cmd := bpm.DefaultProcessBuilder("../../../tools/main/httpStartTool start", "-p", attack.Port).Build()
+	args := fmt.Sprintf("../../../tools/main/httpStartTool start -p %s", attack.Port)
+	cmd := bpm.DefaultProcessBuilder("sh", "-c", args).Build()
 
 	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
 
@@ -332,6 +333,8 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+
+	attack.PortPid = int32(cmd.Process.Pid)
 
 	return nil
 }
@@ -357,7 +360,8 @@ func checkPortIsListened(port string) (bool, error) {
 
 func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) error {
 
-	c := fmt.Sprintf("lsof -i:%s | awk '{print $2}' | grep -v PID | xargs kill -9", attack.Port)
+	//c := fmt.Sprintf("lsof -i:%s | awk '{print $2}' | grep -v PID | xargs kill -9", attack.Port)
+	c := fmt.Sprintf("kill -9 %d", attack.PortPid)
 
 	cmd := exec.Command("sh", "-c", c)
 
