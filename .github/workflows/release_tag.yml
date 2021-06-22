@@ -42,5 +42,22 @@ jobs:
 
       - name: Upload files
         run: |
+
           GIT_TAG=${GITHUB_REF##*/}
-          aws s3 cp bin/chaosd ${{ secrets.AWS_BUCKET_NAME }}/${GIT_TAG}/chaosd
+
+          # download tools
+          curl -fsSL -o byteman.tar.gz https://mirrors.chaos-mesh.org/latest/byteman.tar.gz
+          curl -fsSL -o stress-ng https://mirrors.chaos-mesh.org/latest/stress-ng
+          tar zxvf byteman.tar.gz
+          chmod +x ./stress-ng
+
+          # prepare package
+          mkdir chaosd-${GIT_TAG}-linux-amd64
+          mkdir chaosd-${GIT_TAG}-linux-amd64/tools
+          mv bin/chaosd chaosd-${GIT_TAG}-linux-amd64/
+          mv byteman chaosd-${GIT_TAG}-linux-amd64/tools/
+          mv stress-ng chaosd-${GIT_TAG}-linux-amd64/tools/
+
+          # upload package
+          tar czvf chaosd-${GIT_TAG}-linux-amd64.tar.gz chaosd-${GIT_TAG}-linux-amd64
+          aws s3 cp chaosd-${GIT_TAG}-linux-amd64.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-${GIT_TAG}-linux-amd64.tar.gz
