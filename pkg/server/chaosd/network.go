@@ -18,14 +18,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
-	"github.com/shirou/gopsutil/process"
-	"os/exec"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"syscall"
+
+	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
+	"github.com/shirou/gopsutil/process"
 
 	"go.uber.org/zap"
 
@@ -50,7 +51,7 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 
 	switch attack.Action {
 	case core.NetworkDNSAction:
-    if attack.NeedApplyEtcHosts() {
+		if attack.NeedApplyEtcHosts() {
 			if err = env.Chaos.applyEtcHosts(attack, env.AttackUid, env); err != nil {
 				return errors.WithStack(err)
 			}
@@ -61,7 +62,7 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 				return errors.WithStack(err)
 			}
 		}
-    
+
 	case core.NetworkPortOccupied:
 		return env.Chaos.applyPortOccupied(attack)
 
@@ -492,6 +493,8 @@ func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) er
 		log.Error("the port occupy process kill failed", zap.Error(err))
 		return err
 	}
+	return nil
+}
 
 func (s *Server) recoverEtcHosts(attack *core.NetworkCommand, uid string) error {
 	cmd := "mv /etc/hosts.chaosd." + uid + " /etc/hosts"

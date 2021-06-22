@@ -15,16 +15,17 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/pingcap/errors"
+	"github.com/pingcap/log"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
-	"github.com/pingcap/log"
-	"net/http"
 )
 
 func PortOccupyTool() error {
 	var Port string
-	var rootCmd = &cobra.Command {
+	var rootCmd = &cobra.Command{
 		Use:   "http server start",
 		Short: "http server start",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -56,7 +57,6 @@ func startHttp(porttoOccupy string) {
 		log.Error("ListenAndServe", zap.Error(err))
 	}
 }
-
 
 func main() {
 	if err := PortOccupyTool(); err != nil {
