@@ -267,13 +267,13 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 
 	w := bufio.NewWriter(fd)
 
-	new_flag := true
+	newFlag := true
 	// if match one line, then replace it.
 	for _, line := range lines {
 		match := re.MatchString(line)
 		if match {
 			line = reIp.ReplaceAllString(line, attack.DNSIp)
-			new_flag = false
+			newFlag = false
 		}
 		line = line + "\n"
 		_, err := w.WriteString(line)
@@ -282,7 +282,7 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 		}
 	}
 	// if not match any, then add a new line.
-	if new_flag {
+	if newFlag {
 		_, err := w.WriteString(attack.DNSIp + "\t" + attack.DNSHost + "\n")
 		if err != nil {
 			return errors.WithStack(err)
