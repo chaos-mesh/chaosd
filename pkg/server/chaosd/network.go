@@ -324,7 +324,7 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 		return errors.Errorf("port %s has been occupied", attack.Port)
 	}
 
-	args := fmt.Sprintf("-p %s", attack.Port)
+	args := fmt.Sprintf("-p=%s", attack.Port)
 	cmd := bpm.DefaultProcessBuilder("PortOccupyTool", args).Build()
 
 	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
