@@ -1,5 +1,7 @@
 # chaosd
 
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/chaos-mesh/chaosd)
+
 chaosd is an easy-to-use Chaos Engineering tool used to inject failures to a physical node. Currently, two modes are supported:
 
 - **Command mode** - Using chaosd as a command-line tool. Supported failure types are:
@@ -25,7 +27,8 @@ Before deploying chaosd, make sure the following items have been installed:
 * [tc](https://linux.die.net/man/8/tc)
 * [ipset](https://linux.die.net/man/8/ipset)
 * [iptables](https://linux.die.net/man/8/iptables)
-* [stress-ng](https://wiki.ubuntu.com/Kernel/Reference/stress-ng)
+* [stress-ng](https://wiki.ubuntu.com/Kernel/Reference/stress-ng) (required when install chaosd by building from source code)
+* [byteman](https://github.com/chaos-mesh/byteman)(required when install chaosd by building from source code)
 
 ## Install
 
@@ -35,7 +38,7 @@ You can either build directly from the source or download the binary to finish t
 
     ```bash
     make chaosd
-    chmod +x chaosd && mv chaosd /usr/local/bin/chaosd
+    mv chaosd /usr/local/bin/chaosd
     ```
 
 - Download binary
@@ -43,19 +46,19 @@ You can either build directly from the source or download the binary to finish t
     Download the latest unstable version by executing the command below:
 
     ```bash
-    curl -fsSL -o chaosd https://mirrors.chaos-mesh.org/latest/chaosd
+    curl -fsSL -o chaosd-latest-linux-amd64.tar.gz https://mirrors.chaos-mesh.org/chaosd-latest-linux-amd64.tar.gz
     ```
 
-    If you want to download the release version, you can replace the `latest` in the above command with the version number. For example, download `v0.9.0` by executing the command below:
+    If you want to download the release version, you can replace the `latest` in the above command with the version number. For example, download `v1.0.0` by executing the command below:
 
     ```bash
-    curl -fsSL -o chaosd https://mirrors.chaos-mesh.org/v0.9.0/chaosd
+    curl -fsSL -o chaosd-v1.0.0-linux-amd64.tar.gz https://mirrors.chaos-mesh.org/chaosd-v1.0.0-linux-amd64.tar.gz
     ```
 
-    Then add executable permissions to the chaosd and move it to path `/usr/local/bin`:
+    Then uncompress the archived file, and you can go into the folder and execute chaosd：
 
     ```bash
-    chmod +x chaosd && mv chaosd /usr/local/bin/chaosd
+    tar zxvf chaosd-latest-linux-amd64.tar.gz && cd chaosd-latest-linux-amd64
     ```
 
 ## Usages
@@ -362,3 +365,10 @@ Sample usage:
 ```bash
 $ curl -X DELETE "127.0.0.1:31767/api/attack/20df86e9-96e7-47db-88ce-dd31bc70c4f0"
 ```
+
+
+## Development
+
+You can develop chaosd directly from your browser in a pre-configured development environment in the cloud:
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/chaos-mesh/chaosd)

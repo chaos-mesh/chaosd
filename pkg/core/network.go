@@ -45,6 +45,8 @@ type NetworkCommand struct {
 	DNSServer string
 	Port      string
 	PortPid   int32
+	DNSIp     string
+	DNSHost   string
 }
 
 var _ AttackConfig = &NetworkCommand{}
@@ -58,7 +60,10 @@ const (
 	NetworkPortOccupied    = "occupied"
 )
 
-func (n NetworkCommand) Validate() error {
+func (n *NetworkCommand) Validate() error {
+	if err := n.CommonAttackConfig.Validate(); err != nil {
+		return err
+	}
 	switch n.Action {
 	case NetworkDelayAction:
 		return n.validNetworkDelay()
@@ -128,6 +133,18 @@ func (n *NetworkCommand) validNetworkCommon() error {
 }
 
 func (n *NetworkCommand) validNetworkDNS() error {
+	if !utils.CheckIPs(n.DNSServer) {
+		return errors.Errorf("server addresse %s not valid", n.DNSServer)
+	}
+
+	if !utils.CheckIPs(n.DNSIp) {
+		return errors.Errorf("ip addresse %s not valid", n.DNSIp)
+	}
+
+	if (len(n.DNSHost) != 0 && len(n.DNSIp) == 0) || (len(n.DNSHost) == 0 && len(n.DNSIp) != 0) {
+		return errors.Errorf("DNS host %s must match a DNS ip %s", n.DNSHost, n.DNSIp)
+	}
+
 	return nil
 }
 
@@ -359,6 +376,18 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 	default:
 		return false
 	}
+}
+
+func (n *NetworkCommand) NeedApplyEtcHosts() bool {
+	if len(n.DNSHost) > 0 || len(n.DNSIp) > 0 {
+		return true
+	}
+
+	return false
+}
+
+func (n *NetworkCommand) NeedApplyDNSServer() bool {
+	return len(n.DNSServer) > 0
 }
 
 func (n *NetworkCommand) ToChain() (*pb.Chain, error) {

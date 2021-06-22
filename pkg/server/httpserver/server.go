@@ -23,6 +23,7 @@ import (
 
 	"github.com/chaos-mesh/chaosd/pkg/config"
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/scheduler"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 	"github.com/chaos-mesh/chaosd/pkg/swaggerserver"
@@ -51,7 +52,7 @@ func NewServer(
 	}
 }
 
-func Register(s *httpServer) {
+func Register(s *httpServer, scheduler scheduler.Scheduler) {
 	if s.conf.Platform != config.LocalPlatform {
 		return
 	}
@@ -66,6 +67,8 @@ func Register(s *httpServer) {
 			log.Fatal("failed to start HTTP server", zap.Error(err))
 		}
 	}()
+
+	scheduler.Start()
 }
 
 func handler(s *httpServer) {
@@ -87,6 +90,7 @@ func handler(s *httpServer) {
 	experiments := api.Group("/experiments")
 	{
 		experiments.GET("/", s.listExperiments)
+		experiments.GET("/:uid/runs", s.listExperimentRuns)
 	}
 
 	system := api.Group("/system")
@@ -106,17 +110,13 @@ func handler(s *httpServer) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/process [post]
 func (s *httpServer) createProcessAttack(c *gin.Context) {
-	attack := &core.ProcessCommand{
-		CommonAttackConfig: core.CommonAttackConfig{
-			Kind: core.ProcessAttack,
-		},
-	}
+	attack := core.NewProcessCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.ProcessAttack, attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.ProcessAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -135,17 +135,13 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/network [post]
 func (s *httpServer) createNetworkAttack(c *gin.Context) {
-	attack := &core.NetworkCommand{
-		CommonAttackConfig: core.CommonAttackConfig{
-			Kind: core.ProcessAttack,
-		},
-	}
+	attack := core.NewNetworkCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.NetworkAttack, attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.NetworkAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -164,17 +160,13 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/stress [post]
 func (s *httpServer) createStressAttack(c *gin.Context) {
-	attack := &core.StressCommand{
-		CommonAttackConfig: core.CommonAttackConfig{
-			Kind: core.ProcessAttack,
-		},
-	}
+	attack := core.NewStressCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.StressAttack, attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.StressAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -193,17 +185,13 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/disk [post]
 func (s *httpServer) createDiskAttack(c *gin.Context) {
-	attack := &core.DiskOption{
-		CommonAttackConfig: core.CommonAttackConfig{
-			Kind: core.ProcessAttack,
-		},
-	}
+	attack := core.NewDiskOption()
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attack)
+	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attack, core.ServerMode)
 
 	if err != nil {
 		handleError(c, err)

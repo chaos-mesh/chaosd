@@ -14,7 +14,6 @@
 package chaosd
 
 import (
-	"encoding/json"
 	"strconv"
 	"syscall"
 
@@ -67,10 +66,11 @@ func (processAttack) Attack(options core.AttackConfig, _ Environment) error {
 }
 
 func (processAttack) Recover(exp core.Experiment, _ Environment) error {
-	pcmd := &core.ProcessCommand{}
-	if err := json.Unmarshal([]byte(exp.RecoverCommand), pcmd); err != nil {
+	config, err := exp.GetRequestCommand()
+	if err != nil {
 		return err
 	}
+	pcmd := config.(*core.ProcessCommand)
 	if pcmd.Signal != int(syscall.SIGSTOP) {
 		return core.ErrNonRecoverableAttack.New("only SIGSTOP process attack is supported to recover")
 	}

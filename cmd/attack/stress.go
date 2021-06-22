@@ -86,7 +86,7 @@ func stressAttackF(chaos *chaosd.Server, options *core.StressCommand) {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
-	uid, err := chaos.ExecuteAttack(chaosd.StressAttack, options)
+	uid, err := chaos.ExecuteAttack(chaosd.StressAttack, options, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

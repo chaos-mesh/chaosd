@@ -15,7 +15,10 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"time"
+
+	perr "github.com/pkg/errors"
 )
 
 const (
@@ -33,11 +36,18 @@ const (
 	StressAttack  = "stress"
 	DiskAttack    = "disk"
 	HostAttack    = "host"
+	JVMAttack     = "jvm"
+)
+
+const (
+	ServerMode  = "svr"
+	CommandMode = "cmd"
 )
 
 // ExperimentStore defines operations for working with experiments
 type ExperimentStore interface {
 	List(ctx context.Context) ([]*Experiment, error)
+	ListByLaunchMode(ctx context.Context, mode string) ([]*Experiment, error)
 	ListByConditions(ctx context.Context, conds *SearchCommand) ([]*Experiment, error)
 	ListByStatus(ctx context.Context, status string) ([]*Experiment, error)
 	FindByUid(ctx context.Context, uid string) (*Experiment, error)
@@ -57,6 +67,35 @@ type Experiment struct {
 	Kind           string `json:"kind"`
 	Action         string `json:"action"`
 	RecoverCommand string `json:"recover_command"`
+	LaunchMode     string `json:"launch_mode"`
 
-	Cron string `json:"cron"`
+	cachedRequestCommand AttackConfig
+}
+
+func (exp *Experiment) GetRequestCommand() (AttackConfig, error) {
+	if exp.cachedRequestCommand != nil {
+		return exp.cachedRequestCommand, nil
+	}
+
+	var attackConfig AttackConfig
+	switch exp.Kind {
+	case ProcessAttack:
+		attackConfig = &ProcessCommand{}
+	case NetworkAttack:
+		attackConfig = &NetworkCommand{}
+	case HostAttack:
+		attackConfig = &HostCommand{}
+	case StressAttack:
+		attackConfig = &StressCommand{}
+	case DiskAttack:
+		attackConfig = &DiskOption{}
+	default:
+		return nil, perr.Errorf("chaos experiment kind %s not found", exp.Kind)
+	}
+
+	if err := json.Unmarshal([]byte(exp.RecoverCommand), attackConfig); err != nil {
+		return nil, err
+	}
+	exp.cachedRequestCommand = attackConfig
+	return attackConfig, nil
 }

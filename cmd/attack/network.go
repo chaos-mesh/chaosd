@@ -173,7 +173,7 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dns",
-		Short: "attack DNS server",
+		Short: "attack DNS server or map specified host to specified IP",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkDNSAction
@@ -184,6 +184,8 @@ func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 
 	cmd.Flags().StringVarP(&options.DNSServer, "dns-server", "", "123.123.123.123",
 		"update the DNS server in /etc/resolv.conf with this value")
+	cmd.Flags().StringVarP(&options.DNSHost, "dns-hostname", "H", "", "map this host to specified IP")
+	cmd.Flags().StringVarP(&options.DNSIp, "dns-ip", "i", "", "map specified host to this IP address")
 
 	return cmd
 }
@@ -193,7 +195,7 @@ func commonNetworkAttackFunc(options *core.NetworkCommand, chaos *chaosd.Server)
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
-	uid, err := chaos.ExecuteAttack(chaosd.NetworkAttack, options)
+	uid, err := chaos.ExecuteAttack(chaosd.NetworkAttack, options, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

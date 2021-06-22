@@ -14,18 +14,24 @@
 package chaosd
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
-	"github.com/pingcap/log"
 	"github.com/shirou/gopsutil/process"
-	"go.uber.org/zap"
 	"os/exec"
+	"io/ioutil"
+	"os"
+	"regexp"
 	"strings"
 	"syscall"
 
+	"go.uber.org/zap"
+
 	"github.com/pingcap/errors"
+
+	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 
@@ -44,7 +50,18 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 
 	switch attack.Action {
 	case core.NetworkDNSAction:
-		return env.Chaos.updateDNSServer(attack)
+    if attack.NeedApplyEtcHosts() {
+			if err = env.Chaos.applyEtcHosts(attack, env.AttackUid, env); err != nil {
+				return errors.WithStack(err)
+			}
+		}
+
+		if attack.NeedApplyDNSServer() {
+			if err = env.Chaos.updateDNSServer(attack); err != nil {
+				return errors.WithStack(err)
+			}
+		}
+    
 	case core.NetworkPortOccupied:
 		return env.Chaos.applyPortOccupied(attack)
 
@@ -202,13 +219,108 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	return nil
 }
 
+func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Environment) error {
+	recoverFlag := true
+	cmd := "mv /etc/hosts /etc/hosts.chaosd." + uid + " && touch /etc/hosts"
+	backupCmd := exec.Command("/bin/bash", "-c", cmd) // #nosec
+
+	defer func() {
+		if recoverFlag {
+			if err := env.Chaos.recoverEtcHosts(attack, uid); err != nil {
+				log.Error("Error recover env: %s\n", zap.Error(err))
+			}
+		}
+	}()
+
+	stdout, err := backupCmd.CombinedOutput()
+	if err != nil {
+		log.Error(backupCmd.String()+string(stdout), zap.Error(err))
+		return errors.WithStack(err)
+	}
+
+	fileBytes, err := ioutil.ReadFile("/etc/hosts.chaosd." + uid) // #nosec
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	lines := strings.Split(string(fileBytes), "\n")
+
+	// Filter out the line of the hostname in /etc/hosts
+	// example:
+	// 10.86.33.102    qunarzz.com     q.qunarzz.com   common.qunarzz.com
+	// 127.0.0.1       localhost
+	needle := "^(\\d{1,3})(\\.\\d{1,3}){3}.*\\b" + attack.DNSHost + "\\b.*"
+	re, err := regexp.Compile(needle)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// match IP address, eg: 127.0.0.1
+	reIp, err := regexp.Compile(`^(\d{1,3})(\.\d{1,3}){3}`)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	fd, err := os.OpenFile("/etc/hosts", os.O_RDWR|os.O_APPEND, 0600)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	defer func() {
+		if err := fd.Close(); err != nil {
+			log.Error("Error closing file: %s\n", zap.Error(err))
+		}
+	}()
+
+	w := bufio.NewWriter(fd)
+
+	newFlag := true
+	// if match one line, then replace it.
+	for _, line := range lines {
+		match := re.MatchString(line)
+		if match {
+			line = reIp.ReplaceAllString(line, attack.DNSIp)
+			newFlag = false
+		}
+		line = line + "\n"
+		_, err := w.WriteString(line)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	// if not match any, then add a new line.
+	if newFlag {
+		_, err := w.WriteString(attack.DNSIp + "\t" + attack.DNSHost + "\n")
+		if err != nil {
+			return errors.WithStack(err)
+		}
+	}
+
+	err = w.Flush()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	err = fd.Sync()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	recoverFlag = false
+	return nil
+}
+
 func (networkAttack) Recover(exp core.Experiment, env Environment) error {
-	attack := &core.NetworkCommand{}
-	if err := json.Unmarshal([]byte(exp.RecoverCommand), attack); err != nil {
+	config, err := exp.GetRequestCommand()
+	if err != nil {
 		return err
 	}
+	attack := config.(*core.NetworkCommand)
+
 	switch attack.Action {
 	case core.NetworkDNSAction:
+		if attack.NeedApplyEtcHosts() {
+			if err := env.Chaos.recoverEtcHosts(attack, env.AttackUid); err != nil {
+				return errors.WithStack(err)
+			}
+		}
 		return env.Chaos.recoverDNSServer(attack)
 	case core.NetworkPortOccupied:
 		return env.Chaos.recoverPortOccupied(attack, env.AttackUid)
@@ -381,5 +493,13 @@ func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) er
 		return err
 	}
 
+func (s *Server) recoverEtcHosts(attack *core.NetworkCommand, uid string) error {
+	cmd := "mv /etc/hosts.chaosd." + uid + " /etc/hosts"
+	recoverCmd := exec.Command("/bin/bash", "-c", cmd) // #nosec
+	stdout, err := recoverCmd.CombinedOutput()
+	if err != nil {
+		log.Error(recoverCmd.String()+string(stdout), zap.Error(err))
+		return errors.WithStack(err)
+	}
 	return nil
 }

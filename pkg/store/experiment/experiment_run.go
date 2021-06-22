@@ -50,7 +50,8 @@ func (store *experimentRunStore) ListByExperimentID(ctx context.Context, id uint
 func (store *experimentRunStore) ListByExperimentUID(ctx context.Context, uid string) ([]*core.ExperimentRun, error) {
 	runs := make([]*core.ExperimentRun, 0)
 	if err := store.db.
-		Joins("JOIN experiments ON experiments.uid = ?", uid).
+		Joins("Experiment").
+		Where("experiment.uid = ?", uid).
 		Find(&runs).
 		Order("start_at DESC").
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -67,8 +68,23 @@ func (store *experimentRunStore) LatestRun(ctx context.Context, id uint) (*core.
 		Order("start_at DESC").
 		First(&run, "experiment_id = ?", id).
 		Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, perr.WithStack(err)
 	}
 
 	return run, nil
+}
+
+func (store *experimentRunStore) NewRun(_ context.Context, expRun *core.ExperimentRun) error {
+	return store.db.Model(core.ExperimentRun{}).Save(expRun).Error
+}
+
+func (store *experimentRunStore) Update(_ context.Context, runUid string, status string, message string) error {
+	return store.db.
+		Model(core.ExperimentRun{}).
+		Where("uid = ?", runUid).
+		Updates(core.Experiment{Status: status, Message: message}).
+		Error
 }

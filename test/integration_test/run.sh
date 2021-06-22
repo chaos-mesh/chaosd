@@ -15,12 +15,14 @@
 
 set -eu
 
+pwd=`pwd`
 test_dir=test/integration_test
 
 function run() {
     script=$1
     echo "Running test $script..."
     TEST_NAME="$(basename "$(dirname "$script")")" \
+    PATH="$pwd/$test_dir/../utilities:$PATH" \
     bash +x "$script"
 }
 

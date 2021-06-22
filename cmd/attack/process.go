@@ -86,7 +86,7 @@ func processAttackF(options *core.ProcessCommand, chaos *chaosd.Server) {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
-	uid, err := chaos.ExecuteAttack(chaosd.ProcessAttack, options)
+	uid, err := chaos.ExecuteAttack(chaosd.ProcessAttack, options, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

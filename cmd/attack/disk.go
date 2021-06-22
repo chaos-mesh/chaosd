@@ -126,7 +126,6 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskOption) *cobra.Command 
 	cmd.Flags().StringVarP(&options.Percent, "percent", "c", "",
 		"'percent' how many percent data of disk will fill in the file path")
 	cmd.Flags().BoolVarP(&options.FillByFallocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
-	cmd.Flags().BoolVarP(&options.DestroyFile, "destroy", "d", false, "destroy file after filled in or allocated")
 	return cmd
 }
 
@@ -134,7 +133,7 @@ func processDiskAttack(options *core.DiskOption, chaos *chaosd.Server) {
 	if err := options.Validate(); err != nil {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
-	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, options)
+	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, options, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

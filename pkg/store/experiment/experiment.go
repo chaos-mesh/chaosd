@@ -49,6 +49,19 @@ func (e *experimentStore) List(_ context.Context) ([]*core.Experiment, error) {
 	return exps, nil
 }
 
+func (e *experimentStore) ListByLaunchMode(_ context.Context, mode string) ([]*core.Experiment, error) {
+	exps := make([]*core.Experiment, 0)
+	if err := e.db.
+		Where("launch_mode = ?", mode).
+		Find(&exps).
+		Order("created_at DESC").
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, perr.WithStack(err)
+	}
+
+	return exps, nil
+}
+
 func (e *experimentStore) ListByStatus(_ context.Context, status string) ([]*core.Experiment, error) {
 	exps := make([]*core.Experiment, 0)
 	if err := e.db.

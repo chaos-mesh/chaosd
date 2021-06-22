@@ -11,37 +11,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package utils
 
 import (
-	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 )
 
-const (
-	HostShutdownAction = "shutdown"
-)
-
-type HostCommand struct {
-	CommonAttackConfig
-}
-
-var _ AttackConfig = &HostCommand{}
-
-func (h *HostCommand) Validate() error {
-	return h.CommonAttackConfig.Validate()
-}
-
-func (h HostCommand) RecoverData() string {
-	data, _ := json.Marshal(h)
-
-	return string(data)
-}
-
-func NewHostCommand() *HostCommand {
-	return &HostCommand{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind:   HostAttack,
-			Action: HostShutdownAction,
-		},
+func SetRuntimeEnv() error {
+	wd, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		return err
 	}
+
+	_, err = os.Stat(fmt.Sprintf("%s/tools", wd))
+	if os.IsNotExist(err) {
+		return err
+	}
+
+	path := os.Getenv("PATH")
+	bytemanHome := fmt.Sprintf("%s/tools/byteman", wd)
+	err = os.Setenv("BYTEMAN_HOME", bytemanHome)
+	if err != nil {
+		return err
+	}
+	err = os.Setenv("PATH", fmt.Sprintf("%s/tools:%s/bin:%s", wd, bytemanHome, path))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
