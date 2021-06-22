@@ -17,11 +17,12 @@ import (
 	"fmt"
 	"github.com/pingcap/errors"
 	"github.com/spf13/cobra"
-	"log"
+	"go.uber.org/zap"
+	"github.com/pingcap/log"
 	"net/http"
 )
 
-func PortOccupyTool(port string) error {
+func PortOccupyTool() error {
 	var Port string
 	var rootCmd = &cobra.Command {
 		Use:   "http server start",
@@ -31,7 +32,7 @@ func PortOccupyTool(port string) error {
 		},
 	}
 
-	rootCmd.Flags().StringVarP(&Port, "port", "p", port, "port to occupy")
+	rootCmd.Flags().StringVarP(&Port, "port", "p", "", "port to occupy")
 	if err := rootCmd.Execute(); err != nil {
 		return errors.WithStack(err)
 	}
@@ -52,11 +53,13 @@ func startHttp(porttoOccupy string) {
 		fmt.Fprintf(w, "Hello cmd!")
 	})
 	if err := http.ListenAndServe(s, nil); err != nil {
-		log.Println("ListenAndServe: ", err)
+		log.Error("ListenAndServe", zap.Error(err))
 	}
 }
 
 
 func main() {
-	PortOccupyTool("")
+	if err := PortOccupyTool(); err != nil {
+		log.Error("PortOccupyTool run fail", zap.Error(err))
+	}
 }
