@@ -109,7 +109,7 @@ func (opt *DiskOption) PreProcess() (*DiskAttackConfig, error) {
 			DdOptions:          nil,
 			FAllocateOption: &FAllocateOption{
 				LengthOpt: "-l",
-				Length:    strconv.FormatUint(byteSize, 10) + "c",
+				Length:    strconv.FormatUint(byteSize, 10),
 				FileName:  path,
 			},
 			Path: path,
