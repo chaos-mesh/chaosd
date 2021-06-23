@@ -45,6 +45,7 @@ func NewNetworkAttackCommand() *cobra.Command {
 		NewNetworkCorruptCommand(dep, options),
 		NetworkDuplicateCommand(dep, options),
 		NetworkDNSCommand(dep, options),
+		NewNetworkPortOccupiedCommand(dep, options),
 	)
 
 	return cmd
@@ -200,4 +201,20 @@ func commonNetworkAttackFunc(options *core.NetworkCommand, chaos *chaosd.Server)
 	}
 
 	utils.NormalExit(fmt.Sprintf("Attack network successfully, uid: %s", uid))
+}
+
+func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "port",
+		Short: "attack network port",
+
+		Run: func(cmd *cobra.Command, args []string) {
+			options.Action = core.NetworkPortOccupied
+			options.CompleteDefaults()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "this specified port is to occupied")
+	return cmd
 }
