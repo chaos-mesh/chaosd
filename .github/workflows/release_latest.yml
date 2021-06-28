@@ -42,9 +42,7 @@ jobs:
           printf "%s\n" ${{ secrets.AWS_ACCESS_KEY }} ${{ secrets.AWS_SECRET_KEY }} ${{ secrets.AWS_REGION }} "json" | aws configure
 
       - name: Build binary
-        run: |
-          make build
-          make chaos-tools
+        run: make build
 
       - name: Upload files
         run: |
