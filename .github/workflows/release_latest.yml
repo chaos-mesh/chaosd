@@ -17,6 +17,15 @@ jobs:
           go-version: 1.16.2
         id: go
 
+      - name: Prepare build environment
+        run: |
+          # actions/checkout require git v2.X
+          yum -y install https://packages.endpoint.com/rhel/7/os/x86_64/endpoint-repo-1.7-1.x86_64.rpm
+          yum install -y gcc
+          yum install -y make
+          yum install -y binutils
+          yum install -y git
+
       - uses: actions/checkout@master
         with:
           # Must use at least depth 2!
@@ -32,14 +41,10 @@ jobs:
           pip3 install awscli
           printf "%s\n" ${{ secrets.AWS_ACCESS_KEY }} ${{ secrets.AWS_SECRET_KEY }} ${{ secrets.AWS_REGION }} "json" | aws configure
 
-      - name: Prepare build environment
-        run: |
-          yum install -y gcc
-          yum install -y make
-          yum install -y binutils
-
       - name: Build binary
-        run: make build
+        run: |
+          make build
+          make chaos-tools
 
       - name: Upload files
         run: |
@@ -54,6 +59,7 @@ jobs:
           mkdir chaosd-latest-linux-amd64
           mkdir chaosd-latest-linux-amd64/tools
           mv bin/chaosd chaosd-latest-linux-amd64/
+          mv bin/PortOccupyTool chaosd-latest-linux-amd64/tools/
           mv byteman chaosd-latest-linux-amd64/tools/
           mv stress-ng chaosd-latest-linux-amd64/tools/
 
