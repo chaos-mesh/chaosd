@@ -23,6 +23,7 @@ import (
 
 var (
 	ErrNS             = errorx.NewNamespace("error.api")
+	ErrAuth           = ErrNS.NewType("auth")
 	ErrOther          = ErrNS.NewType("other")
 	ErrInvalidRequest = ErrNS.NewType("invalid_request")
 	ErrInternalServer = ErrNS.NewType("internal_server_error")

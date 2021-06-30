@@ -42,6 +42,7 @@ func NewServer(
 	exp core.ExperimentStore,
 ) *httpServer {
 	e := gin.Default()
+
 	e.Use(utils.MWHandleErrors())
 
 	return &httpServer{
@@ -57,21 +58,15 @@ func Register(s *httpServer, scheduler scheduler.Scheduler) {
 		return
 	}
 
-	handler(s)
-
 	go func() {
-		addr := s.conf.Address()
-		log.Debug("starting HTTP server", zap.String("address", addr))
-
-		if err := s.engine.Run(addr); err != nil {
+		if err := s.Run(s.handler); err != nil {
 			log.Fatal("failed to start HTTP server", zap.Error(err))
 		}
 	}()
-
 	scheduler.Start()
 }
 
-func handler(s *httpServer) {
+func (s *httpServer) handler() {
 	api := s.engine.Group("/api")
 	{
 		api.GET("/swagger/*any", swaggerserver.Handler())

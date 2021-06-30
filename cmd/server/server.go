@@ -32,6 +32,9 @@ func NewServerCommand() *cobra.Command {
 
 	cmd.Flags().IntVarP(&conf.ListenPort, "port", "p", 31767, "listen port of the Chaosd Server")
 	cmd.Flags().StringVarP(&conf.ListenHost, "host", "a", "0.0.0.0", "listen host of the Chaosd Server")
+	cmd.Flags().StringVar(&conf.SSLCertFile, "cert", "", "path to a PEM encoded certificate file")
+	cmd.Flags().StringVar(&conf.SSLKeyFile, "key", "", "path to a PEM encoded private key file")
+	cmd.Flags().StringVar(&conf.SSLClientCAFile, "CA", "", "path to a PEM encoded CA's certificate file")
 	cmd.Flags().StringVarP(&conf.Runtime, "runtime", "r", "docker", "current container runtime")
 	cmd.Flags().BoolVar(&conf.EnablePprof, "enable-pprof", true, "enable pprof")
 	cmd.Flags().IntVar(&conf.PprofPort, "pprof-port", 31766, "listen port of the pprof server")
