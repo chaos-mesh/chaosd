@@ -20,10 +20,11 @@ import (
 )
 
 func SetRuntimeEnv() error {
-	wd, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		return err
-	}
+	ex, err := os.Executable()
+    if err != nil {
+        return err
+    }
+    wd := filepath.Dir(ex)
 
 	_, err = os.Stat(fmt.Sprintf("%s/tools", wd))
 	if os.IsNotExist(err) {
