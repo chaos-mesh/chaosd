@@ -34,81 +34,84 @@ type diskAttack struct{}
 var DiskAttack AttackType = diskAttack{}
 
 func (disk diskAttack) Attack(options core.AttackConfig, env Environment) error {
-	if attackConf, ok := options.(*core.DiskAttackConfig); ok {
-		if attackConf.Action == core.DiskFillAction {
-			if attackConf.FAllocateOption != nil {
-				cmd := core.FAllocateCommand.Unmarshal(*attackConf.FAllocateOption)
-				output, err := cmd.CombinedOutput()
+	var attackConf *core.DiskAttackConfig
+	var ok bool
+	if attackConf, ok = options.(*core.DiskAttackConfig); !ok {
+		return fmt.Errorf("AttackConfig -> *DiskAttackConfig meet error")
+	}
+	if attackConf.Action == core.DiskFillAction {
+		if attackConf.FAllocateOption != nil {
+			cmd := core.FAllocateCommand.Unmarshal(*attackConf.FAllocateOption)
+			output, err := cmd.CombinedOutput()
 
-				if err != nil {
-					log.Error(string(output), zap.Error(err))
-					return err
-				}
-				log.Info(string(output))
-				return nil
+			if err != nil {
+				log.Error(string(output), zap.Error(err))
+				return err
 			}
-
-			for _, DdOption := range *attackConf.DdOptions {
-				cmd := core.DdCommand.Unmarshal(DdOption)
-				output, err := cmd.CombinedOutput()
-
-				if err != nil {
-					log.Error(string(output), zap.Error(err))
-					return err
-				}
-				log.Info(string(output))
-			}
+			log.Info(string(output))
 			return nil
 		}
 
-		if attackConf.DdOptions != nil {
-			duration, _ := options.ScheduleDuration()
-			var deadline <-chan time.Time
-			if duration != nil {
-				deadline = time.After(*duration)
-			}
+		for _, DdOption := range *attackConf.DdOptions {
+			cmd := core.DdCommand.Unmarshal(DdOption)
+			output, err := cmd.CombinedOutput()
 
-			if len(*attackConf.DdOptions) == 0 {
-				return nil
-			}
-			rest := (*attackConf.DdOptions)[len(*attackConf.DdOptions)-1]
-			*attackConf.DdOptions = (*attackConf.DdOptions)[:len(*attackConf.DdOptions)-1]
-
-			cmd := core.DdCommand.Unmarshal(rest)
-			err := utils.ExecWithDeadline(deadline, cmd)
 			if err != nil {
+				log.Error(string(output), zap.Error(err))
 				return err
 			}
-
-			var wg sync.WaitGroup
-			var mu sync.Mutex
-			var errs error
-			wg.Add(len(*attackConf.DdOptions))
-			for _, ddOpt := range *attackConf.DdOptions {
-				cmd := core.DdCommand.Unmarshal(ddOpt)
-
-				go func(cmd *exec.Cmd) {
-					defer wg.Done()
-					err := utils.ExecWithDeadline(deadline, cmd)
-					if err != nil {
-						log.Error(cmd.String(), zap.Error(err))
-						mu.Lock()
-						defer mu.Unlock()
-						errs = multierror.Append(errs, err)
-						return
-					}
-				}(cmd)
-			}
-
-			wg.Wait()
-
-			if errs != nil {
-				return errs
-			}
+			log.Info(string(output))
 		}
 		return nil
 	}
-	return fmt.Errorf("AttackConfig -> *DiskAttackConfig meet error")
+
+	if attackConf.DdOptions != nil {
+		duration, _ := options.ScheduleDuration()
+		var deadline <-chan time.Time
+		if duration != nil {
+			deadline = time.After(*duration)
+		}
+
+		if len(*attackConf.DdOptions) == 0 {
+			return nil
+		}
+		rest := (*attackConf.DdOptions)[len(*attackConf.DdOptions)-1]
+		*attackConf.DdOptions = (*attackConf.DdOptions)[:len(*attackConf.DdOptions)-1]
+
+		cmd := core.DdCommand.Unmarshal(rest)
+		err := utils.ExecWithDeadline(deadline, cmd)
+		if err != nil {
+			return err
+		}
+
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+		var errs error
+		wg.Add(len(*attackConf.DdOptions))
+		for _, ddOpt := range *attackConf.DdOptions {
+			cmd := core.DdCommand.Unmarshal(ddOpt)
+
+			go func(cmd *exec.Cmd) {
+				defer wg.Done()
+				err := utils.ExecWithDeadline(deadline, cmd)
+				if err != nil {
+					log.Error(cmd.String(), zap.Error(err))
+					mu.Lock()
+					defer mu.Unlock()
+					errs = multierror.Append(errs, err)
+					return
+				}
+			}(cmd)
+		}
+
+		wg.Wait()
+
+		if errs != nil {
+			return errs
+		}
+	}
+	return nil
+
 }
 
 func (diskAttack) Recover(exp core.Experiment, _ Environment) error {
