@@ -143,9 +143,9 @@ func initDdOptions(opt *DiskOption, path string, byteSize uint64) ([]DdOption, e
 				WritePath: path,
 				BlockSize: block.BlockSize,
 				Count:     block.Count,
-				Iflag:     "fullblock",
+				Iflag:     "fullblock", // fullblock : accumulate full blocks of input.
 				Oflag:     "append",
-				Conv:      "notrunc",
+				Conv:      "notrunc", // notrunc : do not truncate the output file.
 			})
 		}
 	case DiskWritePayloadAction:
@@ -155,7 +155,7 @@ func initDdOptions(opt *DiskOption, path string, byteSize uint64) ([]DdOption, e
 				WritePath: path,
 				BlockSize: block.BlockSize,
 				Count:     block.Count,
-				Oflag:     "dsync",
+				Oflag:     "dsync", // dsync : use synchronized I/O for data.
 			})
 		}
 	case DiskReadPayloadAction:
@@ -165,7 +165,7 @@ func initDdOptions(opt *DiskOption, path string, byteSize uint64) ([]DdOption, e
 				WritePath: "/dev/null",
 				BlockSize: block.BlockSize,
 				Count:     block.Count,
-				Iflag:     "dsync,fullblock,nocache",
+				Iflag:     "dsync,fullblock,nocache", // nocache : Request to drop cache.
 			})
 		}
 	}
@@ -267,5 +267,5 @@ func initSize(opt *DiskOption) (uint64, error) {
 	if opt.Action == DiskFillAction {
 		return 0, fmt.Errorf("one of percent and size must not be empty, DiskOption : %v", opt)
 	}
-	return 0, fmt.Errorf("one of size must not be empty, DiskOption : %v", opt)
+	return 0, fmt.Errorf("size must not be empty, DiskOption : %v", opt)
 }
