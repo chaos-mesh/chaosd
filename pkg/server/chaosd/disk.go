@@ -106,7 +106,7 @@ func (diskAttack) diskPayload(payload *core.DiskOption) error {
 	}
 	ddBlocks, err := utils.SplitBytesByProcessNum(byteSize, payload.PayloadProcessNum)
 	if err != nil {
-		log.Error(fmt.Sprintf("split size ,process num %d", payload.PayloadProcessNum), zap.Error(err))
+		log.Error(fmt.Sprintf("split size, process num %d", payload.PayloadProcessNum), zap.Error(err))
 		return err
 	}
 	if len(ddBlocks) == 0 {

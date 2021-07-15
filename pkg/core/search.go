@@ -33,10 +33,8 @@ func (s SearchCommand) Validate() error {
 	}
 
 	if len(s.Kind) > 0 {
-		switch s.Kind {
-		case NetworkAttack, ProcessAttack:
-			break
-		default:
+		attack := GetAttackByKind(s.Kind)
+		if attack == nil {
 			return errors.Errorf("type %s not supported", s.Kind)
 		}
 	}
