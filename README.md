@@ -146,7 +146,7 @@ Generates stress on the host. Supported tasks are:
    Sample usage:
 
     ```bash
-    $ chaosd attack stress cpu -l 100 -w 2
+    $ chaosd attack stress cpu -l 100 -w 2 # stress 2 CPU and each cpu loads 100%
     ```
 
 - **Memory stress**
@@ -156,7 +156,7 @@ Generates stress on the host. Supported tasks are:
    Sample usage:
 
     ```bash
-    $ chaosd attack stress mem -w 2 # stress 2 CPU and each cpu loads 100%
+    $ chaosd attack stress mem -w 2
     ```
 
 #### Disk attack
