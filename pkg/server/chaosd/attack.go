@@ -51,7 +51,10 @@ func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig,
 		return
 	}
 
-	uid = uuid.New().String()
+	uid = options.GetUID()
+	if len(uid) == 0 {
+		uid = uuid.New().String()
+	}
 
 	exp := &core.Experiment{
 		Uid:            uid,

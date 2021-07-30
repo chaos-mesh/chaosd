@@ -33,6 +33,9 @@ type AttackConfig interface {
 
 	// CompleteDefaults is used to fill flags with default values
 	CompleteDefaults()
+
+	// GetUID returns the experiment's ID
+	GetUID() string
 }
 
 type SchedulerConfig struct {
@@ -57,6 +60,7 @@ type CommonAttackConfig struct {
 
 	Action string `json:"action"`
 	Kind   string `json:"kind"`
+	UID    string `json:"uid"`
 }
 
 func (config CommonAttackConfig) String() string {
@@ -78,4 +82,8 @@ func (config *CommonAttackConfig) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (config *CommonAttackConfig) GetUID() string {
+	return config.UID
 }

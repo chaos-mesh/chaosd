@@ -25,11 +25,12 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
-func NewStressAttackCommand() *cobra.Command {
+func NewStressAttackCommand(uid *string) *cobra.Command {
 	options := core.NewStressCommand()
 	dep := fx.Options(
 		server.Module,
 		fx.Provide(func() *core.StressCommand {
+			options.UID = *uid
 			return options
 		}),
 	)
