@@ -153,7 +153,7 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 		},
 	}
 
-	cmd.Flags().StringVar(&options.Percent, "percent", "1", "percentage of packets to corrupt (10 is 10%)")
+	cmd.Flags().StringVar(&options.Percent, "percent", "1", "percentage of packets to duplicate (10 is 10%)")
 	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
 	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
 	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
