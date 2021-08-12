@@ -116,6 +116,8 @@ func (j *JVMCommand) Validate() error {
 		if len(j.RuleData) == 0 {
 			return errors.New("rule data not provide")
 		}
+	case "":
+		return errors.New("action not provided")
 	default:
 		return errors.New(fmt.Sprintf("action %s not supported, action can be 'latency', 'exception', 'return', 'stress', 'gc', 'rule-file' of 'rule-data'", j.Action))
 	}
