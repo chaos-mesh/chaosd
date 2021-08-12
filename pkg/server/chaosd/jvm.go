@@ -104,39 +104,6 @@ func (j jvmAttack) Attack(options core.AttackConfig, env Environment) (err error
 	return nil
 }
 
-func (j jvmAttack) install(attack *core.JVMCommand) error {
-	var err error
-
-	bmInstallCmd := fmt.Sprintf(bmInstallCommand, attack.Port, attack.Pid)
-	cmd := exec.Command("bash", "-c", bmInstallCmd)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Error(string(output), zap.Error(err))
-		return err
-	}
-
-	log.Info(string(output))
-	return err
-}
-
-func (j jvmAttack) submit(attack *core.JVMCommand) error {
-	ruleFile, err := j.generateRuleFile(attack)
-	if err != nil {
-		return err
-	}
-
-	bmSubmitCmd := fmt.Sprintf(bmSubmitCommand, attack.Port, "l", ruleFile)
-	cmd := exec.Command("bash", "-c", bmSubmitCmd)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Error(string(output), zap.Error(err))
-		return err
-	}
-
-	log.Info(string(output))
-	return nil
-}
-
 func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 	var err error
 	if len(attack.RuleData) > 0 {
