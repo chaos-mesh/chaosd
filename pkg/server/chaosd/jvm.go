@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
+	"strings"
 	"text/template"
 
 	"github.com/pingcap/errors"
@@ -60,15 +61,47 @@ const bmInstallCommand = "bminstall.sh -b -Dorg.jboss.byteman.transform.all -Dor
 const bmSubmitCommand = "bmsubmit.sh -p %d -%s %s"
 
 func (j jvmAttack) Attack(options core.AttackConfig, env Environment) (err error) {
+	// install agent
 	attack := options.(*core.JVMCommand)
+	bmInstallCmd := fmt.Sprintf(bmInstallCommand, attack.Port, attack.Pid)
+	cmd := exec.Command("bash", "-c", bmInstallCmd)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		// this error will occured when install agent more than once, and will ignore this error and continue to submit rule
+		errMsg1 := "Agent JAR loaded but agent failed to initialize"
 
-	if attack.Type == core.JVMInstallType {
-		return j.install(attack)
-	} else if attack.Type == core.JVMSubmitType {
-		return j.submit(attack)
+		// these two errors will occured when java version less or euqal to 1.8, and don't know why
+		// but it can install agent success even with this error, so just ignore it now.
+		// TODO: Investigate the cause of these two error
+		errMsg2 := "Provider sun.tools.attach.LinuxAttachProvider not found"
+		errMsg3 := "install java.io.IOException: Non-numeric value found"
+		if !strings.Contains(string(output), errMsg1) && !strings.Contains(string(output), errMsg2) &&
+			!strings.Contains(string(output), errMsg3) {
+			log.Error(string(output), zap.Error(err))
+			return err
+		}
+		log.Debug(string(output), zap.Error(err))
 	}
 
-	return errors.Errorf("attack type %s not supported", attack.Type)
+	// submit rules
+	ruleFile, err := j.generateRuleFile(attack)
+	if err != nil {
+		return err
+	}
+
+	bmSubmitCmd := fmt.Sprintf(bmSubmitCommand, attack.Port, "l", ruleFile)
+	cmd = exec.Command("bash", "-c", bmSubmitCmd)
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Error(string(output), zap.Error(err))
+		return err
+	}
+
+	if len(output) > 0 {
+		log.Info("submit rules", zap.String("output", string(output)))
+	}
+
+	return nil
 }
 
 func (j jvmAttack) install(attack *core.JVMCommand) error {
@@ -106,12 +139,23 @@ func (j jvmAttack) submit(attack *core.JVMCommand) error {
 
 func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 	var err error
-	if len(attack.RuleFile) > 0 {
-		attack.RuleData, err = ioutil.ReadFile(attack.RuleFile)
+	if len(attack.RuleData) > 0 {
+		filename, err := writeDataIntoFile(attack.RuleData, "rule.btm")
 		if err != nil {
 			return "", err
 		}
-		log.Info("rule file data:" + string(attack.RuleData))
+		log.Info("byteman rule", zap.String("rule", string(attack.RuleData)), zap.String("file", filename))
+
+		return filename, nil
+	}
+
+	if len(attack.RuleFile) > 0 {
+		data, err := ioutil.ReadFile(attack.RuleFile)
+		if err != nil {
+			return "", err
+		}
+		attack.RuleData = string(data)
+		log.Info("rule file data:" + attack.RuleData)
 
 		return attack.RuleFile, nil
 	}
@@ -119,7 +163,7 @@ func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 	if len(attack.Do) == 0 {
 		switch attack.Action {
 		case core.JVMLatencyAction:
-			attack.Do = fmt.Sprintf("Thread.sleep(%s)", attack.LatencyDuration)
+			attack.Do = fmt.Sprintf("Thread.sleep(%d)", attack.LatencyDuration)
 		case core.JVMExceptionAction:
 			attack.Do = fmt.Sprintf("throw new %s", attack.ThrowException)
 		case core.JVMReturnAction:
@@ -136,9 +180,7 @@ func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 			}
 		}
 	}
-
 	buf := new(bytes.Buffer)
-
 	var t *template.Template
 	switch attack.Action {
 	case core.JVMStressAction:
@@ -150,37 +192,24 @@ func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 	default:
 		return "", errors.Errorf("jvm action %s not supported", attack.Action)
 	}
-
 	if t == nil {
 		return "", errors.Errorf("parse byeman rule template failed")
 	}
-
 	err = t.Execute(buf, attack)
 	if err != nil {
 		log.Error("executing template", zap.Error(err))
 		return "", err
 	}
 
-	log.Info("byteman rule", zap.String("rule", buf.String()))
+	attack.RuleData = buf.String()
 
-	tmpfile, err := ioutil.TempFile("", "rule.btm")
+	filename, err := writeDataIntoFile(attack.RuleData, "rule.btm")
 	if err != nil {
 		return "", err
 	}
+	log.Info("byteman rule", zap.String("rule", attack.RuleData), zap.String("file", filename))
 
-	log.Info("create btm file", zap.String("file", tmpfile.Name()))
-
-	if _, err := tmpfile.Write(buf.Bytes()); err != nil {
-		return "", err
-	}
-
-	attack.RuleData = buf.Bytes()
-
-	if err := tmpfile.Close(); err != nil {
-		return "", err
-	}
-
-	return tmpfile.Name(), nil
+	return filename, nil
 }
 
 func (j jvmAttack) Recover(exp core.Experiment, env Environment) error {
@@ -189,22 +218,13 @@ func (j jvmAttack) Recover(exp core.Experiment, env Environment) error {
 		return err
 	}
 
-	tmpfile, err := ioutil.TempFile("", "rule.btm")
+	filename, err := writeDataIntoFile(attack.RuleData, "rule.btm")
 	if err != nil {
 		return err
 	}
+	log.Info("create btm file", zap.String("file", filename))
 
-	if _, err := tmpfile.Write(attack.RuleData); err != nil {
-		return err
-	}
-
-	if err := tmpfile.Close(); err != nil {
-		return err
-	}
-
-	log.Info("create btm file", zap.String("file", tmpfile.Name()))
-
-	bmSubmitCmd := fmt.Sprintf(bmSubmitCommand, attack.Port, "u", tmpfile.Name())
+	bmSubmitCmd := fmt.Sprintf(bmSubmitCommand, attack.Port, "u", filename)
 	cmd := exec.Command("bash", "-c", bmSubmitCmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -215,4 +235,21 @@ func (j jvmAttack) Recover(exp core.Experiment, env Environment) error {
 	log.Info(string(output))
 
 	return nil
+}
+
+func writeDataIntoFile(data string, filename string) (string, error) {
+	tmpfile, err := ioutil.TempFile("", filename)
+	if err != nil {
+		return "", err
+	}
+
+	if _, err := tmpfile.WriteString(data); err != nil {
+		return "", err
+	}
+
+	if err := tmpfile.Close(); err != nil {
+		return "", err
+	}
+
+	return tmpfile.Name(), err
 }

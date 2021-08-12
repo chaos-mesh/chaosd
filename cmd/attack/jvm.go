@@ -39,38 +39,8 @@ func NewJVMAttackCommand() *cobra.Command {
 		Short: "JVM attack related commands",
 	}
 
-	cmd.AddCommand(
-		NewJVMInstallCommand(dep, options),
-		NewJVMSubmitCommand(dep, options),
-	)
-
-	return cmd
-}
-
-func NewJVMInstallCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "install [options]",
-		Short: "install agent to Java process",
-		Run: func(*cobra.Command, []string) {
-			options.Type = core.JVMInstallType
-			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
-		},
-	}
-
-	cmd.Flags().IntVarP(&options.Port, "port", "", 9288, "the port of agent server")
-	cmd.Flags().IntVarP(&options.Pid, "pid", "", 0, "the pid of Java process which need to attach")
-
-	return cmd
-}
-
-func NewJVMSubmitCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "submit [options]",
-		Short: "submit rules for byteman agent",
-	}
-	options.Type = core.JVMSubmitType
-
 	cmd.PersistentFlags().IntVarP(&options.Port, "port", "", 9288, "the port of agent server")
+	cmd.PersistentFlags().IntVarP(&options.Pid, "pid", "", 0, "the pid of Java process which need to attach")
 
 	cmd.AddCommand(
 		NewJVMLatencyCommand(dep, options),
@@ -96,7 +66,7 @@ func NewJVMLatencyCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comman
 
 	cmd.Flags().StringVarP(&options.Class, "class", "c", "", "Java class name")
 	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "the method name in Java class")
-	cmd.Flags().StringVarP(&options.LatencyDuration, "latency", "", "", "the latency duration")
+	cmd.Flags().IntVarP(&options.LatencyDuration, "latency", "", 0, "the latency duration, unit ms")
 
 	return cmd
 }

@@ -83,6 +83,7 @@ func handler(s *httpServer) {
 		attack.POST("/stress", s.createStressAttack)
 		attack.POST("/network", s.createNetworkAttack)
 		attack.POST("/disk", s.createDiskAttack)
+		attack.POST("/jvm", s.createJVMAttack)
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
@@ -192,6 +193,32 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 	}
 
 	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attack, core.ServerMode)
+
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+// @Summary Create jvm attack.
+// @Description Create jvm attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.DiskOption true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/disk [post]
+func (s *httpServer) createJVMAttack(c *gin.Context) {
+	attack := core.NewJVMCommand()
+	if err := c.ShouldBindJSON(attack); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	uid, err := s.chaos.ExecuteAttack(chaosd.JVMAttack, attack, core.ServerMode)
 
 	if err != nil {
 		handleError(c, err)
