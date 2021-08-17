@@ -25,11 +25,12 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
-func NewHostAttackCommand() *cobra.Command {
+func NewHostAttackCommand(uid *string) *cobra.Command {
 	options := core.NewHostCommand()
 	dep := fx.Options(
 		server.Module,
 		fx.Provide(func() *core.HostCommand {
+			options.UID = *uid
 			return options
 		}),
 	)

@@ -27,11 +27,12 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
-func NewProcessAttackCommand() *cobra.Command {
+func NewProcessAttackCommand(uid *string) *cobra.Command {
 	options := core.NewProcessCommand()
 	dep := fx.Options(
 		server.Module,
 		fx.Provide(func() *core.ProcessCommand {
+			options.UID = *uid
 			return options
 		}),
 	)

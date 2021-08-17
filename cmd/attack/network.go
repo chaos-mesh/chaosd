@@ -25,11 +25,12 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
-func NewNetworkAttackCommand() *cobra.Command {
+func NewNetworkAttackCommand(uid *string) *cobra.Command {
 	options := core.NewNetworkCommand()
 	dep := fx.Options(
 		server.Module,
 		fx.Provide(func() *core.NetworkCommand {
+			options.UID = *uid
 			return options
 		}),
 	)

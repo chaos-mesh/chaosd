@@ -21,13 +21,16 @@ func NewAttackCommand() *cobra.Command {
 		Short: "Attack related commands",
 	}
 
+	var uid string
+	cmd.PersistentFlags().StringVarP(&uid, "uid", "", "", "the experiment ID")
+
 	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-		NewStressAttackCommand(),
-		NewDiskAttackCommand(),
-		NewHostAttackCommand(),
-		NewJVMAttackCommand(),
+		NewProcessAttackCommand(&uid),
+		NewNetworkAttackCommand(&uid),
+		NewStressAttackCommand(&uid),
+		NewDiskAttackCommand(&uid),
+		NewHostAttackCommand(&uid),
+		NewJVMAttackCommand(&uid),
 	)
 
 	return cmd
