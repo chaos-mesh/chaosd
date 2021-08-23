@@ -47,6 +47,12 @@ func (s *StressCommand) Validate() error {
 	return nil
 }
 
+func (s *StressCommand) CompleteDefaults() {
+	if s.Workers == 0 {
+		s.Workers = 1
+	}
+}
+
 func (s StressCommand) RecoverData() string {
 	data, _ := json.Marshal(s)
 

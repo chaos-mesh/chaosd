@@ -46,7 +46,10 @@ func (s *Server) newEnvironment(uid string) Environment {
 // If options.Schedule isn't provided, then the attack is executed immediately.
 // Otherwise the attack is scheduled based on the provided schedule spec and duration.
 func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig, launchMode string) (uid string, err error) {
-	uid = uuid.New().String()
+	uid = options.GetUID()
+	if len(uid) == 0 {
+		uid = uuid.New().String()
+	}
 
 	exp := &core.Experiment{
 		Uid:            uid,

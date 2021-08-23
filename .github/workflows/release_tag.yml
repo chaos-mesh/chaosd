@@ -7,6 +7,8 @@ jobs:
   run:
     name: Upload
     runs-on: ubuntu-latest
+    # glibc version 2.17
+    container: docker.io/centos:7.2.1511
     steps:
       - name: Set up Go 1.16
         uses: actions/setup-go@v1
@@ -14,18 +16,52 @@ jobs:
           go-version: 1.16.2
         id: go
 
+      - name: Prepare build environment
+        run: |
+          # actions/checkout require git v2.X
+          yum -y install https://packages.endpoint.com/rhel/7/os/x86_64/endpoint-repo-1.7-1.x86_64.rpm
+          yum install -y gcc
+          yum install -y make
+          yum install -y binutils
+          yum install -y git
+
       - uses: actions/checkout@master
         with:
           # Must use at least depth 2!
           fetch-depth: 2
-      - uses: actions/setup-python@v2
+
+      - name: Setup python3
+        run: |
+          yum install -y python3
+          alias python=python3
+
       - name: Configure awscli
         run: |
           pip3 install awscli
           printf "%s\n" ${{ secrets.AWS_ACCESS_KEY }} ${{ secrets.AWS_SECRET_KEY }} ${{ secrets.AWS_REGION }} "json" | aws configure
+
       - name: Build binary
         run: make build
+
       - name: Upload files
         run: |
+
           GIT_TAG=${GITHUB_REF##*/}
-          aws s3 cp bin/chaosd ${{ secrets.AWS_BUCKET_NAME }}/${GIT_TAG}/chaosd
+
+          # download tools
+          curl -fsSL -o byteman.tar.gz https://mirrors.chaos-mesh.org/latest/byteman.tar.gz
+          curl -fsSL -o stress-ng https://mirrors.chaos-mesh.org/latest/stress-ng
+          tar zxvf byteman.tar.gz
+          chmod +x ./stress-ng
+
+          # prepare package
+          mkdir chaosd-${GIT_TAG}-linux-amd64
+          mkdir chaosd-${GIT_TAG}-linux-amd64/tools
+          mv bin/chaosd chaosd-${GIT_TAG}-linux-amd64/
+          mv bin/PortOccupyTool chaosd-${GIT_TAG}-linux-amd64/tools/
+          mv byteman chaosd-${GIT_TAG}-linux-amd64/tools/
+          mv stress-ng chaosd-${GIT_TAG}-linux-amd64/tools/
+
+          # upload package
+          tar czvf chaosd-${GIT_TAG}-linux-amd64.tar.gz chaosd-${GIT_TAG}-linux-amd64
+          aws s3 cp chaosd-${GIT_TAG}-linux-amd64.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-${GIT_TAG}-linux-amd64.tar.gz

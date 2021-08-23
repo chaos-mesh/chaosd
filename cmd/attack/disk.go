@@ -25,11 +25,12 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
-func NewDiskAttackCommand() *cobra.Command {
+func NewDiskAttackCommand(uid *string) *cobra.Command {
 	options := core.NewDiskOption()
 	dep := fx.Options(
 		server.Module,
 		fx.Provide(func() *core.DiskOption {
+			options.UID = *uid
 			return options
 		}),
 	)
