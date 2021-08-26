@@ -177,6 +177,7 @@ func initPath(opt *DiskOption) (string, error) {
 	case DiskFillAction, DiskWritePayloadAction:
 		if opt.Path == "" {
 			var err error
+			// Check if the path is valid.
 			opt.Path, err = utils.CreateTempFile()
 			if err != nil {
 				log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", opt.Action))
