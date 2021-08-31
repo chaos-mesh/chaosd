@@ -9,3 +9,4 @@ This document defines the roadmap for Chaosd development.
 - [ ] Support workflow to manage a group of chaos experiments.
 - [ ] Support use Dashboard to manage chaos experiments.
 - [ ] Support time skew.
+- [ ] JVM Attack supports fault injection for applications including MySQL, PostgreSQL, RoketMQ, etc.
