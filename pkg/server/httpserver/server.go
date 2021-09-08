@@ -116,6 +116,12 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 		return
 	}
 
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
 	uid, err := s.chaos.ExecuteAttack(chaosd.ProcessAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
@@ -138,6 +144,12 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 	attack := core.NewNetworkCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
 		return
 	}
 
@@ -166,6 +178,12 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 		return
 	}
 
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
 	uid, err := s.chaos.ExecuteAttack(chaosd.StressAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
@@ -185,14 +203,20 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/disk [post]
 func (s *httpServer) createDiskAttack(c *gin.Context) {
-	attack := core.NewDiskOption()
-	if err := c.ShouldBindJSON(attack); err != nil {
+	options := core.NewDiskOption()
+	if err := c.ShouldBindJSON(options); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attack, core.ServerMode)
+	attackConfig, err := options.PreProcess()
+	if err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
 
+	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attackConfig, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return

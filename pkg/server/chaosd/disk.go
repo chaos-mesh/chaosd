@@ -17,196 +17,43 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strconv"
-	"strings"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
 
+	"github.com/chaos-mesh/chaosd/pkg/server/utils"
+
 	"github.com/chaos-mesh/chaosd/pkg/core"
-	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 type diskAttack struct{}
 
 var DiskAttack AttackType = diskAttack{}
 
-const DDWritePayloadCommand = "dd if=/dev/zero of=%s bs=%s count=%s oflag=dsync"
-const DDReadPayloadCommand = "dd if=%s of=/dev/null bs=%s count=%s iflag=dsync,fullblock,nocache"
-
-func (disk diskAttack) Attack(options core.AttackConfig, env Environment) (err error) {
-	attack := options.(*core.DiskOption)
-
-	if options.String() == core.DiskFillAction {
-		return disk.diskFill(attack)
+func (disk diskAttack) Attack(options core.AttackConfig, env Environment) error {
+	var attackConf *core.DiskAttackConfig
+	var ok bool
+	if attackConf, ok = options.(*core.DiskAttackConfig); !ok {
+		return fmt.Errorf("AttackConfig -> *DiskAttackConfig meet error")
 	}
-	return disk.diskPayload(attack)
-}
-
-func initWritePayloadPath(payload *core.DiskOption) error {
-	var err error
-	payload.Path, err = utils.CreateTempFile()
-	if err != nil {
-		log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", payload.Action))
-		return err
-	}
-	return nil
-}
-
-func initReadPayloadPath(payload *core.DiskOption) error {
-	path, err := utils.GetRootDevice()
-	if err != nil {
-		log.Error("err when GetRootDevice in reading payload", zap.Error(err))
-		return err
-	}
-	if path == "" {
-		err = errors.Errorf("can not get root device path")
-		log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
-		return err
-	}
-	payload.Path = path
-	return nil
-}
-
-// diskPayload will execute a dd command (DDWritePayloadCommand or DDReadPayloadCommand)
-// to add a write or read payload.
-func (diskAttack) diskPayload(payload *core.DiskOption) error {
-	var cmdFormat string
-	switch payload.Action {
-	case core.DiskWritePayloadAction:
-		cmdFormat = DDWritePayloadCommand
-		if payload.Path == "" {
-			err := initWritePayloadPath(payload)
-			if err != nil {
-				return err
-			}
-		}
-	case core.DiskReadPayloadAction:
-		cmdFormat = DDReadPayloadCommand
-		if payload.Path == "" {
-			err := initReadPayloadPath(payload)
-			if err != nil {
-				return err
-			}
-		}
-	default:
-		err := errors.Errorf("invalid payload action")
-		log.Error(fmt.Sprintf("payload action: %s", payload.Action), zap.Error(err))
-		return err
-	}
-
-	byteSize, err := utils.ParseUnit(payload.Size)
-	if err != nil {
-		log.Error(fmt.Sprintf("fail to get parse size per units , %s", payload.Size), zap.Error(err))
-		return err
-	}
-	ddBlocks, err := utils.SplitBytesByProcessNum(byteSize, payload.PayloadProcessNum)
-	if err != nil {
-		log.Error(fmt.Sprintf("split size, process num %d", payload.PayloadProcessNum), zap.Error(err))
-		return err
-	}
-	if len(ddBlocks) == 0 {
-		return nil
-	}
-	rest := ddBlocks[len(ddBlocks)-1]
-	ddBlocks = ddBlocks[:len(ddBlocks)-1]
-	cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, rest.BlockSize, rest.Count))
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Error(cmd.String()+string(output), zap.Error(err))
-	}
-	log.Info(string(output))
-
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	var errs error
-	wg.Add(len(ddBlocks))
-	for _, sizeBlock := range ddBlocks {
-		cmd := exec.Command("bash", "-c", fmt.Sprintf(cmdFormat, payload.Path, sizeBlock.BlockSize, sizeBlock.Count))
-
-		go func(cmd *exec.Cmd) {
-			defer wg.Done()
+	if attackConf.Action == core.DiskFillAction {
+		if attackConf.FAllocateOption != nil {
+			cmd := core.FAllocateCommand.Unmarshal(*attackConf.FAllocateOption)
 			output, err := cmd.CombinedOutput()
+
 			if err != nil {
-				log.Error(cmd.String()+string(output), zap.Error(err))
-				mu.Lock()
-				defer mu.Unlock()
-				errs = multierror.Append(errs, err)
-				return
+				log.Error(string(output), zap.Error(err))
+				return err
 			}
 			log.Info(string(output))
-		}(cmd)
-	}
-
-	wg.Wait()
-
-	if errs != nil {
-		return errs
-	}
-
-	return nil
-}
-
-// dd command with 'oflag=append conv=notrunc' will append new data in the file.
-const DDFillCommand = "dd if=/dev/zero of=%s bs=%s count=%s iflag=fullblock oflag=append conv=notrunc"
-const FallocateCommand = "fallocate -l %s %s"
-
-// diskFill will execute a dd command (DDFillCommand or FallocateCommand)
-// to fill the disk.
-func (diskAttack) diskFill(fill *core.DiskOption) error {
-	if fill.Path == "" {
-		var err error
-		fill.Path, err = utils.CreateTempFile()
-		if err != nil {
-			log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", fill.Action))
-			return err
-		}
-	}
-
-	if fill.Size != "" {
-		fill.Size = strings.Trim(fill.Size, " ")
-	} else if fill.Percent != "" {
-		fill.Percent = strings.Trim(fill.Percent, " ")
-		percent, err := strconv.ParseUint(fill.Percent, 10, 0)
-		if err != nil {
-			log.Error(fmt.Sprintf(" unexcepted err when parsing disk percent '%s'", fill.Percent), zap.Error(err))
-			return err
-		}
-		dir := filepath.Dir(fill.Path)
-		totalSize, err := utils.GetDiskTotalSize(dir)
-		if err != nil {
-			log.Error("fail to get disk total size", zap.Error(err))
-			return err
-		}
-		fill.Size = strconv.FormatUint(totalSize*percent/100, 10) + "c"
-	}
-	var cmd *exec.Cmd
-	if fill.FillByFallocate {
-		cmd = exec.Command("bash", "-c", fmt.Sprintf(FallocateCommand, fill.Size, fill.Path))
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Error(string(output), zap.Error(err))
-			return err
-		}
-		log.Info(string(output))
-	} else {
-		byteSize, err := utils.ParseUnit(fill.Size)
-		if err != nil {
-			log.Error("fail to parse disk size", zap.Error(err))
-			return err
+			return nil
 		}
 
-		ddBlocks, err := utils.SplitBytesByProcessNum(byteSize, 1)
-		if err != nil {
-			log.Error("fail to split disk size", zap.Error(err))
-			return err
-		}
-		for _, block := range ddBlocks {
-			cmd = exec.Command("bash", "-c", fmt.Sprintf(DDFillCommand, fill.Path, block.BlockSize, block.Count))
+		for _, DdOption := range *attackConf.DdOptions {
+			cmd := core.DdCommand.Unmarshal(DdOption)
 			output, err := cmd.CombinedOutput()
 
 			if err != nil {
@@ -215,22 +62,69 @@ func (diskAttack) diskFill(fill *core.DiskOption) error {
 			}
 			log.Info(string(output))
 		}
+		return nil
 	}
 
+	if attackConf.DdOptions != nil {
+		duration, _ := options.ScheduleDuration()
+		var deadline <-chan time.Time
+		if duration != nil {
+			deadline = time.After(*duration)
+		}
+
+		if len(*attackConf.DdOptions) == 0 {
+			return nil
+		}
+		rest := (*attackConf.DdOptions)[len(*attackConf.DdOptions)-1]
+		*attackConf.DdOptions = (*attackConf.DdOptions)[:len(*attackConf.DdOptions)-1]
+
+		cmd := core.DdCommand.Unmarshal(rest)
+		err := utils.ExecWithDeadline(deadline, cmd)
+		if err != nil {
+			return err
+		}
+
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+		var errs error
+		wg.Add(len(*attackConf.DdOptions))
+		for _, ddOpt := range *attackConf.DdOptions {
+			cmd := core.DdCommand.Unmarshal(ddOpt)
+
+			go func(cmd *exec.Cmd) {
+				defer wg.Done()
+				err := utils.ExecWithDeadline(deadline, cmd)
+				if err != nil {
+					log.Error(cmd.String(), zap.Error(err))
+					mu.Lock()
+					defer mu.Unlock()
+					errs = multierror.Append(errs, err)
+					return
+				}
+			}(cmd)
+		}
+
+		wg.Wait()
+
+		if errs != nil {
+			return errs
+		}
+	}
 	return nil
+
 }
 
 func (diskAttack) Recover(exp core.Experiment, _ Environment) error {
-	config, err := exp.GetRequestCommand()
+	attackConfig, err := exp.GetRequestCommand()
 	if err != nil {
 		return err
 	}
-	option := *config.(*core.DiskOption)
-	switch option.Action {
+	config := *attackConfig.(*core.DiskAttackConfig)
+	switch config.Action {
 	case core.DiskFillAction, core.DiskWritePayloadAction:
-		err = os.Remove(option.Path)
+		err = os.Remove(config.Path)
 		if err != nil {
-			log.Warn(fmt.Sprintf("recover disk: remove %s failed", option.Path), zap.Error(err))
+			log.Warn(fmt.Sprintf("recover disk: remove %s failed", config.Path), zap.Error(err))
 		}
 	}
 	return nil

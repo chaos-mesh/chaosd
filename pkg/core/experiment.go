@@ -101,7 +101,7 @@ func GetAttackByKind(kind string) *AttackConfig {
 	case StressAttack:
 		attackConfig = &StressCommand{}
 	case DiskAttack:
-		attackConfig = &DiskOption{}
+		attackConfig = &DiskAttackConfig{}
 	case JVMAttack:
 		attackConfig = &JVMCommand{}
 	default:
