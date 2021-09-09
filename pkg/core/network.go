@@ -22,7 +22,9 @@ import (
 
 	"github.com/pingcap/errors"
 
+	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+	"github.com/chaos-mesh/chaos-mesh/pkg/netem"
 
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
@@ -47,17 +49,20 @@ type NetworkCommand struct {
 	PortPid   int32
 	DNSIp     string
 	DNSHost   string
+
+	*BandwidthSpec `json:",inline"`
 }
 
 var _ AttackConfig = &NetworkCommand{}
 
 const (
-	NetworkDelayAction     = "delay"
-	NetworkLossAction      = "loss"
-	NetworkCorruptAction   = "corrupt"
-	NetworkDuplicateAction = "duplicate"
-	NetworkDNSAction       = "dns"
-	NetworkPortOccupied    = "occupied"
+	NetworkDelayAction        = "delay"
+	NetworkLossAction         = "loss"
+	NetworkCorruptAction      = "corrupt"
+	NetworkDuplicateAction    = "duplicate"
+	NetworkDNSAction          = "dns"
+	NetworkPortOccupiedAction = "occupied"
+	NetworkBandwidthAction    = "bandwidth"
 )
 
 func (n *NetworkCommand) Validate() error {
@@ -71,7 +76,7 @@ func (n *NetworkCommand) Validate() error {
 		return n.validNetworkCommon()
 	case NetworkDNSAction:
 		return n.validNetworkDNS()
-	case NetworkPortOccupied:
+	case NetworkPortOccupiedAction:
 		return n.validNetworkOccupied()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
@@ -293,6 +298,26 @@ func (n *NetworkCommand) ToDuplicateNetem() (*pb.Netem, error) {
 }
 
 func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
+	if n.Action == NetworkBandwidthAction {
+		tbf, err := netem.FromBandwidth(&v1alpha1.BandwidthSpec{
+			Rate:     n.Rate,
+			Limit:    n.Limit,
+			Buffer:   n.Buffer,
+			Peakrate: n.Peakrate,
+			Minburst: n.Minburst,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &pb.Tc{
+			Type:  pb.Tc_BANDWIDTH,
+			Tbf:   tbf,
+			Ipset: ipset,
+		}, nil
+	}
+
 	tc := &pb.Tc{
 		Type:       pb.Tc_NETEM,
 		Ipset:      ipset,
@@ -398,6 +423,10 @@ func NewNetworkCommand() *NetworkCommand {
 	return &NetworkCommand{
 		CommonAttackConfig: CommonAttackConfig{
 			Kind: NetworkAttack,
+		},
+		BandwidthSpec: &BandwidthSpec{
+			Peakrate: new(uint64),
+			Minburst: new(uint32),
 		},
 	}
 }
