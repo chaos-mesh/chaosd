@@ -35,6 +35,7 @@ const (
 	NetworkAttack = "network"
 	StressAttack  = "stress"
 	DiskAttack    = "disk"
+	ClockAttack   = "clock"
 	HostAttack    = "host"
 	JVMAttack     = "jvm"
 )
