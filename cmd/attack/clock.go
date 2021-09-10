@@ -1,27 +1,32 @@
 package attack
 
 import (
-	"github.com/spf13/cobra"
+	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 
+	"github.com/spf13/cobra"
+	"go.uber.org/fx"
+
+	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 func NewClockAttackCommand(uid *string) *cobra.Command {
 	options := core.NewClockOption()
-	//dep := fx.Options(
-	//	server.Module,
-	//	fx.Provide(func() *core.ClockOption {
-	//		options.UID = *uid
-	//		return options
-	//	}),
-	//)
+	dep := fx.Options(
+		server.Module,
+		fx.Provide(func() *core.ClockOption {
+			options.UID = *uid
+			return options
+		}),
+	)
 
 	cmd := &cobra.Command{
 		Use:   "clock attack",
 		Short: "clock skew",
 		Run: func(*cobra.Command, []string) {
 			options.Action = "Attack"
-			//utils.FxNewAppWithoutLog(dep, fx.Invoke(_)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(processClockAttack)).Run()
 		},
 	}
 
@@ -31,4 +36,8 @@ func NewClockAttackCommand(uid *string) *cobra.Command {
 	cmd.Flags().StringVarP(&options.ClockIdsSlice, "clock-ids-slice", "c", "", "")
 
 	return cmd
+}
+
+func processClockAttack(options *core.ClockOption, chaos *chaosd.Server) {
+
 }
