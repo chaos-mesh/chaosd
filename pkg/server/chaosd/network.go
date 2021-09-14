@@ -66,7 +66,7 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 	case core.NetworkPortOccupiedAction:
 		return env.Chaos.applyPortOccupied(attack)
 
-	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction:
+	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkBandwidthAction:
 		if attack.NeedApplyIPSet() {
 			ipsetName, err = env.Chaos.applyIPSet(attack, env.AttackUid)
 			if err != nil {
@@ -334,7 +334,7 @@ func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 		return env.Chaos.recoverDNSServer(attack)
 	case core.NetworkPortOccupiedAction:
 		return env.Chaos.recoverPortOccupied(attack, env.AttackUid)
-	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction:
+	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkBandwidthAction:
 		if attack.NeedApplyIPSet() {
 			if err := env.Chaos.recoverIPSet(env.AttackUid); err != nil {
 				return errors.WithStack(err)

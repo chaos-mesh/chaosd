@@ -207,7 +207,7 @@ func NewNetworkBandwidthCommand(dep fx.Option, options *core.NetworkCommand) *co
 	cmd.Flags().StringVarP(&options.Rate, "rate", "r", "", "the speed knob, allows bps, kbps, mbps, gbps, tbps unit. bps means bytes per second")
 	cmd.Flags().Uint32VarP(&options.Limit, "limit", "l", 0, "the number of bytes that can be queued waiting for tokens to become available")
 	cmd.Flags().Uint32VarP(&options.Buffer, "buffer", "b", 0, "the maximum amount of bytes that tokens can be available for instantaneously")
-	cmd.Flags().Uint64VarP(options.Peakrate, "peakrate", "p", 0, "the maximum depletion rate of the bucket")
+	cmd.Flags().Uint64VarP(options.Peakrate, "peakrate", "", 0, "the maximum depletion rate of the bucket")
 	cmd.Flags().Uint32VarP(options.Minburst, "minburst", "m", 0, "specifies the size of the peakrate bucket")
 	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
 	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",

@@ -78,6 +78,8 @@ func (n *NetworkCommand) Validate() error {
 		return n.validNetworkDNS()
 	case NetworkPortOccupiedAction:
 		return n.validNetworkOccupied()
+	case NetworkBandwidthAction:
+		return nil
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -396,7 +398,7 @@ func (n *NetworkCommand) NeedApplyIptables() bool {
 
 func (n *NetworkCommand) NeedApplyTC() bool {
 	switch n.Action {
-	case NetworkDelayAction, NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
+	case NetworkDelayAction, NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction, NetworkBandwidthAction:
 		return true
 	default:
 		return false
