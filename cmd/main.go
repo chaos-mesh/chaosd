@@ -22,8 +22,6 @@ import (
 	_ "github.com/swaggo/swag"
 	"go.uber.org/zap"
 
-	ctrl "sigs.k8s.io/controller-runtime"
-	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"github.com/chaos-mesh/chaosd/cmd/attack"
 	"github.com/chaos-mesh/chaosd/cmd/recover"
 	"github.com/chaos-mesh/chaosd/cmd/search"
@@ -68,8 +66,6 @@ func setLogLevel() {
 	if strings.ToLower(logLevel) == "debug" {
 		utils.PrintFxLog = true
 	}
-
-	ctrl.SetLogger(ctrlzap.New(ctrlzap.UseDevMode(true)))
 }
 
 func main() {

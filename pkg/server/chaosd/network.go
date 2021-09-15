@@ -196,14 +196,13 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 			Correlation: attack.Correlation,
 		}
 	case core.NetworkBandwidthAction:
-		tc.Bandwidth = &core.BandwidthSpec {
-			Rate: attack.Rate,
-			Limit: attack.Limit,
-			Buffer: attack.Buffer,
+		tc.Bandwidth = &core.BandwidthSpec{
+			Rate:     attack.Rate,
+			Limit:    attack.Limit,
+			Buffer:   attack.Buffer,
 			Peakrate: attack.Peakrate,
 			Minburst: attack.Minburst,
 		}
-		// do nothing?
 	default:
 		return errors.Errorf("network %s attack not supported", attack.Action)
 	}

@@ -210,17 +210,8 @@ func NewNetworkBandwidthCommand(dep fx.Option, options *core.NetworkCommand) *co
 	cmd.Flags().Uint64VarP(options.Peakrate, "peakrate", "", 0, "the maximum depletion rate of the bucket")
 	cmd.Flags().Uint32VarP(options.Minburst, "minburst", "m", 0, "specifies the size of the peakrate bucket")
 	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
-	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
-		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
-			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&options.SourcePort, "source-port", "s", "",
-		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
-			"It can only be used in conjunction with -p tcp or -p udp")
 	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
-	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
-		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-
 
 	return cmd
 }
