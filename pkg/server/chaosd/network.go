@@ -91,7 +91,7 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 }
 
 func (s *Server) applyIPSet(attack *core.NetworkCommand, uid string) (string, error) {
-	ipset, err := attack.ToIPSet(fmt.Sprintf("chaos-%s", uid[:16]))
+	ipset, err := attack.ToIPSet(fmt.Sprintf("chaos-%.16s", uid))
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
