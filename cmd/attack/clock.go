@@ -35,9 +35,8 @@ func NewClockAttackCommand(uid *string) *cobra.Command {
 	cmd.Flags().Int64VarP(&options.SecDelta, "second-delta", "s", 0, "")
 	cmd.Flags().Int64VarP(&options.NsecDelta, "nanosecond-delta", "n", 0, "")
 	cmd.Flags().StringVarP(&options.ClockIdsSlice, "clock-ids-slice", "c", "", "")
-	cmd.Flags().BoolVarP(&options.CheckPidExist, "check-pid-exist", "l", true, "")
 
-	SetScheduleFlags(cmd, &options.SchedulerConfig)
+	cmd.Flags().BoolVarP(&options.CheckPidExist, "check-pid-exist", "l", true, "")
 	return cmd
 }
 
@@ -47,7 +46,7 @@ func processClockAttack(options *core.ClockOption, chaos *chaosd.Server) {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
-	uid, err := chaos.ExecuteAttack(options, options, core.CommandMode)
+	uid, err := chaos.ExecuteAttack(chaosd.ClockAttack, options, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

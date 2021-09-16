@@ -35,6 +35,7 @@ func NewAttackCommand() *cobra.Command {
 		NewDiskAttackCommand(&uid),
 		NewHostAttackCommand(&uid),
 		NewJVMAttackCommand(&uid),
+		NewClockAttackCommand(&uid),
 	)
 
 	return cmd
