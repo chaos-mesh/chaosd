@@ -20,8 +20,14 @@ type ClockOption struct {
 	ClockIdsSlice string
 
 	CheckPidExist bool
+	Store         ClockFuncStore
 
 	ClockIdsMask uint64
+}
+
+type ClockFuncStore struct {
+	CodeOfGetClockFunc []byte
+	OriginAddress      uint64
 }
 
 func NewClockOption() *ClockOption {

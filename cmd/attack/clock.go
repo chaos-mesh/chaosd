@@ -34,7 +34,7 @@ func NewClockAttackCommand(uid *string) *cobra.Command {
 	cmd.Flags().IntVarP(&options.Pid, "pid", "p", 0, "")
 	cmd.Flags().Int64VarP(&options.SecDelta, "second-delta", "s", 0, "")
 	cmd.Flags().Int64VarP(&options.NsecDelta, "nanosecond-delta", "n", 0, "")
-	cmd.Flags().StringVarP(&options.ClockIdsSlice, "clock-ids-slice", "c", "", "")
+	cmd.Flags().StringVarP(&options.ClockIdsSlice, "clock-ids-slice", "c", "CLOCK_REALTIME", "")
 
 	cmd.Flags().BoolVarP(&options.CheckPidExist, "check-pid-exist", "l", true, "")
 	return cmd

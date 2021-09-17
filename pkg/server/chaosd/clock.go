@@ -2,6 +2,7 @@ package chaosd
 
 import (
 	"bytes"
+	"debug/elf"
 	"fmt"
 	"github.com/chaos-mesh/chaos-mesh/pkg/mapreader"
 	"github.com/chaos-mesh/chaos-mesh/pkg/ptrace"
@@ -71,7 +72,6 @@ func (c clockAttack) Attack(options core.AttackConfig, env Environment) error {
 	defer func() {
 		runtime.UnlockOSThread()
 	}()
-
 	program, err := ptrace.Trace(opt.Pid)
 	if err != nil {
 		return err
@@ -112,8 +112,8 @@ func (c clockAttack) Attack(options core.AttackConfig, env Environment) error {
 
 		if bytes.Equal(*image, fakeImage[0:constImageLen]) {
 			fakeEntry = &e
-			log.Error("found injected image", zap.Uint64("addr", fakeEntry.StartAddress))
-			break
+			err := fmt.Errorf("found injected image addr : %d", fakeEntry.StartAddress)
+			return err
 		}
 	}
 
@@ -132,26 +132,100 @@ func (c clockAttack) Attack(options core.AttackConfig, env Environment) error {
 	}
 
 	// 147 is the index of TV_SEC_DELTA in fakeImage
-	err = program.WriteUint64ToAddr(fakeAddr+147, uint64(opt.NsecDelta))
+	err = program.WriteUint64ToAddr(fakeAddr+147, uint64(opt.SecDelta))
 	if err != nil {
 		return err
 	}
 
 	// 155 is the index of TV_NSEC_DELTA in fakeImage
-	err = program.WriteUint64ToAddr(fakeAddr+155, uint64(opt.SecDelta))
+	err = program.WriteUint64ToAddr(fakeAddr+155, uint64(opt.NsecDelta))
 	if err != nil {
 		return err
 	}
 
-	originAddr, err := program.FindSymbolInEntry("clock_gettime", vdsoEntry)
+	originAddr, size, err := FindSymbolInEntry(*program, "clock_gettime", vdsoEntry)
 	if err != nil {
 		return err
 	}
 
+	funcBytes, err := program.ReadSlice(originAddr, size)
+
+	opt.Store = core.ClockFuncStore{
+		CodeOfGetClockFunc: *funcBytes,
+		OriginAddress:      originAddr,
+	}
+	if err != nil {
+		return err
+	}
 	err = program.JumpToFakeFunc(originAddr, fakeAddr)
 	return err
 }
 
-func (c clockAttack) Recover(experiment core.Experiment, env Environment) error {
-	panic("implement me")
+func (c clockAttack) Recover(exp core.Experiment, env Environment) error {
+	options, err := exp.GetRequestCommand()
+	if err != nil {
+		return err
+	}
+
+	var opt *core.ClockOption
+	var ok bool
+	if opt, ok = options.(*core.ClockOption); !ok {
+		return fmt.Errorf("AttackConfig -> *ClockOption meet error")
+	}
+
+	runtime.LockOSThread()
+	defer func() {
+		runtime.UnlockOSThread()
+	}()
+	program, err := ptrace.Trace(opt.Pid)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = program.Detach()
+		if err != nil {
+			log.Error("fail to detach program", zap.Error(err), zap.Int("pid", opt.Pid))
+		}
+	}()
+
+	err = program.PtraceWriteSlice(opt.Store.OriginAddress, opt.Store.CodeOfGetClockFunc)
+	return err
+}
+
+// FindSymbolInEntry finds symbol in entry through parsing elf
+func FindSymbolInEntry(p ptrace.TracedProgram, symbolName string, entry *mapreader.Entry) (uint64, uint64, error) {
+	libBuffer, err := p.GetLibBuffer(entry)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	reader := bytes.NewReader(*libBuffer)
+	vdsoElf, err := elf.NewFile(reader)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	loadOffset := uint64(0)
+
+	for _, prog := range vdsoElf.Progs {
+		if prog.Type == elf.PT_LOAD {
+			loadOffset = prog.Vaddr - prog.Off
+
+			// break here is enough for vdso
+			break
+		}
+	}
+
+	symbols, err := vdsoElf.DynamicSymbols()
+	if err != nil {
+		return 0, 0, err
+	}
+	for _, symbol := range symbols {
+		if symbol.Name == symbolName {
+			offset := symbol.Value
+			fmt.Println(symbol.Size)
+			return entry.StartAddress + (offset - loadOffset), symbol.Size, nil
+		}
+	}
+	return 0, 0, fmt.Errorf("cannot find symbol")
 }

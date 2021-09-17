@@ -105,6 +105,8 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &DiskAttackConfig{}
 	case JVMAttack:
 		attackConfig = &JVMCommand{}
+	case ClockAttack:
+		attackConfig = &ClockOption{}
 	default:
 		return nil
 	}
