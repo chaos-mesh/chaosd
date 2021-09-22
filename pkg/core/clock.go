@@ -1,14 +1,29 @@
+// Copyright 2021 Chaos Mesh Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package core
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/chaos-mesh/chaos-mesh/pkg/time/utils"
-	"github.com/pingcap/log"
-	"go.uber.org/zap"
 	"os"
 	"strings"
 	"syscall"
+
+	"github.com/pingcap/log"
+	"go.uber.org/zap"
+
+	"github.com/chaos-mesh/chaos-mesh/pkg/time/utils"
 )
 
 type ClockOption struct {
@@ -46,9 +61,27 @@ func (opt *ClockOption) PreProcess() error {
 		log.Error("error while converting clock ids to mask", zap.Error(err))
 		return err
 	}
+	if clockIdsMask == 0 {
+		log.Error("clock ids must not be empty")
+		return fmt.Errorf("clock ids must not be empty")
+	}
 	opt.ClockIdsMask = clockIdsMask
 
+	if uint64(opt.SecDelta) > 1<<31 {
+		log.Warn("Monotonic clock will be broken when sec delta is too large or too small.")
+		if uint64(opt.SecDelta) > 1<<56 {
+			log.Warn("Time zone info will be broken when sec delta is too large or too small.")
+		}
+	}
+
+	if uint64(opt.NsecDelta) > 1<<56 {
+		log.Warn("Time will be broken when nanosecond delta is too large or too small")
+	}
+
 	if opt.CheckPidExist {
+		// Since os.FindProcess in unix systems will always succeed
+		// regardless of whether the process exists (https://pkg.go.dev/os#FindProcess),
+		// we need to use process.Signal to check if pid is accessible.
 		process, err := os.FindProcess(opt.Pid)
 		if err != nil {
 			fmt.Printf("Failed to find process: %s\n", err)
