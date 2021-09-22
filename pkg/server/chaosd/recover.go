@@ -25,7 +25,7 @@ import (
 )
 
 func (s *Server) RecoverAttack(uid string) error {
-	exp, err := s.exp.FindByUid(context.Background(), uid)
+	exp, err := s.expStore.FindByUid(context.Background(), uid)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (s *Server) RecoverAttack(uid string) error {
 		}
 	}
 
-	if err := s.exp.Update(context.Background(), uid, core.Destroyed, "", exp.RecoverCommand); err != nil {
+	if err := s.expStore.Update(context.Background(), uid, core.Destroyed, "", exp.RecoverCommand); err != nil {
 		return perr.WithStack(err)
 	}
 	return nil
