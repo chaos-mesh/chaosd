@@ -25,11 +25,12 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
-func NewNetworkAttackCommand() *cobra.Command {
+func NewNetworkAttackCommand(uid *string) *cobra.Command {
 	options := core.NewNetworkCommand()
 	dep := fx.Options(
 		server.Module,
 		fx.Provide(func() *core.NetworkCommand {
+			options.UID = *uid
 			return options
 		}),
 	)
@@ -46,6 +47,7 @@ func NewNetworkAttackCommand() *cobra.Command {
 		NetworkDuplicateCommand(dep, options),
 		NetworkPartitionCommand(dep, options),
 		NetworkDNSCommand(dep, options),
+		NewNetworkPortOccupiedCommand(dep, options),
 	)
 
 	return cmd
@@ -153,7 +155,7 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 		},
 	}
 
-	cmd.Flags().StringVar(&options.Percent, "percent", "1", "percentage of packets to corrupt (10 is 10%)")
+	cmd.Flags().StringVar(&options.Percent, "percent", "1", "percentage of packets to duplicate (10 is 10%)")
 	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
 	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
 	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
@@ -196,7 +198,7 @@ func NetworkPartitionCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dns",
-		Short: "attack DNS server",
+		Short: "attack DNS server or map specified host to specified IP",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkDNSAction
@@ -207,6 +209,8 @@ func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 
 	cmd.Flags().StringVarP(&options.DNSServer, "dns-server", "", "123.123.123.123",
 		"update the DNS server in /etc/resolv.conf with this value")
+	cmd.Flags().StringVarP(&options.DNSHost, "dns-hostname", "H", "", "map this host to specified IP")
+	cmd.Flags().StringVarP(&options.DNSIp, "dns-ip", "i", "", "map specified host to this IP address")
 
 	return cmd
 }
@@ -222,4 +226,20 @@ func commonNetworkAttackFunc(options *core.NetworkCommand, chaos *chaosd.Server)
 	}
 
 	utils.NormalExit(fmt.Sprintf("Attack network successfully, uid: %s", uid))
+}
+
+func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "port",
+		Short: "attack network port",
+
+		Run: func(cmd *cobra.Command, args []string) {
+			options.Action = core.NetworkPortOccupied
+			options.CompleteDefaults()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "this specified port is to occupied")
+	return cmd
 }

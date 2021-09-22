@@ -44,6 +44,10 @@ type NetworkCommand struct {
 
 	// used for DNS attack
 	DNSServer string
+	Port      string
+	PortPid   int32
+	DNSIp     string
+	DNSHost   string
 
 	// only the packet which match the tcp flag can be accepted, others will be dropped.
 	// only set when the IPProtocol is tcp, used for partition.
@@ -59,6 +63,7 @@ const (
 	NetworkDuplicateAction = "duplicate"
 	NetworkDNSAction       = "dns"
 	NetworkPartitionAction = "partition"
+	NetworkPortOccupied    = "occupied"
 )
 
 func (n *NetworkCommand) Validate() error {
@@ -74,6 +79,8 @@ func (n *NetworkCommand) Validate() error {
 		return n.validNetworkDNS()
 	case NetworkPartitionAction:
 		return n.validNetworkPartition()
+	case NetworkPortOccupied:
+		return n.validNetworkOccupied()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -154,6 +161,25 @@ func (n *NetworkCommand) validNetworkPartition() error {
 }
 
 func (n *NetworkCommand) validNetworkDNS() error {
+	if !utils.CheckIPs(n.DNSServer) {
+		return errors.Errorf("server addresse %s not valid", n.DNSServer)
+	}
+
+	if !utils.CheckIPs(n.DNSIp) {
+		return errors.Errorf("ip addresse %s not valid", n.DNSIp)
+	}
+
+	if (len(n.DNSHost) != 0 && len(n.DNSIp) == 0) || (len(n.DNSHost) == 0 && len(n.DNSIp) != 0) {
+		return errors.Errorf("DNS host %s must match a DNS ip %s", n.DNSHost, n.DNSIp)
+	}
+
+	return nil
+}
+
+func (n *NetworkCommand) validNetworkOccupied() error {
+	if len(n.Port) == 0 {
+		return errors.New("port is required")
+	}
 	return nil
 }
 
@@ -419,6 +445,18 @@ func (n *NetworkCommand) ToChain(ipset string) ([]*pb.Chain, error) {
 	})
 
 	return chains, nil
+}
+
+func (n *NetworkCommand) NeedApplyEtcHosts() bool {
+	if len(n.DNSHost) > 0 || len(n.DNSIp) > 0 {
+		return true
+	}
+
+	return false
+}
+
+func (n *NetworkCommand) NeedApplyDNSServer() bool {
+	return len(n.DNSServer) > 0
 }
 
 func NewNetworkCommand() *NetworkCommand {

@@ -77,8 +77,21 @@ func (exp *Experiment) GetRequestCommand() (AttackConfig, error) {
 		return exp.cachedRequestCommand, nil
 	}
 
+	attackConfig := GetAttackByKind(exp.Kind)
+	if attackConfig == nil {
+		return nil, perr.Errorf("chaos experiment kind %s not found", exp.Kind)
+	}
+
+	if err := json.Unmarshal([]byte(exp.RecoverCommand), attackConfig); err != nil {
+		return nil, err
+	}
+	exp.cachedRequestCommand = *attackConfig
+	return *attackConfig, nil
+}
+
+func GetAttackByKind(kind string) *AttackConfig {
 	var attackConfig AttackConfig
-	switch exp.Kind {
+	switch kind {
 	case ProcessAttack:
 		attackConfig = &ProcessCommand{}
 	case NetworkAttack:
@@ -88,14 +101,12 @@ func (exp *Experiment) GetRequestCommand() (AttackConfig, error) {
 	case StressAttack:
 		attackConfig = &StressCommand{}
 	case DiskAttack:
-		attackConfig = &DiskOption{}
+		attackConfig = &DiskAttackConfig{}
+	case JVMAttack:
+		attackConfig = &JVMCommand{}
 	default:
-		return nil, perr.Errorf("chaos experiment kind %s not found", exp.Kind)
+		return nil
 	}
 
-	if err := json.Unmarshal([]byte(exp.RecoverCommand), attackConfig); err != nil {
-		return nil, err
-	}
-	exp.cachedRequestCommand = attackConfig
-	return attackConfig, nil
+	return &attackConfig
 }

@@ -37,7 +37,7 @@ $(GOBIN)/goimports:
 
 build: binary
 
-binary: swagger_spec chaosd
+binary: swagger_spec chaosd chaos-tools
 
 taily-build:
 	if [ "$(shell docker ps --filter=name=$@ -q)" = "" ]; then \
@@ -61,6 +61,8 @@ endif
 chaosd:
 	$(CGOENV) go build -ldflags '$(LDFLAGS)' -tags "${BUILD_TAGS}" -o bin/chaosd ./cmd/main.go
 
+chaos-tools:
+	$(CGOENV) go build -o bin/PortOccupyTool tools/PortOccupyTool.go
 
 swagger_spec:
 ifeq ($(SWAGGER),1)

@@ -13,7 +13,11 @@
 
 package attack
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/spf13/cobra"
+
+	"github.com/chaos-mesh/chaosd/pkg/core"
+)
 
 func NewAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -21,14 +25,22 @@ func NewAttackCommand() *cobra.Command {
 		Short: "Attack related commands",
 	}
 
+	var uid string
+	cmd.PersistentFlags().StringVarP(&uid, "uid", "", "", "the experiment ID")
+
 	cmd.AddCommand(
-		NewProcessAttackCommand(),
-		NewNetworkAttackCommand(),
-		NewStressAttackCommand(),
-		NewDiskAttackCommand(),
-		NewHostAttackCommand(),
-		NewJVMAttackCommand(),
+		NewProcessAttackCommand(&uid),
+		NewNetworkAttackCommand(&uid),
+		NewStressAttackCommand(&uid),
+		NewDiskAttackCommand(&uid),
+		NewHostAttackCommand(&uid),
+		NewJVMAttackCommand(&uid),
 	)
 
 	return cmd
+}
+
+func SetScheduleFlags(cmd *cobra.Command, conf *core.SchedulerConfig) {
+	cmd.Flags().StringVar(&conf.Duration, "duration", "",
+		`Work duration of attacks.A duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m".Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 }
