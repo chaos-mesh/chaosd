@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/chaos-mesh/chaos-mesh/pkg/mapreader"
+	"github.com/chaos-mesh/chaos-mesh/pkg/ptrace"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
 
-	"github.com/chaos-mesh/chaos-mesh/pkg/mapreader"
-	"github.com/chaos-mesh/chaos-mesh/pkg/ptrace"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 

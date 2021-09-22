@@ -15,11 +15,13 @@ package chaosd
 
 import (
 	"context"
-	"github.com/chaos-mesh/chaosd/pkg/core"
+
 	"github.com/google/uuid"
 	"github.com/pingcap/log"
 	perr "github.com/pkg/errors"
 	"go.uber.org/zap"
+
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 type Environment struct {
