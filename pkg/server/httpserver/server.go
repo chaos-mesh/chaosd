@@ -83,6 +83,7 @@ func handler(s *httpServer) {
 		attack.POST("/stress", s.createStressAttack)
 		attack.POST("/network", s.createNetworkAttack)
 		attack.POST("/disk", s.createDiskAttack)
+		attack.POST("/clock", s.createClockAttack)
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
