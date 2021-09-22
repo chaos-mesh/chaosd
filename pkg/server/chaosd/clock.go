@@ -164,6 +164,34 @@ func (c clockAttack) Attack(options core.AttackConfig, env Environment) error {
 
 	funcBytes, err := program.ReadSlice(originAddr, size)
 
+	exps, err := env.Chaos.Search(&core.SearchCommand{
+		Status: core.Success,
+		Kind:   core.ClockAttack,
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, exp := range exps {
+		if exp.Kind == core.ClockAttack {
+			lastOptions, err := exp.GetRequestCommand()
+			if err != nil {
+				return err
+			}
+
+			var lastOpt *core.ClockOption
+			var ok bool
+			if lastOpt, ok = lastOptions.(*core.ClockOption); !ok {
+				log.Warn("AttackConfig -> *ClockOption meet error")
+				continue
+			}
+			if lastOpt.Pid == opt.Pid {
+				return fmt.Errorf("plz recover the last clock attack on pid : %d first \n"+
+					"chaosd recover %s", opt.Pid, exp.Uid)
+			}
+		}
+	}
+
 	opt.Store = core.ClockFuncStore{
 		CodeOfGetClockFunc: *funcBytes,
 		OriginAddress:      originAddr,
@@ -238,7 +266,6 @@ func FindSymbolInEntry(p ptrace.TracedProgram, symbolName string, entry *mapread
 	for _, symbol := range symbols {
 		if symbol.Name == symbolName {
 			offset := symbol.Value
-			fmt.Println(symbol.Size)
 			return entry.StartAddress + (offset - loadOffset), symbol.Size, nil
 		}
 	}
