@@ -93,11 +93,12 @@ func (opt *ClockOption) PreProcess() error {
 	// we need to use process.Signal to check if pid is accessible.
 	process, err := os.FindProcess(opt.Pid)
 	if err != nil {
-		fmt.Printf("Failed to find process: %s\n", err)
+		log.Error("failed to find process", zap.Error(err))
+		return err
 	} else {
 		err := process.Signal(syscall.Signal(0))
 		if err != nil {
-			fmt.Printf("Pid may not be accessible , because : %v", err)
+			log.Error("pid may not be accessible", zap.Error(err))
 			return err
 		}
 	}
