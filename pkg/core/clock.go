@@ -64,7 +64,7 @@ func (opt *ClockOption) PreProcess() error {
 		return err
 	}
 	opt.SecDelta = int64(offset / time.Second)
-	opt.NsecDelta = offset.Nanoseconds()
+	opt.NsecDelta = int64(offset % time.Second)
 
 	clockIdsMask, err := utils.EncodeClkIds(clkIds)
 	if err != nil {
