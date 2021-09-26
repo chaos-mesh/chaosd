@@ -15,13 +15,12 @@ package chaosd
 
 import (
 	"context"
-
-	"github.com/google/uuid"
 	"github.com/pingcap/log"
-	perr "github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/google/uuid"
+	perr "github.com/pkg/errors"
 )
 
 type Environment struct {
@@ -71,6 +70,25 @@ func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig,
 		return
 	}
 
+	defer func() {
+		if err != nil {
+			if err := s.expStore.Update(context.Background(), uid, core.Error, err.Error(), options.RecoverData()); err != nil {
+				log.Error("failed to update experiment", zap.Error(err))
+			}
+			return
+		}
+
+		var newStatus string
+		if len(options.Cron()) > 0 {
+			newStatus = core.Scheduled
+		} else {
+			newStatus = core.Success
+		}
+		if err := s.expStore.Update(context.Background(), uid, newStatus, "", options.RecoverData()); err != nil {
+			log.Error("failed to update experiment", zap.Error(err))
+		}
+	}()
+
 	env := s.newEnvironment(uid)
 	if len(options.Cron()) > 0 {
 		if err = s.Cron.Schedule(
@@ -87,23 +105,6 @@ func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig,
 			err = perr.WithStack(err)
 			return
 		}
-	}
-
-	if err != nil {
-		if err := s.expStore.Update(context.Background(), uid, core.Error, err.Error(), options.RecoverData()); err != nil {
-			log.Error("failed to update experiment", zap.Error(err))
-		}
-		return
-	}
-
-	var newStatus string
-	if len(options.Cron()) > 0 {
-		newStatus = core.Scheduled
-	} else {
-		newStatus = core.Success
-	}
-	if err := s.expStore.Update(context.Background(), uid, newStatus, "", options.RecoverData()); err != nil {
-		log.Error("failed to update experiment", zap.Error(err))
 	}
 	return
 }
