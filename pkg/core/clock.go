@@ -95,12 +95,12 @@ func (opt *ClockOption) PreProcess() error {
 	if err != nil {
 		log.Error("failed to find process", zap.Error(err))
 		return err
-	} else {
-		err := process.Signal(syscall.Signal(0))
-		if err != nil {
-			log.Error("pid may not be accessible", zap.Error(err))
-			return err
-		}
+	}
+
+	err = process.Signal(syscall.Signal(0))
+	if err != nil {
+		log.Error("pid may not be accessible", zap.Error(err))
+		return err
 	}
 	return nil
 }
