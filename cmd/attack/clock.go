@@ -45,15 +45,11 @@ func NewClockAttackCommand(uid *string) *cobra.Command {
 	}
 
 	cmd.Flags().IntVarP(&options.Pid, "pid", "p", 0, "Pid of target program.")
-	cmd.Flags().Int64VarP(&options.SecDelta, "second-delta", "s", 0, "Delta time of sec field.")
-	cmd.Flags().Int64VarP(&options.NsecDelta, "nanosecond-delta", "n", 0, "Delta time of nsec field.")
+	cmd.Flags().StringVarP(&options.TimeOffset, "time-offset", "t", "", "Specifies the length of time offset.")
 	cmd.Flags().StringVarP(&options.ClockIdsSlice, "clock-ids-slice", "c", "CLOCK_REALTIME",
 		"The identifier of the particular clock on which to act."+
 			"More clock description in linux kernel can be found in man page of clock_getres, clock_gettime, clock_settime."+
 			"Muti clock ids should be split with \",\"")
-
-	cmd.Flags().BoolVarP(&options.CheckPidExist, "check-pid-exist", "l", true,
-		"Check if target program exists when using duration option.")
 	return cmd
 }
 

@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
@@ -29,13 +30,15 @@ import (
 type ClockOption struct {
 	CommonAttackConfig
 
-	Pid           int
-	SecDelta      int64
-	NsecDelta     int64
+	Pid int
+
+	TimeOffset string
+	SecDelta   int64
+	NsecDelta  int64
+
 	ClockIdsSlice string
 
-	CheckPidExist bool
-	Store         ClockFuncStore
+	Store ClockFuncStore
 
 	ClockIdsMask uint64
 }
@@ -55,6 +58,13 @@ func NewClockOption() *ClockOption {
 
 func (opt *ClockOption) PreProcess() error {
 	clkIds := strings.Split(opt.ClockIdsSlice, ",")
+
+	offset, err := time.ParseDuration(opt.TimeOffset)
+	if err != nil {
+		return err
+	}
+	opt.SecDelta = int64(offset / time.Second)
+	opt.NsecDelta = offset.Nanoseconds()
 
 	clockIdsMask, err := utils.EncodeClkIds(clkIds)
 	if err != nil {
@@ -78,18 +88,17 @@ func (opt *ClockOption) PreProcess() error {
 		log.Warn("Time will be broken when nanosecond delta is too large or too small")
 	}
 
-	if opt.CheckPidExist {
-		// Since os.FindProcess in unix systems will always succeed
-		// regardless of whether the process exists (https://pkg.go.dev/os#FindProcess),
-		// we need to use process.Signal to check if pid is accessible.
-		process, err := os.FindProcess(opt.Pid)
+	// Since os.FindProcess in unix systems will always succeed
+	// regardless of whether the process exists (https://pkg.go.dev/os#FindProcess),
+	// we need to use process.Signal to check if pid is accessible.
+	process, err := os.FindProcess(opt.Pid)
+	if err != nil {
+		fmt.Printf("Failed to find process: %s\n", err)
+	} else {
+		err := process.Signal(syscall.Signal(0))
 		if err != nil {
-			fmt.Printf("Failed to find process: %s\n", err)
-		} else {
-			err := process.Signal(syscall.Signal(0))
-			if err != nil {
-				fmt.Printf("Pid may not be accessible , because : %v", err)
-			}
+			fmt.Printf("Pid may not be accessible , because : %v", err)
+			return err
 		}
 	}
 	return nil
