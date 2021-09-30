@@ -83,6 +83,7 @@ func handler(s *httpServer) {
 		attack.POST("/stress", s.createStressAttack)
 		attack.POST("/network", s.createNetworkAttack)
 		attack.POST("/disk", s.createDiskAttack)
+		attack.POST("/clock", s.createClockAttack)
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
@@ -217,6 +218,37 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 	}
 
 	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attackConfig, core.ServerMode)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+// @Summary Create clock attack.
+// @Description Create clock attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.ClockOption true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/clock [post]
+func (s *httpServer) createClockAttack(c *gin.Context) {
+	options := core.NewClockOption()
+	if err := c.ShouldBindJSON(options); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	err := options.PreProcess()
+	if err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+	uid, err := s.chaos.ExecuteAttack(chaosd.ClockAttack, options, core.CommandMode)
 	if err != nil {
 		handleError(c, err)
 		return

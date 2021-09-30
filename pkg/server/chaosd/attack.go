@@ -30,7 +30,14 @@ type Environment struct {
 }
 
 type AttackType interface {
+	// Attack execute attack with options and env.
+	// ExecuteAttack will store the options ahead of Attack be executed
+	// and will store options again after Attack be executed.
+	// We can also use env.Chaos.expStore to touch the storage of chaosd.
+	// But do not update it with your own uid ,
+	// because it will be covered after Attack executed with options.
 	Attack(options core.AttackConfig, env Environment) error
+	// Recover can get marshaled options data from experiment and recover it.
 	Recover(experiment core.Experiment, env Environment) error
 }
 
@@ -59,25 +66,26 @@ func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig,
 		RecoverCommand: options.RecoverData(),
 		LaunchMode:     launchMode,
 	}
-	if err = s.exp.Set(context.Background(), exp); err != nil {
+	if err = s.expStore.Set(context.Background(), exp); err != nil {
 		err = perr.WithStack(err)
 		return
 	}
 
 	defer func() {
 		if err != nil {
-			if err := s.exp.Update(context.Background(), uid, core.Error, err.Error(), options.RecoverData()); err != nil {
+			if err := s.expStore.Update(context.Background(), uid, core.Error, err.Error(), options.RecoverData()); err != nil {
 				log.Error("failed to update experiment", zap.Error(err))
 			}
 			return
 		}
+
 		var newStatus string
 		if len(options.Cron()) > 0 {
 			newStatus = core.Scheduled
 		} else {
 			newStatus = core.Success
 		}
-		if err := s.exp.Update(context.Background(), uid, newStatus, "", options.RecoverData()); err != nil {
+		if err := s.expStore.Update(context.Background(), uid, newStatus, "", options.RecoverData()); err != nil {
 			log.Error("failed to update experiment", zap.Error(err))
 		}
 	}()

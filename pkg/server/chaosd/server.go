@@ -22,7 +22,7 @@ import (
 )
 
 type Server struct {
-	exp          core.ExperimentStore
+	expStore     core.ExperimentStore
 	ExpRun       core.ExperimentRunStore
 	Cron         scheduler.Scheduler
 	ipsetRule    core.IPSetRuleStore
@@ -44,7 +44,7 @@ func NewServer(
 ) *Server {
 	return &Server{
 		conf:         conf,
-		exp:          exp,
+		expStore:     exp,
 		Cron:         cron,
 		ExpRun:       expRun,
 		ipsetRule:    ipset,
