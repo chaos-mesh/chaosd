@@ -412,7 +412,7 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 	}
 }
 
-func (n *NetworkCommand) ToChain(ipset string) ([]*pb.Chain, error) {
+func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
 	if n.Action != NetworkPartitionAction {
 		return nil, nil
 	}

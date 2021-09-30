@@ -120,7 +120,7 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, ipset, uid string) e
 		return errors.WithStack(err)
 	}
 	chains := core.IptablesRuleList(iptables).ToChains()
-	newChains, err := attack.ToChain(ipset)
+	newChains, err := attack.PartitionChain(ipset)
 	if err != nil {
 		return errors.WithStack(err)
 	}
