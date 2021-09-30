@@ -26,12 +26,15 @@ type Config struct {
 
 	Version bool
 
-	ListenPort  int
-	ListenHost  string
-	Runtime     string
-	EnablePprof bool
-	PprofPort   int
-	Platform    string
+	ListenPort      int
+	ListenHost      string
+	SSLCertFile     string
+	SSLKeyFile      string
+	SSLClientCAFile string
+	Runtime         string
+	EnablePprof     bool
+	PprofPort       int
+	Platform        string
 }
 
 // Parse parses flag definitions from the argument list.
@@ -56,6 +59,14 @@ func (c *Config) Validate() error {
 
 	if !checkRuntime(c.Runtime) {
 		return errors.Errorf("container runtime %s is not supported", c.Runtime)
+	}
+
+	if (len(c.SSLCertFile) > 0 || len(c.SSLKeyFile) > 0) && (len(c.SSLCertFile) == 0 || len(c.SSLKeyFile) == 0) {
+		return errors.New("provide both certificate and private key")
+	}
+
+	if len(c.SSLClientCAFile) > 0 && len(c.SSLCertFile) == 0 {
+		return errors.New("attempting to use client CA without providing server certificate")
 	}
 
 	return nil
