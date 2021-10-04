@@ -20,6 +20,7 @@ import (
 	"github.com/joomcode/errorx"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"github.com/chaos-mesh/chaosd/pkg/config"
 	"github.com/chaos-mesh/chaosd/pkg/core"
@@ -272,6 +273,10 @@ func (s *httpServer) recoverAttack(c *gin.Context) {
 }
 
 func handleError(c *gin.Context, err error) {
+	if err == gorm.ErrRecordNotFound {
+		_ = c.AbortWithError(http.StatusNotFound, utils.ErrNotFound.WrapWithNoMessage(err))
+		return
+	}
 	if errorx.IsOfType(err, core.ErrAttackConfigValidation) {
 		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInvalidRequest.WrapWithNoMessage(err))
 	} else {
