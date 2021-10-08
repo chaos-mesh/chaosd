@@ -206,11 +206,11 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 // @Description Create jvm attack.
 // @Tags attack
 // @Produce json
-// @Param request body core.DiskOption true "Request body"
+// @Param request body core.JVMCommand true "Request body"
 // @Success 200 {object} utils.Response
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
-// @Router /api/attack/disk [post]
+// @Router /api/attack/jvm [post]
 func (s *httpServer) createJVMAttack(c *gin.Context) {
 	attack := core.NewJVMCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
