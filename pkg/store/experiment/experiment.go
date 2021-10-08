@@ -17,9 +17,8 @@ import (
 	"context"
 	"errors"
 
-	"gorm.io/gorm"
-
 	perr "github.com/pkg/errors"
+	"gorm.io/gorm"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/store/dbstore"

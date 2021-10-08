@@ -35,6 +35,7 @@ const (
 	NetworkAttack = "network"
 	StressAttack  = "stress"
 	DiskAttack    = "disk"
+	ClockAttack   = "clock"
 	HostAttack    = "host"
 	JVMAttack     = "jvm"
 )
@@ -101,9 +102,11 @@ func GetAttackByKind(kind string) *AttackConfig {
 	case StressAttack:
 		attackConfig = &StressCommand{}
 	case DiskAttack:
-		attackConfig = &DiskOption{}
+		attackConfig = &DiskAttackConfig{}
 	case JVMAttack:
 		attackConfig = &JVMCommand{}
+	case ClockAttack:
+		attackConfig = &ClockOption{}
 	default:
 		return nil
 	}

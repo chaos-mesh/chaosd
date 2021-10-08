@@ -25,11 +25,12 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
-func NewDiskAttackCommand() *cobra.Command {
+func NewDiskAttackCommand(uid *string) *cobra.Command {
 	options := core.NewDiskOption()
 	dep := fx.Options(
 		server.Module,
 		fx.Provide(func() *core.DiskOption {
+			options.UID = *uid
 			return options
 		}),
 	)
@@ -79,6 +80,7 @@ func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.
 			"If path not provided, payload will write into a temp file, temp file will be deleted after writing")
 	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
 		"'process-num' specifies the number of process work on writing , default 1, only 1-255 is valid value")
+	SetScheduleFlags(cmd, &options.SchedulerConfig)
 	return cmd
 }
 
@@ -102,6 +104,7 @@ func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.C
 			"If path not provided, payload will read from disk mount on \"/\"")
 	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
 		"'process-num' specifies the number of process work on reading , default 1, only 1-255 is valid value")
+	SetScheduleFlags(cmd, &options.SchedulerConfig)
 	return cmd
 }
 
@@ -125,15 +128,17 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskOption) *cobra.Command 
 			"If path not provided, a temp file will be generated and deleted immediately after data filled in or allocated")
 	cmd.Flags().StringVarP(&options.Percent, "percent", "c", "",
 		"'percent' how many percent data of disk will fill in the file path")
-	cmd.Flags().BoolVarP(&options.FillByFallocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
+	cmd.Flags().BoolVarP(&options.FillByFAllocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
 	return cmd
 }
 
 func processDiskAttack(options *core.DiskOption, chaos *chaosd.Server) {
-	if err := options.Validate(); err != nil {
+	attackConfig, err := options.PreProcess()
+	if err != nil {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
-	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, options, core.CommandMode)
+
+	uid, err := chaos.ExecuteAttack(chaosd.DiskAttack, attackConfig, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}

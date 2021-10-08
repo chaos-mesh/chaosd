@@ -14,6 +14,7 @@
 package chaosd
 
 import (
+	"fmt"
 	"strconv"
 	"syscall"
 
@@ -39,18 +40,10 @@ func (processAttack) Attack(options core.AttackConfig, _ Environment) error {
 	for _, p := range processes {
 		if attack.Process == strconv.Itoa(p.Pid()) || attack.Process == p.Executable() {
 			notFound = false
-			switch attack.Signal {
-			case int(syscall.SIGKILL):
-				err = syscall.Kill(p.Pid(), syscall.SIGKILL)
-			case int(syscall.SIGTERM):
-				err = syscall.Kill(p.Pid(), syscall.SIGTERM)
-			case int(syscall.SIGSTOP):
-				err = syscall.Kill(p.Pid(), syscall.SIGSTOP)
-			default:
-				return errors.Errorf("signal %d is not supported", attack.Signal)
-			}
 
+			err = syscall.Kill(p.Pid(), syscall.Signal(attack.Signal))
 			if err != nil {
+				err = errors.Annotate(err, fmt.Sprintf("kill process with signal %d", attack.Signal))
 				return errors.WithStack(err)
 			}
 			attack.PIDs = append(attack.PIDs, p.Pid())

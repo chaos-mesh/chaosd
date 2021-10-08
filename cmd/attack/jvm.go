@@ -25,11 +25,12 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
-func NewJVMAttackCommand() *cobra.Command {
+func NewJVMAttackCommand(uid *string) *cobra.Command {
 	options := core.NewJVMCommand()
 	dep := fx.Options(
 		server.Module,
 		fx.Provide(func() *core.JVMCommand {
+			options.UID = *uid
 			return options
 		}),
 	)
