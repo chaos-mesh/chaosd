@@ -33,7 +33,7 @@ $(GOBIN)/revive:
 	$(GO) get github.com/mgechev/revive@v1.0.2-0.20200225072153-6219ca02fffb
 
 $(GOBIN)/goimports:
-	$(GO) get golang.org/x/tools/cmd/goimports@v0.0.0-20200309202150-20ab64c0d93f
+	$(GO) get golang.org/x/tools/cmd/goimports@v0.1.1
 
 build: binary
 
