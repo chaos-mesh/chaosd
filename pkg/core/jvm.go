@@ -61,8 +61,8 @@ type JVMCommand struct {
 	// the CPU core number need to use, only set it when action is stress
 	CPUCount int
 
-	// the memory size need to locate, only set it when action is stress
-	MemorySize int
+	// the memory type need to locate, only set it when action is stress, the value can be 'stack' or 'heap'
+	MemoryType string
 
 	// attach or agent
 	Type string
@@ -80,7 +80,7 @@ type JVMCommand struct {
 
 	StressValueName string
 
-	StressValue int
+	StressValue string
 
 	// btm rule file path
 	RuleFile string
@@ -98,13 +98,20 @@ func (j *JVMCommand) Validate() error {
 	case JVMSubmitType:
 		switch j.Action {
 		case JVMStressAction:
-			if j.CPUCount == 0 && j.MemorySize == 0 {
+			if j.CPUCount == 0 && len(j.MemoryType) == 0 {
 				return errors.New("must set one of cpu-count and mem-size when action is 'stress'")
 			}
 
-			if j.CPUCount > 0 && j.MemorySize > 0 {
+			if j.CPUCount > 0 && len(j.MemoryType) > 0 {
 				return errors.New("inject stress on both CPU and memory is not support now")
 			}
+
+			if len(j.MemoryType) > 0 {
+				if j.MemoryType != "heap" && j.MemoryType != "stack" {
+					return errors.New("memory type should be one of 'heap' and 'stack'")
+				}
+			}
+
 		case JVMGCAction:
 			// do nothing
 		case JVMExceptionAction, JVMReturnAction, JVMLatencyAction:
