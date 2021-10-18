@@ -30,13 +30,13 @@ import (
 type ClockOption struct {
 	CommonAttackConfig
 
-	Pid int
+	Pid int `json:"pid,omitempty"`
 
-	TimeOffset string
+	TimeOffset string `json:"time-offset,omitempty"`
 	SecDelta   int64
 	NsecDelta  int64
 
-	ClockIdsSlice string
+	ClockIdsSlice string `json:"clock-ids-slice,omitempty"`
 
 	Store ClockFuncStore
 

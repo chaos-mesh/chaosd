@@ -29,29 +29,31 @@ import (
 type NetworkCommand struct {
 	CommonAttackConfig
 
-	Latency     string
-	Jitter      string
-	Correlation string
-	Percent     string
-	Device      string
-	SourcePort  string
-	EgressPort  string
-	IPAddress   string
-	IPProtocol  string
-	Hostname    string
+	Latency     string `json:"latency,omitempty"`
+	Jitter      string `json:"jitter,omitempty"`
+	Correlation string `json:"correlation,omitempty"`
+	Percent     string `json:"percent,omitempty"`
+	Device      string `json:"device,omitempty"`
+	SourcePort  string `json:"source-port,omitempty"`
+	EgressPort  string `json:"egress-port,omitempty"`
+	IPAddress   string `json:"ip-address,omitempty"`
+	IPProtocol  string `json:"ip-protocol,omitempty"`
+	Hostname    string `json:"hostname,omitempty"`
 
-	Direction string
+	Direction string `json:"direction,omitempty"`
 
 	// used for DNS attack
-	DNSServer string
-	Port      string
-	PortPid   int32
-	DNSIp     string
-	DNSHost   string
+	DNSServer string `json:"dns-server,omitempty"`
+	DNSIp     string `json:"dns-ip,omitempty"`
+	DNSHost   string `json:"dns-host,omitempty"`
+
+	// used for port occupied
+	Port    string `json:"port,omitempty"`
+	PortPid int32  `json:"port-pid,omitempty"`
 
 	// only the packet which match the tcp flag can be accepted, others will be dropped.
 	// only set when the IPProtocol is tcp, used for partition.
-	AcceptTCPFlags string
+	AcceptTCPFlags string `json:"accept-tcp-flags,omitempty"`
 }
 
 var _ AttackConfig = &NetworkCommand{}

@@ -38,40 +38,46 @@ type JVMCommand struct {
 	CommonAttackConfig
 
 	// rule name, should be unique, and will generate by chaosd automatically
-	Name string
+	Name string `json:"name,omitempty"`
 
 	// Java class
-	Class string
+	Class string `json:"class,omitempty"`
 
 	// the method in Java class
-	Method string
+	Method string `json:"method,omitempty"`
 
 	// fault action, values can be latency, exception, return, stress
-	Action string
+	Action string `json:"action,omitempty"`
 
 	// the return value for action 'return'
-	ReturnValue string
+	ReturnValue string `json:"value,omitempty"`
 
-	// the exception which needs to throw dor action `exception`
-	ThrowException string
+	// the exception which needs to throw for action `exception`
+	ThrowException string `json:"exception,omitempty"`
 
 	// the latency duration for action 'latency'
-	LatencyDuration string
+	LatencyDuration string `json:"latency,omitempty"`
 
 	// the CPU core number need to use, only set it when action is stress
-	CPUCount int
+	CPUCount int `json:"cpu-count,omitempty"`
 
 	// the memory type need to locate, only set it when action is stress, the value can be 'stack' or 'heap'
-	MemoryType string
+	MemoryType string `json:"mem-type,omitempty"`
 
 	// attach or agent
 	Type string
 
 	// the port of agent server
-	Port int
+	Port int `json:"port,omitempty"`
 
 	// the pid of Java process which need to attach
-	Pid int
+	Pid int `json:"pid,omitempty"`
+
+	// btm rule file path
+	RuleFile string `json:"rule-file,omitempty"`
+
+	// RuleData used to save the rule file's data, will use it when recover
+	RuleData []byte `json:"rule-data,omitempty"`
 
 	// below is only used for template
 	Do string
@@ -81,12 +87,6 @@ type JVMCommand struct {
 	StressValueName string
 
 	StressValue string
-
-	// btm rule file path
-	RuleFile string
-
-	// RuleData used to save the rule file's data, will use it when recover
-	RuleData []byte
 }
 
 func (j *JVMCommand) Validate() error {

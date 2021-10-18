@@ -27,11 +27,11 @@ const (
 type StressCommand struct {
 	CommonAttackConfig
 
-	Load        int
-	Workers     int
-	Size        string
-	Options     []string
-	StressngPid int32
+	Load        int      `json:"load,omitempty"`
+	Workers     int      `json:"workers,omitempty"`
+	Size        string   `json:"size,omitempty"`
+	Options     []string `json:"options,omitempty"`
+	StressngPid int32    `json:"stress-ng-pid,omitempty"`
 }
 
 var _ AttackConfig = &StressCommand{}
