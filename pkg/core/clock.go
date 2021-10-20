@@ -105,6 +105,12 @@ func (opt *ClockOption) PreProcess() error {
 	return nil
 }
 
+func (opt *ClockOption) CompleteDefaults() {
+	if len(opt.ClockIdsSlice) == 0 {
+		opt.ClockIdsSlice = "CLOCK_REALTIME"
+	}
+}
+
 func (opt ClockOption) RecoverData() string {
 	data, _ := json.Marshal(opt)
 
