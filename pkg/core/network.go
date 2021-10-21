@@ -43,9 +43,9 @@ type NetworkCommand struct {
 	Direction string `json:"direction,omitempty"`
 
 	// used for DNS attack
-	DNSServer string `json:"dns-server,omitempty"`
-	DNSIp     string `json:"dns-ip,omitempty"`
-	DNSHost   string `json:"dns-host,omitempty"`
+	DNSServer     string `json:"dns-server,omitempty"`
+	DNSIp         string `json:"dns-ip,omitempty"`
+	DNSDomainName string `json:"dns-domain-name,omitempty"`
 
 	// used for port occupied
 	Port    string `json:"port,omitempty"`
@@ -175,8 +175,8 @@ func (n *NetworkCommand) validNetworkDNS() error {
 		return errors.Errorf("ip addresse %s not valid", n.DNSIp)
 	}
 
-	if (len(n.DNSHost) != 0 && len(n.DNSIp) == 0) || (len(n.DNSHost) == 0 && len(n.DNSIp) != 0) {
-		return errors.Errorf("DNS host %s must match a DNS ip %s", n.DNSHost, n.DNSIp)
+	if (len(n.DNSDomainName) != 0 && len(n.DNSIp) == 0) || (len(n.DNSDomainName) == 0 && len(n.DNSIp) != 0) {
+		return errors.Errorf("DNS host %s must match a DNS ip %s", n.DNSDomainName, n.DNSIp)
 	}
 
 	return nil
@@ -454,7 +454,7 @@ func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
 }
 
 func (n *NetworkCommand) NeedApplyEtcHosts() bool {
-	if len(n.DNSHost) > 0 || len(n.DNSIp) > 0 {
+	if len(n.DNSDomainName) > 0 || len(n.DNSIp) > 0 {
 		return true
 	}
 

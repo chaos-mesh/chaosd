@@ -209,7 +209,7 @@ func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 
 	cmd.Flags().StringVarP(&options.DNSServer, "dns-server", "", "123.123.123.123",
 		"update the DNS server in /etc/resolv.conf with this value")
-	cmd.Flags().StringVarP(&options.DNSHost, "dns-hostname", "H", "", "map this host to specified IP")
+	cmd.Flags().StringVarP(&options.DNSDomainName, "dns-domain-name", "d", "", "map this host to specified IP")
 	cmd.Flags().StringVarP(&options.DNSIp, "dns-ip", "i", "", "map specified host to this IP address")
 
 	return cmd

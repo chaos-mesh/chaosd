@@ -59,7 +59,7 @@ func NewJVMInstallCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comman
 	}
 
 	cmd.Flags().IntVarP(&options.Port, "port", "", 9288, "the port of agent server")
-	cmd.Flags().IntVarP(&options.Pid, "pid", "", 0, "the pid of Java process which need to attach")
+	cmd.Flags().IntVarP(&options.Pid, "pid", "", 0, "the pid of Java process which needs to attach")
 
 	return cmd
 }
@@ -114,7 +114,7 @@ func NewJVMReturnCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 
 	cmd.Flags().StringVarP(&options.Class, "class", "c", "", "Java class name")
 	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "the method name in Java class")
-	cmd.Flags().StringVarP(&options.ReturnValue, "value", "", "", "the return value for action 'return', only support number and string type now")
+	cmd.Flags().StringVarP(&options.ReturnValue, "value", "", "", "the return value for action 'return'. Only supports number and string types.")
 
 	return cmd
 }
@@ -146,8 +146,8 @@ func NewJVMStressCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 		},
 	}
 
-	cmd.Flags().IntVarP(&options.CPUCount, "cpu-count", "", 0, "the CPU core number need to use")
-	cmd.Flags().StringVarP(&options.MemoryType, "mem-type", "", "", "the memory type need to locate, the value can be 'stack' or 'heap'")
+	cmd.Flags().IntVarP(&options.CPUCount, "cpu-count", "", 0, "the CPU core number")
+	cmd.Flags().StringVarP(&options.MemoryType, "mem-type", "", "", "the memory type to be allocated. The value can be 'stack' or 'heap'")
 
 	return cmd
 }

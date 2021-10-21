@@ -58,10 +58,10 @@ type JVMCommand struct {
 	// the latency duration for action 'latency'
 	LatencyDuration string `json:"latency,omitempty"`
 
-	// the CPU core number need to use, only set it when action is stress
+	// the CPU core number, only set it when action is stress
 	CPUCount int `json:"cpu-count,omitempty"`
 
-	// the memory type need to locate, only set it when action is stress, the value can be 'stack' or 'heap'
+	// the memory type to be located, only set it when action is stress, the value can be 'stack' or 'heap'
 	MemoryType string `json:"mem-type,omitempty"`
 
 	// attach or agent
@@ -70,7 +70,7 @@ type JVMCommand struct {
 	// the port of agent server
 	Port int `json:"port,omitempty"`
 
-	// the pid of Java process which need to attach
+	// the pid of Java process which needs to attach
 	Pid int `json:"pid,omitempty"`
 
 	// btm rule file path
