@@ -59,8 +59,11 @@ type JVMCommand struct {
 	// the CPU core number need to use, only set it when action is stress
 	CPUCount int `json:"cpu-count"`
 
-	// the memory size need to locate, only set it when action is stress
-	MemorySize int `json:"mem-size"`
+	// the memory type need to locate, only set it when action is stress, the value can be 'stack' or 'heap'
+	MemoryType string `json:"mem-type"`
+
+	// attach or agent
+	Type string
 
 	// the port of agent server
 	Port int `json:"port"`
@@ -75,7 +78,7 @@ type JVMCommand struct {
 
 	StressValueName string `json:"-"`
 
-	StressValue int `json:"-"`
+	StressValue string `json:"-"`
 
 	// btm rule file path
 	RuleFile string `json:"rule-file"`
@@ -91,11 +94,11 @@ func (j *JVMCommand) Validate() error {
 
 	switch j.Action {
 	case JVMStressAction:
-		if j.CPUCount == 0 && j.MemorySize == 0 {
-			return errors.New("must set one of cpu-count and mem-size when action is 'stress'")
+		if j.CPUCount == 0 && len(j.MemoryType) == 0 {
+			return errors.New("must set one of cpu-count and mem-type when action is 'stress'")
 		}
 
-		if j.CPUCount > 0 && j.MemorySize > 0 {
+		if j.CPUCount > 0 && len(j.MemoryType) > 0 {
 			return errors.New("inject stress on both CPU and memory is not support now")
 		}
 	case JVMGCAction:

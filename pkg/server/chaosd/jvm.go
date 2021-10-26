@@ -139,11 +139,11 @@ func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 			if attack.CPUCount > 0 {
 				attack.StressType = "CPU"
 				attack.StressValueName = "CPUCOUNT"
-				attack.StressValue = attack.CPUCount
+				attack.StressValue = fmt.Sprintf("%d", attack.CPUCount)
 			} else {
 				attack.StressType = "MEMORY"
-				attack.StressValueName = "MEMORYSIZE"
-				attack.StressValue = attack.MemorySize
+				attack.StressValueName = "MEMORYTYPE"
+				attack.StressValue = attack.MemoryType
 			}
 		}
 	}

@@ -45,6 +45,7 @@ func NewNetworkAttackCommand(uid *string) *cobra.Command {
 		NewNetworkLossCommand(dep, options),
 		NewNetworkCorruptCommand(dep, options),
 		NetworkDuplicateCommand(dep, options),
+		NetworkPartitionCommand(dep, options),
 		NetworkDNSCommand(dep, options),
 		NewNetworkPortOccupiedCommand(dep, options),
 	)
@@ -167,6 +168,29 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+
+	return cmd
+}
+
+func NetworkPartitionCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "partition",
+		Short: "partition",
+
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.NetworkPartitionAction
+			options.CompleteDefaults()
+			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+	cmd.Flags().StringVarP(&options.Direction, "direction", "", "", "specifies the partition direction, values can be 'from', 'to'. 'from' means packets coming from the 'IPAddress' or 'Hostname' and going to your server, 'to' means packets originating from your server and going to the 'IPAddress' or 'Hostname'.")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
+		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	cmd.Flags().StringVarP(&options.AcceptTCPFlags, "accept-tcp-flags", "", "", "only the packet which match the tcp flag can be accepted, others will be dropped. only set when the protocol is tcp.")
 
 	return cmd
 }

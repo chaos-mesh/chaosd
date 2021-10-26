@@ -79,7 +79,7 @@ func TestJVMCommand(t *testing.T) {
 				Pid:        1234,
 				Action:     JVMStressAction,
 				CPUCount:   1,
-				MemorySize: 1,
+				MemoryType: "heap",
 			},
 			"inject stress on both CPU and memory is not support now",
 		},
