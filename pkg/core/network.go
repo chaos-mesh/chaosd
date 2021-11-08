@@ -79,7 +79,7 @@ func (n *NetworkCommand) Validate() error {
 	case NetworkPortOccupiedAction:
 		return n.validNetworkOccupied()
 	case NetworkBandwidthAction:
-		return nil
+		return n.validNetworkBandwidth()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -113,6 +113,14 @@ func (n *NetworkCommand) validNetworkDelay() error {
 	}
 
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
+}
+
+func (n *NetworkCommand) validNetworkBandwidth() error {
+	if len(n.Rate) == 0 || n.Limit == 0 || n.Buffer == 0 {
+		return errors.Errorf("rate, limit and buffer both are required when action is bandwidth")
+	}
+
+	return nil
 }
 
 func (n *NetworkCommand) validNetworkCommon() error {
