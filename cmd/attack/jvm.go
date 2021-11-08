@@ -147,7 +147,7 @@ func NewJVMStressCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 	}
 
 	cmd.Flags().IntVarP(&options.CPUCount, "cpu-count", "", 0, "the CPU core number need to use")
-	cmd.Flags().IntVarP(&options.MemorySize, "mem-size", "", 0, "the memory size need to locate, the unit is MB")
+	cmd.Flags().StringVarP(&options.MemoryType, "mem-type", "", "", "the memory type need to locate, the value can be 'stack' or 'heap'")
 
 	return cmd
 }

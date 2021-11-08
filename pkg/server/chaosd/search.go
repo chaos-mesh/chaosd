@@ -23,7 +23,7 @@ import (
 
 func (s *Server) Search(conds *core.SearchCommand) ([]*core.Experiment, error) {
 	if len(conds.UID) > 0 {
-		exp, err := s.exp.FindByUid(context.Background(), conds.UID)
+		exp, err := s.expStore.FindByUid(context.Background(), conds.UID)
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
@@ -31,7 +31,7 @@ func (s *Server) Search(conds *core.SearchCommand) ([]*core.Experiment, error) {
 		return []*core.Experiment{exp}, nil
 	}
 
-	exps, err := s.exp.ListByConditions(context.Background(), conds)
+	exps, err := s.expStore.ListByConditions(context.Background(), conds)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

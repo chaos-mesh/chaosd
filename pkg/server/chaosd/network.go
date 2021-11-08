@@ -75,7 +75,7 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 		}
 
 		if attack.NeedApplyIptables() {
-			if err = env.Chaos.applyIptables(attack, env.AttackUid); err != nil {
+			if err = env.Chaos.applyIptables(attack, ipsetName, env.AttackUid); err != nil {
 				return errors.WithStack(err)
 			}
 		}
@@ -114,20 +114,17 @@ func (s *Server) applyIPSet(attack *core.NetworkCommand, uid string) (string, er
 	return ipset.Name, nil
 }
 
-func (s *Server) applyIptables(attack *core.NetworkCommand, uid string) error {
+func (s *Server) applyIptables(attack *core.NetworkCommand, ipset, uid string) error {
 	iptables, err := s.iptablesRule.List(context.Background())
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	chains := core.IptablesRuleList(iptables).ToChains()
-	newChain, err := attack.ToChain()
+	newChains, err := attack.PartitionChain(ipset)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	if newChain != nil {
-		chains = append(chains, newChain)
-	}
+	chains = append(chains, newChains...)
 
 	if _, err := s.svr.SetIptablesChains(context.Background(), &pb.IptablesChainsRequest{
 		Chains:  chains,
@@ -333,7 +330,7 @@ func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 		return env.Chaos.recoverDNSServer(attack)
 	case core.NetworkPortOccupiedAction:
 		return env.Chaos.recoverPortOccupied(attack, env.AttackUid)
-	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkBandwidthAction:
+	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkPartitionAction, core.NetworkBandwidthAction:
 		if attack.NeedApplyIPSet() {
 			if err := env.Chaos.recoverIPSet(env.AttackUid); err != nil {
 				return errors.WithStack(err)

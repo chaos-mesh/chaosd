@@ -70,6 +70,8 @@ type IptablesRule struct {
 	Direction string `json:"direction"`
 	// Experiment represents the experiment which the rule belong to.
 	Experiment string `gorm:"index:experiment" json:"experiment"`
+
+	Protocol string `json:"protocol"`
 }
 
 func (i *IptablesRule) ToChain() *pb.Chain {

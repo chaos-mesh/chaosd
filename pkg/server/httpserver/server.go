@@ -20,6 +20,7 @@ import (
 	"github.com/joomcode/errorx"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"github.com/chaos-mesh/chaosd/pkg/config"
 	"github.com/chaos-mesh/chaosd/pkg/core"
@@ -42,6 +43,7 @@ func NewServer(
 	exp core.ExperimentStore,
 ) *httpServer {
 	e := gin.Default()
+
 	e.Use(utils.MWHandleErrors())
 
 	return &httpServer{
@@ -57,21 +59,15 @@ func Register(s *httpServer, scheduler scheduler.Scheduler) {
 		return
 	}
 
-	handler(s)
-
 	go func() {
-		addr := s.conf.Address()
-		log.Debug("starting HTTP server", zap.String("address", addr))
-
-		if err := s.engine.Run(addr); err != nil {
+		if err := s.Run(s.handler); err != nil {
 			log.Fatal("failed to start HTTP server", zap.Error(err))
 		}
 	}()
-
 	scheduler.Start()
 }
 
-func handler(s *httpServer) {
+func (s *httpServer) handler() {
 	api := s.engine.Group("/api")
 	{
 		api.GET("/swagger/*any", swaggerserver.Handler())
@@ -83,6 +79,7 @@ func handler(s *httpServer) {
 		attack.POST("/stress", s.createStressAttack)
 		attack.POST("/network", s.createNetworkAttack)
 		attack.POST("/disk", s.createDiskAttack)
+		attack.POST("/clock", s.createClockAttack)
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
@@ -116,6 +113,12 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 		return
 	}
 
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
 	uid, err := s.chaos.ExecuteAttack(chaosd.ProcessAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
@@ -138,6 +141,12 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 	attack := core.NewNetworkCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
 		return
 	}
 
@@ -166,6 +175,12 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 		return
 	}
 
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
 	uid, err := s.chaos.ExecuteAttack(chaosd.StressAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
@@ -185,14 +200,51 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/disk [post]
 func (s *httpServer) createDiskAttack(c *gin.Context) {
-	attack := core.NewDiskOption()
-	if err := c.ShouldBindJSON(attack); err != nil {
+	options := core.NewDiskOption()
+	if err := c.ShouldBindJSON(options); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attack, core.ServerMode)
+	attackConfig, err := options.PreProcess()
+	if err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
 
+	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attackConfig, core.ServerMode)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+// @Summary Create clock attack.
+// @Description Create clock attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.ClockOption true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/clock [post]
+func (s *httpServer) createClockAttack(c *gin.Context) {
+	options := core.NewClockOption()
+	if err := c.ShouldBindJSON(options); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	err := options.PreProcess()
+	if err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+	uid, err := s.chaos.ExecuteAttack(chaosd.ClockAttack, options, core.CommandMode)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -221,6 +273,10 @@ func (s *httpServer) recoverAttack(c *gin.Context) {
 }
 
 func handleError(c *gin.Context, err error) {
+	if err == gorm.ErrRecordNotFound {
+		_ = c.AbortWithError(http.StatusNotFound, utils.ErrNotFound.WrapWithNoMessage(err))
+		return
+	}
 	if errorx.IsOfType(err, core.ErrAttackConfigValidation) {
 		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInvalidRequest.WrapWithNoMessage(err))
 	} else {
