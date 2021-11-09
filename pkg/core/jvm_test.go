@@ -28,44 +28,31 @@ func TestJVMCommand(t *testing.T) {
 	}{
 		{
 			&JVMCommand{},
-			"type not provided",
-		},
-		{
-			&JVMCommand{
-				Type: JVMInstallType,
-			},
 			"pid can't be 0",
 		},
 		{
 			&JVMCommand{
-				Type: JVMInstallType,
-				Pid:  123,
-			},
-			"",
-		},
-		{
-			&JVMCommand{
-				Type: JVMSubmitType,
+				Pid: 1234,
 			},
 			"action not provided",
 		},
 		{
 			&JVMCommand{
-				Type:   JVMSubmitType,
+				Pid:    1234,
 				Action: "test",
 			},
 			"action test not supported",
 		},
 		{
 			&JVMCommand{
-				Type:   JVMSubmitType,
+				Pid:    1234,
 				Action: JVMLatencyAction,
 			},
 			"class not provided",
 		},
 		{
 			&JVMCommand{
-				Type:   JVMSubmitType,
+				Pid:    1234,
 				Action: JVMExceptionAction,
 				Class:  "test",
 			},
@@ -73,7 +60,7 @@ func TestJVMCommand(t *testing.T) {
 		},
 		{
 			&JVMCommand{
-				Type:   JVMSubmitType,
+				Pid:    1234,
 				Action: JVMExceptionAction,
 				Class:  "test",
 				Method: "test",
@@ -82,14 +69,14 @@ func TestJVMCommand(t *testing.T) {
 		},
 		{
 			&JVMCommand{
-				Type:   JVMSubmitType,
+				Pid:    1234,
 				Action: JVMStressAction,
 			},
 			"must set one of cpu-count and mem-size",
 		},
 		{
 			&JVMCommand{
-				Type:       JVMSubmitType,
+				Pid:        1234,
 				Action:     JVMStressAction,
 				CPUCount:   1,
 				MemoryType: "heap",
@@ -98,7 +85,7 @@ func TestJVMCommand(t *testing.T) {
 		},
 		{
 			&JVMCommand{
-				Type:     JVMSubmitType,
+				Pid:      1234,
 				Action:   JVMStressAction,
 				CPUCount: 1,
 			},
