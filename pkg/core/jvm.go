@@ -23,15 +23,13 @@ import (
 )
 
 const (
-	JVMInstallType = "install"
-	JVMSubmitType  = "submit"
-
 	JVMLatencyAction   = "latency"
 	JVMExceptionAction = "exception"
 	JVMReturnAction    = "return"
 	JVMStressAction    = "stress"
 	JVMGCAction        = "gc"
-	JVMRuleFileAction  = "rule_file"
+	JVMRuleFileAction  = "rule-file"
+	JVMRuleDataAction  = "rule-data"
 )
 
 type JVMCommand struct {
@@ -80,62 +78,51 @@ type JVMCommand struct {
 	RuleData []byte `json:"rule-data,omitempty"`
 
 	// below is only used for template
-	Do string
+	Do string `json:"-"`
 
-	StressType string
+	StressType string `json:"-"`
 
-	StressValueName string
+	StressValueName string `json:"-"`
 
-	StressValue string
+	StressValue string `json:"-"`
 }
 
 func (j *JVMCommand) Validate() error {
-	switch j.Type {
-	case JVMInstallType:
-		if j.Pid == 0 {
-			return errors.New("pid can't be 0")
-		}
-	case JVMSubmitType:
-		switch j.Action {
-		case JVMStressAction:
-			if j.CPUCount == 0 && len(j.MemoryType) == 0 {
-				return errors.New("must set one of cpu-count and mem-size when action is 'stress'")
-			}
+	if j.Pid == 0 {
+		return errors.New("pid can't be 0")
+	}
 
-			if j.CPUCount > 0 && len(j.MemoryType) > 0 {
-				return errors.New("inject stress on both CPU and memory is not support now")
-			}
-
-			if len(j.MemoryType) > 0 {
-				if j.MemoryType != "heap" && j.MemoryType != "stack" {
-					return errors.New("memory type should be one of 'heap' and 'stack'")
-				}
-			}
-
-		case JVMGCAction:
-			// do nothing
-		case JVMExceptionAction, JVMReturnAction, JVMLatencyAction:
-			if len(j.Class) == 0 {
-				return errors.New("class not provided")
-			}
-
-			if len(j.Method) == 0 {
-				return errors.New("method not provided")
-			}
-		case JVMRuleFileAction:
-			if len(j.RuleFile) == 0 {
-				return errors.New("rule file not provided")
-			}
-		case "":
-			return errors.New("action not provided, action can be 'latency', 'exception', 'return', 'stress' or 'gc'")
-		default:
-			return errors.New(fmt.Sprintf("action %s not supported, action can be 'latency', 'exception', 'return', 'stress' or 'gc'", j.Action))
+	switch j.Action {
+	case JVMStressAction:
+		if j.CPUCount == 0 && len(j.MemoryType) == 0 {
+			return errors.New("must set one of cpu-count and mem-type when action is 'stress'")
 		}
 
+		if j.CPUCount > 0 && len(j.MemoryType) > 0 {
+			return errors.New("inject stress on both CPU and memory is not support now")
+		}
+	case JVMGCAction:
+		// do nothing
+	case JVMExceptionAction, JVMReturnAction, JVMLatencyAction:
+		if len(j.Class) == 0 {
+			return errors.New("class not provided")
+		}
+
+		if len(j.Method) == 0 {
+			return errors.New("method not provided")
+		}
+	case JVMRuleFileAction:
+		if len(j.RuleFile) == 0 {
+			return errors.New("rule file not provided")
+		}
+	case JVMRuleDataAction:
+		if len(j.RuleData) == 0 {
+			return errors.New("rule data not provide")
+		}
 	case "":
-		return errors.New("type not provided, type can be 'install' or 'submit'")
+		return errors.New("action not provided")
 	default:
-		return errors.New(fmt.Sprintf("type %s not supported, type can be 'install' or 'submit'", j.Type))
+		return errors.New(fmt.Sprintf("action %s not supported, action can be 'latency', 'exception', 'return', 'stress', 'gc', 'rule-file' of 'rule-data'", j.Action))
 	}
 
 	return nil
@@ -148,10 +135,12 @@ func (j *JVMCommand) RecoverData() string {
 }
 
 func (j *JVMCommand) CompleteDefaults() {
-	if j.Type == JVMSubmitType {
-		if len(j.Name) == 0 {
-			j.Name = fmt.Sprintf("%s-%s-%s-%s-%s", j.Class, j.Method, j.Action, j.Type, utils.RandomStringWithCharset(5))
-		}
+	if len(j.Name) == 0 {
+		j.Name = fmt.Sprintf("%s-%s-%s-%s", j.Class, j.Method, j.Action, utils.RandomStringWithCharset(5))
+	}
+
+	if j.Port == 0 {
+		j.Port = 9288
 	}
 }
 
