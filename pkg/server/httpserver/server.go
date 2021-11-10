@@ -79,7 +79,6 @@ func (s *httpServer) handler() {
 		attack.POST("/stress", s.createStressAttack)
 		attack.POST("/network", s.createNetworkAttack)
 		attack.POST("/disk", s.createDiskAttack)
-		attack.POST("/jvm", s.createJVMAttack)
 		attack.POST("/clock", s.createClockAttack)
 		attack.POST("/jvm", s.createJVMAttack)
 
@@ -284,32 +283,6 @@ func (s *httpServer) createJVMAttack(c *gin.Context) {
 	}
 
 	uid, err := s.chaos.ExecuteAttack(chaosd.JVMAttack, options, core.ServerMode)
-	if err != nil {
-		handleError(c, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
-}
-
-// @Summary Create jvm attack.
-// @Description Create jvm attack.
-// @Tags attack
-// @Produce json
-// @Param request body core.JVMCommand true "Request body"
-// @Success 200 {object} utils.Response
-// @Failure 400 {object} utils.APIError
-// @Failure 500 {object} utils.APIError
-// @Router /api/attack/jvm [post]
-func (s *httpServer) createJVMAttack(c *gin.Context) {
-	attack := core.NewJVMCommand()
-	if err := c.ShouldBindJSON(attack); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
-		return
-	}
-
-	uid, err := s.chaos.ExecuteAttack(chaosd.JVMAttack, attack, core.ServerMode)
-
 	if err != nil {
 		handleError(c, err)
 		return

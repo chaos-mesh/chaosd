@@ -54,7 +54,7 @@ type JVMCommand struct {
 	ThrowException string `json:"exception,omitempty"`
 
 	// the latency duration for action 'latency'
-	LatencyDuration string `json:"latency,omitempty"`
+	LatencyDuration int `json:"latency,omitempty"`
 
 	// the CPU core number, only set it when action is stress
 	CPUCount int `json:"cpu-count,omitempty"`
@@ -75,7 +75,7 @@ type JVMCommand struct {
 	RuleFile string `json:"rule-file,omitempty"`
 
 	// RuleData used to save the rule file's data, will use it when recover
-	RuleData []byte `json:"rule-data,omitempty"`
+	RuleData string `json:"rule-data,omitempty"`
 
 	// below is only used for template
 	Do string `json:"-"`
