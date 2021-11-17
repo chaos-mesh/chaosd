@@ -20,7 +20,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
+	"github.com/chaos-mesh/chaos-mesh/pkg/netem"
 	"github.com/pingcap/errors"
 
 	"github.com/chaos-mesh/chaosd/pkg/utils"
@@ -49,6 +51,7 @@ type NetworkCommand struct {
 	DNSIp     string
 	DNSHost   string
 
+	*BandwidthSpec `json:",inline"`
 	// only the packet which match the tcp flag can be accepted, others will be dropped.
 	// only set when the IPProtocol is tcp, used for partition.
 	AcceptTCPFlags string
@@ -57,13 +60,14 @@ type NetworkCommand struct {
 var _ AttackConfig = &NetworkCommand{}
 
 const (
-	NetworkDelayAction     = "delay"
-	NetworkLossAction      = "loss"
-	NetworkCorruptAction   = "corrupt"
-	NetworkDuplicateAction = "duplicate"
-	NetworkDNSAction       = "dns"
-	NetworkPartitionAction = "partition"
-	NetworkPortOccupied    = "occupied"
+	NetworkDelayAction        = "delay"
+	NetworkLossAction         = "loss"
+	NetworkCorruptAction      = "corrupt"
+	NetworkDuplicateAction    = "duplicate"
+	NetworkDNSAction          = "dns"
+	NetworkPartitionAction    = "partition"
+	NetworkBandwidthAction    = "bandwidth"
+	NetworkPortOccupiedAction = "occupied"
 )
 
 func (n *NetworkCommand) Validate() error {
@@ -79,8 +83,10 @@ func (n *NetworkCommand) Validate() error {
 		return n.validNetworkDNS()
 	case NetworkPartitionAction:
 		return n.validNetworkPartition()
-	case NetworkPortOccupied:
+	case NetworkPortOccupiedAction:
 		return n.validNetworkOccupied()
+	case NetworkBandwidthAction:
+		return n.validNetworkBandwidth()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -114,6 +120,14 @@ func (n *NetworkCommand) validNetworkDelay() error {
 	}
 
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
+}
+
+func (n *NetworkCommand) validNetworkBandwidth() error {
+	if len(n.Rate) == 0 || n.Limit == 0 || n.Buffer == 0 {
+		return errors.Errorf("rate, limit and buffer both are required when action is bandwidth")
+	}
+
+	return nil
 }
 
 func (n *NetworkCommand) validNetworkCommon() error {
@@ -325,6 +339,26 @@ func (n *NetworkCommand) ToDuplicateNetem() (*pb.Netem, error) {
 }
 
 func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
+	if n.Action == NetworkBandwidthAction {
+		tbf, err := netem.FromBandwidth(&v1alpha1.BandwidthSpec{
+			Rate:     n.Rate,
+			Limit:    n.Limit,
+			Buffer:   n.Buffer,
+			Peakrate: n.Peakrate,
+			Minburst: n.Minburst,
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &pb.Tc{
+			Type:  pb.Tc_BANDWIDTH,
+			Tbf:   tbf,
+			Ipset: ipset,
+		}, nil
+	}
+
 	tc := &pb.Tc{
 		Type:       pb.Tc_NETEM,
 		Ipset:      ipset,
@@ -405,7 +439,7 @@ func (n *NetworkCommand) NeedApplyIptables() bool {
 
 func (n *NetworkCommand) NeedApplyTC() bool {
 	switch n.Action {
-	case NetworkDelayAction, NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction:
+	case NetworkDelayAction, NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction, NetworkBandwidthAction:
 		return true
 	default:
 		return false
@@ -467,6 +501,10 @@ func NewNetworkCommand() *NetworkCommand {
 	return &NetworkCommand{
 		CommonAttackConfig: CommonAttackConfig{
 			Kind: NetworkAttack,
+		},
+		BandwidthSpec: &BandwidthSpec{
+			Peakrate: new(uint64),
+			Minburst: new(uint32),
 		},
 	}
 }

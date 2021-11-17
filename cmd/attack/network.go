@@ -48,6 +48,7 @@ func NewNetworkAttackCommand(uid *string) *cobra.Command {
 		NetworkPartitionCommand(dep, options),
 		NetworkDNSCommand(dep, options),
 		NewNetworkPortOccupiedCommand(dep, options),
+		NewNetworkBandwidthCommand(dep, options),
 	)
 
 	return cmd
@@ -215,6 +216,30 @@ func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 	return cmd
 }
 
+func NewNetworkBandwidthCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "bandwidth",
+		Short: "limit network bandwidth",
+
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.NetworkBandwidthAction
+			options.CompleteDefaults()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Rate, "rate", "r", "", "the speed knob, allows bps, kbps, mbps, gbps, tbps unit. bps means bytes per second")
+	cmd.Flags().Uint32VarP(&options.Limit, "limit", "l", 0, "the number of bytes that can be queued waiting for tokens to become available")
+	cmd.Flags().Uint32VarP(&options.Buffer, "buffer", "b", 0, "the maximum amount of bytes that tokens can be available for instantaneously")
+	cmd.Flags().Uint64VarP(options.Peakrate, "peakrate", "", 0, "the maximum depletion rate of the bucket")
+	cmd.Flags().Uint32VarP(options.Minburst, "minburst", "m", 0, "specifies the size of the peakrate bucket")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+
+	return cmd
+}
+
 func commonNetworkAttackFunc(options *core.NetworkCommand, chaos *chaosd.Server) {
 	if err := options.Validate(); err != nil {
 		utils.ExitWithError(utils.ExitBadArgs, err)
@@ -234,7 +259,7 @@ func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) 
 		Short: "attack network port",
 
 		Run: func(cmd *cobra.Command, args []string) {
-			options.Action = core.NetworkPortOccupied
+			options.Action = core.NetworkPortOccupiedAction
 			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
 		},
