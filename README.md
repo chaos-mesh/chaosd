@@ -267,7 +267,7 @@ Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
     Sample usage:
 
     ```bash
-    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "delay", "latency": "10ms", "jitter": "10ms", "correlation": "0"}'
+    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ip-address": "172.16.4.4", "action": "delay", "latency": "10ms", "jitter": "10ms", "correlation": "0"}'
     ```
 
 - **lose network packet**
@@ -277,7 +277,7 @@ Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
     Sample usage:
 
     ```bash
-    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "loss", "percent": "50", "correlation": "0"}'
+    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ip-address": "172.16.4.4", "action": "loss", "percent": "50", "correlation": "0"}'
     ```
 
 - **corrupt network packet**
@@ -287,7 +287,7 @@ Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
     Sample usage:
 
     ```bash
-    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "corrupt", "percent": "50",  "correlation": "0"}'
+    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ip-address": "172.16.4.4", "action": "corrupt", "percent": "50",  "correlation": "0"}'
     ```
 
 - **duplicate network packet**
@@ -297,7 +297,7 @@ Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
     Sample usage:
 
     ```bash
-    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ipaddress": "172.16.4.4", "action": "duplicate", "percent": "50", "correlation": "0"}'
+    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ip-address": "172.16.4.4", "action": "duplicate", "percent": "50", "correlation": "0"}'
     ```
 
 #### Stress attack
@@ -349,11 +349,11 @@ Attacks the disk by increasing write/read payload, or filling up the disk. Suppo
     Sample usage:
 
     ```bash
-    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill_by_fallocate": true}' //filling using fallocate
+    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill-by-fallocate": true}' //filling using fallocate
     ```
 
     ```bash
-    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill_by_fallocate": false}' //filling by writing data to files
+    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill-by-fallocate": false}' //filling by writing data to files
     ```
 
 #### Recover attack
@@ -365,7 +365,6 @@ Sample usage:
 ```bash
 $ curl -X DELETE "127.0.0.1:31767/api/attack/20df86e9-96e7-47db-88ce-dd31bc70c4f0"
 ```
-
 
 ## Development
 
