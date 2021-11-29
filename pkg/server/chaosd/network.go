@@ -63,10 +63,10 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 			}
 		}
 
-	case core.NetworkPortOccupied:
+	case core.NetworkPortOccupiedAction:
 		return env.Chaos.applyPortOccupied(attack)
 
-	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkPartitionAction:
+	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkBandwidthAction:
 		if attack.NeedApplyIPSet() {
 			ipsetName, err = env.Chaos.applyIPSet(attack, env.AttackUid)
 			if err != nil {
@@ -91,7 +91,7 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 }
 
 func (s *Server) applyIPSet(attack *core.NetworkCommand, uid string) (string, error) {
-	ipset, err := attack.ToIPSet(fmt.Sprintf("chaos-%s", uid[:16]))
+	ipset, err := attack.ToIPSet(fmt.Sprintf("chaos-%.16s", uid))
 	if err != nil {
 		return "", errors.WithStack(err)
 	}
@@ -191,6 +191,14 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 		tc.Duplicate = &core.DuplicateSpec{
 			Duplicate:   attack.Percent,
 			Correlation: attack.Correlation,
+		}
+	case core.NetworkBandwidthAction:
+		tc.Bandwidth = &core.BandwidthSpec{
+			Rate:     attack.Rate,
+			Limit:    attack.Limit,
+			Buffer:   attack.Buffer,
+			Peakrate: attack.Peakrate,
+			Minburst: attack.Minburst,
 		}
 	default:
 		return errors.Errorf("network %s attack not supported", attack.Action)
@@ -320,9 +328,9 @@ func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 			}
 		}
 		return env.Chaos.recoverDNSServer(attack)
-	case core.NetworkPortOccupied:
+	case core.NetworkPortOccupiedAction:
 		return env.Chaos.recoverPortOccupied(attack, env.AttackUid)
-	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkPartitionAction:
+	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkPartitionAction, core.NetworkBandwidthAction:
 		if attack.NeedApplyIPSet() {
 			if err := env.Chaos.recoverIPSet(env.AttackUid); err != nil {
 				return errors.WithStack(err)
