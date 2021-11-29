@@ -79,8 +79,8 @@ func (s *httpServer) handler() {
 		attack.POST("/stress", s.createStressAttack)
 		attack.POST("/network", s.createNetworkAttack)
 		attack.POST("/disk", s.createDiskAttack)
-		attack.POST("/jvm", s.createJVMAttack)
 		attack.POST("/clock", s.createClockAttack)
+		attack.POST("/jvm", s.createJVMAttack)
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
@@ -114,6 +114,7 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 		return
 	}
 
+	attack.CompleteDefaults()
 	if err := attack.Validate(); err != nil {
 		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
 		handleError(c, err)
@@ -145,6 +146,7 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 		return
 	}
 
+	attack.CompleteDefaults()
 	if err := attack.Validate(); err != nil {
 		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
 		handleError(c, err)
@@ -176,6 +178,7 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 		return
 	}
 
+	attack.CompleteDefaults()
 	if err := attack.Validate(); err != nil {
 		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
 		handleError(c, err)
@@ -207,6 +210,7 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 		return
 	}
 
+	options.CompleteDefaults()
 	attackConfig, err := options.PreProcess()
 	if err != nil {
 		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
@@ -239,13 +243,14 @@ func (s *httpServer) createClockAttack(c *gin.Context) {
 		return
 	}
 
+	options.CompleteDefaults()
 	err := options.PreProcess()
 	if err != nil {
 		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
 		handleError(c, err)
 		return
 	}
-	uid, err := s.chaos.ExecuteAttack(chaosd.ClockAttack, options, core.CommandMode)
+	uid, err := s.chaos.ExecuteAttack(chaosd.ClockAttack, options, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
@@ -254,8 +259,8 @@ func (s *httpServer) createClockAttack(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
 }
 
-// @Summary Create jvm attack.
-// @Description Create jvm attack.
+// @Summary Create JVM attack.
+// @Description Create JVM attack.
 // @Tags attack
 // @Produce json
 // @Param request body core.JVMCommand true "Request body"
@@ -264,14 +269,20 @@ func (s *httpServer) createClockAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/jvm [post]
 func (s *httpServer) createJVMAttack(c *gin.Context) {
-	attack := core.NewJVMCommand()
-	if err := c.ShouldBindJSON(attack); err != nil {
+	options := core.NewJVMCommand()
+	if err := c.ShouldBindJSON(options); err != nil {
 		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.JVMAttack, attack, core.ServerMode)
+	options.CompleteDefaults()
+	if err := options.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
 
+	uid, err := s.chaos.ExecuteAttack(chaosd.JVMAttack, options, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return

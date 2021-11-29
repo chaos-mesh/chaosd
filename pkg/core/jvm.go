@@ -36,40 +36,46 @@ type JVMCommand struct {
 	CommonAttackConfig
 
 	// rule name, should be unique, and will generate by chaosd automatically
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 
 	// Java class
-	Class string `json:"class"`
+	Class string `json:"class,omitempty"`
 
 	// the method in Java class
-	Method string `json:"method"`
+	Method string `json:"method,omitempty"`
 
 	// fault action, values can be latency, exception, return, stress
-	Action string `json:"action"`
+	Action string `json:"action,omitempty"`
 
 	// the return value for action 'return'
-	ReturnValue string `json:"value"`
+	ReturnValue string `json:"value,omitempty"`
 
-	// the exception which needs to throw dor action `exception`
-	ThrowException string `json:"exception"`
+	// the exception which needs to throw for action `exception`
+	ThrowException string `json:"exception,omitempty"`
 
-	// the latency duration for action 'latency', unit ms
-	LatencyDuration int `json:"latency"`
+	// the latency duration for action 'latency'
+	LatencyDuration int `json:"latency,omitempty"`
 
-	// the CPU core number need to use, only set it when action is stress
-	CPUCount int `json:"cpu-count"`
+	// the CPU core number, only set it when action is stress
+	CPUCount int `json:"cpu-count,omitempty"`
 
-	// the memory type need to locate, only set it when action is stress, the value can be 'stack' or 'heap'
-	MemoryType string `json:"mem-type"`
+	// the memory type to be located, only set it when action is stress, the value can be 'stack' or 'heap'
+	MemoryType string `json:"mem-type,omitempty"`
 
 	// attach or agent
 	Type string
 
 	// the port of agent server
-	Port int `json:"port"`
+	Port int `json:"port,omitempty"`
 
-	// the pid of Java process which need to attach
-	Pid int `json:"pid"`
+	// the pid of Java process which needs to attach
+	Pid int `json:"pid,omitempty"`
+
+	// btm rule file path
+	RuleFile string `json:"rule-file,omitempty"`
+
+	// RuleData used to save the rule file's data, will use it when recover
+	RuleData string `json:"rule-data,omitempty"`
 
 	// below is only used for template
 	Do string `json:"-"`
@@ -79,12 +85,6 @@ type JVMCommand struct {
 	StressValueName string `json:"-"`
 
 	StressValue string `json:"-"`
-
-	// btm rule file path
-	RuleFile string `json:"rule-file"`
-
-	// RuleData used to save the rule file's data, will use it when recover
-	RuleData string `json:"rule-data"`
 }
 
 func (j *JVMCommand) Validate() error {

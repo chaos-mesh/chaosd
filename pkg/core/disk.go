@@ -72,12 +72,12 @@ type FAllocateOption struct {
 type DiskOption struct {
 	CommonAttackConfig
 
-	Size              string `json:"size"`
-	Path              string `json:"path"`
-	Percent           string `json:"percent"`
-	PayloadProcessNum uint8  `json:"payload_process_num"`
+	Size              string `json:"size,omitempty"`
+	Path              string `json:"path,omitempty"`
+	Percent           string `json:"percent,omitempty"`
+	PayloadProcessNum uint8  `json:"payload-process-num,omitempty"`
 
-	FillByFAllocate bool `json:"fill_by_fallocate"`
+	FillByFAllocate bool `json:"fill-by-fallocate,omitempty"`
 }
 
 func NewDiskOption() *DiskOption {

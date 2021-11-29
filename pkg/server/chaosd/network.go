@@ -255,7 +255,7 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 	// example:
 	// 10.86.33.102    qunarzz.com     q.qunarzz.com   common.qunarzz.com
 	// 127.0.0.1       localhost
-	needle := "^(\\d{1,3})(\\.\\d{1,3}){3}.*\\b" + attack.DNSHost + "\\b.*"
+	needle := "^(\\d{1,3})(\\.\\d{1,3}){3}.*\\b" + attack.DNSDomainName + "\\b.*"
 	re, err := regexp.Compile(needle)
 	if err != nil {
 		return errors.WithStack(err)
@@ -295,7 +295,7 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 	}
 	// if not match any, then add a new line.
 	if newFlag {
-		_, err := w.WriteString(attack.DNSIp + "\t" + attack.DNSHost + "\n")
+		_, err := w.WriteString(attack.DNSIp + "\t" + attack.DNSDomainName + "\n")
 		if err != nil {
 			return errors.WithStack(err)
 		}
