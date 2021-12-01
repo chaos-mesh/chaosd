@@ -29,30 +29,6 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-const ruleTemplate = `
-RULE {{.Name}}
-CLASS {{.Class}}
-METHOD {{.Method}}
-AT ENTRY
-IF true
-DO 
-	{{.Do}};
-ENDRULE
-`
-
-const stressRuleTemplate = `
-RULE {{.Name}}
-STRESS {{.StressType}}
-{{.StressValueName}} {{.StressValue}}
-ENDRULE
-`
-
-const gcRuleTemplate = `
-RULE {{.Name}}
-GC
-ENDRULE
-`
-
 type jvmAttack struct{}
 
 var JVMAttack AttackType = jvmAttack{}
@@ -127,48 +103,54 @@ func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 		return attack.RuleFile, nil
 	}
 
-	if len(attack.Do) == 0 {
-		switch attack.Action {
-		case core.JVMLatencyAction:
-			attack.Do = fmt.Sprintf("Thread.sleep(%d)", attack.LatencyDuration)
-		case core.JVMExceptionAction:
-			attack.Do = fmt.Sprintf("throw new %s", attack.ThrowException)
-		case core.JVMReturnAction:
-			attack.Do = fmt.Sprintf("return %s", attack.ReturnValue)
-		case core.JVMStressAction:
-			if attack.CPUCount > 0 {
-				attack.StressType = "CPU"
-				attack.StressValueName = "CPUCOUNT"
-				attack.StressValue = fmt.Sprintf("%d", attack.CPUCount)
-			} else {
-				attack.StressType = "MEMORY"
-				attack.StressValueName = "MEMORYTYPE"
-				attack.StressValue = attack.MemoryType
+	/*
+		if len(attack.Do) == 0 {
+			switch attack.Action {
+			case core.JVMLatencyAction:
+				attack.Do = fmt.Sprintf("Thread.sleep(%d)", attack.LatencyDuration)
+			case core.JVMExceptionAction:
+				attack.Do = fmt.Sprintf("throw new %s", attack.ThrowException)
+			case core.JVMReturnAction:
+				attack.Do = fmt.Sprintf("return %s", attack.ReturnValue)
+			case core.JVMStressAction:
+				if attack.CPUCount > 0 {
+					attack.StressType = "CPU"
+					attack.StressValueName = "CPUCOUNT"
+					attack.StressValue = fmt.Sprintf("%d", attack.CPUCount)
+				} else {
+					attack.StressType = "MEMORY"
+					attack.StressValueName = "MEMORYTYPE"
+					attack.StressValue = attack.MemoryType
+				}
 			}
 		}
-	}
-	buf := new(bytes.Buffer)
-	var t *template.Template
-	switch attack.Action {
-	case core.JVMStressAction:
-		t = template.Must(template.New("byteman rule").Parse(stressRuleTemplate))
-	case core.JVMExceptionAction, core.JVMLatencyAction, core.JVMReturnAction:
-		t = template.Must(template.New("byteman rule").Parse(ruleTemplate))
-	case core.JVMGCAction:
-		t = template.Must(template.New("byteman rule").Parse(gcRuleTemplate))
-	default:
-		return "", errors.Errorf("jvm action %s not supported", attack.Action)
-	}
-	if t == nil {
-		return "", errors.Errorf("parse byeman rule template failed")
-	}
-	err = t.Execute(buf, attack)
+		buf := new(bytes.Buffer)
+		var t *template.Template
+		switch attack.Action {
+		case core.JVMStressAction:
+			t = template.Must(template.New("byteman rule").Parse(stressRuleTemplate))
+		case core.JVMExceptionAction, core.JVMLatencyAction, core.JVMReturnAction:
+			t = template.Must(template.New("byteman rule").Parse(ruleTemplate))
+		case core.JVMGCAction:
+			t = template.Must(template.New("byteman rule").Parse(gcRuleTemplate))
+		default:
+			return "", errors.Errorf("jvm action %s not supported", attack.Action)
+		}
+		if t == nil {
+			return "", errors.Errorf("parse byeman rule template failed")
+		}
+		err = t.Execute(buf, attack)
+		if err != nil {
+			log.Error("executing template", zap.Error(err))
+			return "", err
+		}
+
+		attack.RuleData = buf.String()
+	*/
+	attack.RuleData, err = generateRuleData(attack)
 	if err != nil {
-		log.Error("executing template", zap.Error(err))
 		return "", err
 	}
-
-	attack.RuleData = buf.String()
 
 	filename, err := writeDataIntoFile(attack.RuleData, "rule.btm")
 	if err != nil {
@@ -202,6 +184,81 @@ func (j jvmAttack) Recover(exp core.Experiment, env Environment) error {
 	log.Info(string(output))
 
 	return nil
+}
+
+func generateRuleData(attack *core.JVMCommand) (string, error) {
+	bytemanTemplateSpec := core.BytemanTemplateSpec{
+		Name:   attack.Name,
+		Class:  attack.Class,
+		Method: attack.Method,
+	}
+
+	var mysqlException string
+	switch attack.Action {
+	case core.JVMLatencyAction:
+		bytemanTemplateSpec.Do = fmt.Sprintf("Thread.sleep(%d)", attack.LatencyDuration)
+	case core.JVMExceptionAction:
+		bytemanTemplateSpec.Do = fmt.Sprintf("throw new %s", attack.ThrowException)
+	case core.JVMReturnAction:
+		bytemanTemplateSpec.Do = fmt.Sprintf("return %s", attack.ReturnValue)
+	case core.JVMStressAction:
+		if attack.CPUCount > 0 {
+			bytemanTemplateSpec.StressType = "CPU"
+			bytemanTemplateSpec.StressValueName = "CPUCOUNT"
+			bytemanTemplateSpec.StressValue = fmt.Sprintf("%d", attack.CPUCount)
+		} else {
+			bytemanTemplateSpec.StressType = "MEMORY"
+			bytemanTemplateSpec.StressValueName = "MEMORYTYPE"
+			bytemanTemplateSpec.StressValue = attack.MemoryType
+		}
+	case core.JVMMySQLAction:
+		bytemanTemplateSpec.Helper = core.SQLHelper
+		bytemanTemplateSpec.Bind = fmt.Sprintf("flag:boolean=matchDBTable($2, \"%s\", \"%s\")", attack.Database, attack.Table)
+		bytemanTemplateSpec.Condition = "flag"
+		if attack.MySQLConnectorVersion == 5 {
+			bytemanTemplateSpec.Class = core.MySQL5InjectClass
+			bytemanTemplateSpec.Method = core.MySQL5InjectMethod
+			mysqlException = core.MySQL5Exception
+		} else if attack.MySQLConnectorVersion == 8 {
+			bytemanTemplateSpec.Class = core.MySQL8InjectClass
+			bytemanTemplateSpec.Method = core.MySQL8InjectMethod
+			mysqlException = core.MySQL8Exception
+		} else {
+			return "", errors.Errorf("mysql connector version %s is not supported", attack.MySQLConnectorVersion)
+		}
+
+		if len(attack.ThrowException) > 0 {
+			exception := fmt.Sprintf(mysqlException, attack.ThrowException)
+			bytemanTemplateSpec.Do = fmt.Sprintf("throw new %s", exception)
+		} else if attack.LatencyDuration > 0 {
+			bytemanTemplateSpec.Do = fmt.Sprintf("Thread.sleep(%d)", attack.LatencyDuration)
+		}
+	}
+
+	buf := new(bytes.Buffer)
+	var t *template.Template
+	switch attack.Action {
+	case core.JVMStressAction:
+		t = template.Must(template.New("byteman rule").Parse(core.StressRuleTemplate))
+	case core.JVMExceptionAction, core.JVMLatencyAction, core.JVMReturnAction:
+		t = template.Must(template.New("byteman rule").Parse(core.SimpleRuleTemplate))
+	case core.JVMGCAction:
+		t = template.Must(template.New("byteman rule").Parse(core.GCRuleTemplate))
+	case core.JVMMySQLAction:
+		t = template.Must(template.New("byteman rule").Parse(core.CompleteRuleTemplate))
+	default:
+		return "", errors.Errorf("jvm action %s not supported", attack.Action)
+	}
+	if t == nil {
+		return "", errors.Errorf("parse byeman rule template failed")
+	}
+	err := t.Execute(buf, bytemanTemplateSpec)
+	if err != nil {
+		log.Error("executing template", zap.Error(err))
+		return "", err
+	}
+
+	return buf.String(), nil
 }
 
 func writeDataIntoFile(data string, filename string) (string, error) {
