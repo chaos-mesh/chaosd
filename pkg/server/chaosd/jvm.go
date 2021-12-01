@@ -103,50 +103,6 @@ func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 		return attack.RuleFile, nil
 	}
 
-	/*
-		if len(attack.Do) == 0 {
-			switch attack.Action {
-			case core.JVMLatencyAction:
-				attack.Do = fmt.Sprintf("Thread.sleep(%d)", attack.LatencyDuration)
-			case core.JVMExceptionAction:
-				attack.Do = fmt.Sprintf("throw new %s", attack.ThrowException)
-			case core.JVMReturnAction:
-				attack.Do = fmt.Sprintf("return %s", attack.ReturnValue)
-			case core.JVMStressAction:
-				if attack.CPUCount > 0 {
-					attack.StressType = "CPU"
-					attack.StressValueName = "CPUCOUNT"
-					attack.StressValue = fmt.Sprintf("%d", attack.CPUCount)
-				} else {
-					attack.StressType = "MEMORY"
-					attack.StressValueName = "MEMORYTYPE"
-					attack.StressValue = attack.MemoryType
-				}
-			}
-		}
-		buf := new(bytes.Buffer)
-		var t *template.Template
-		switch attack.Action {
-		case core.JVMStressAction:
-			t = template.Must(template.New("byteman rule").Parse(stressRuleTemplate))
-		case core.JVMExceptionAction, core.JVMLatencyAction, core.JVMReturnAction:
-			t = template.Must(template.New("byteman rule").Parse(ruleTemplate))
-		case core.JVMGCAction:
-			t = template.Must(template.New("byteman rule").Parse(gcRuleTemplate))
-		default:
-			return "", errors.Errorf("jvm action %s not supported", attack.Action)
-		}
-		if t == nil {
-			return "", errors.Errorf("parse byeman rule template failed")
-		}
-		err = t.Execute(buf, attack)
-		if err != nil {
-			log.Error("executing template", zap.Error(err))
-			return "", err
-		}
-
-		attack.RuleData = buf.String()
-	*/
 	attack.RuleData, err = generateRuleData(attack)
 	if err != nil {
 		return "", err
