@@ -27,6 +27,7 @@ type Config struct {
 	Version bool
 
 	ListenPort      int
+	ListenHttpsPort int
 	ListenHost      string
 	SSLCertFile     string
 	SSLKeyFile      string
@@ -35,6 +36,7 @@ type Config struct {
 	EnablePprof     bool
 	PprofPort       int
 	Platform        string
+	ServerName      string
 }
 
 // Parse parses flag definitions from the argument list.
@@ -49,6 +51,11 @@ func (c *Config) Parse(arguments []string) error {
 // Get the grpc address
 func (c *Config) Address() string {
 	return fmt.Sprintf("%s:%d", c.ListenHost, c.ListenPort)
+}
+
+// Get the https server address
+func (c *Config) HttpsServerAddress() string {
+	return fmt.Sprintf("%s:%d", c.ListenHost, c.ListenHttpsPort)
 }
 
 // Validate is used to validate if some configurations are right.

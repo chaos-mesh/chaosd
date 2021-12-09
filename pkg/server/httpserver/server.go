@@ -60,15 +60,32 @@ func Register(s *httpServer, scheduler scheduler.Scheduler) {
 	}
 
 	go func() {
-		if err := s.Run(s.handler); err != nil {
+		if err := s.startHttpServer(); err != nil {
 			log.Fatal("failed to start HTTP server", zap.Error(err))
+		}
+	}()
+	go func() {
+		if err := s.startHttpsServer(); err != nil {
+			log.Fatal("failed to start HTTPS server", zap.Error(err))
 		}
 	}()
 	scheduler.Start()
 }
 
-func (s *httpServer) handler() {
-	api := s.engine.Group("/api")
+func (s *httpServer) startHttpServer() error {
+	httpServerAddr := s.conf.Address()
+	log.Info("starting HTTP server", zap.String("address", httpServerAddr))
+	e := gin.Default()
+	e.Use(utils.MWHandleErrors())
+	s.systemHandler(e)
+	if s.serverMode() == HTTPServer {
+		s.handler(e)
+	}
+	return s.engine.Run(httpServerAddr)
+}
+
+func (s *httpServer) handler(engine *gin.Engine) {
+	api := engine.Group("/api")
 	{
 		api.GET("/swagger/*any", swaggerserver.Handler())
 	}
@@ -90,7 +107,10 @@ func (s *httpServer) handler() {
 		experiments.GET("/", s.listExperiments)
 		experiments.GET("/:uid/runs", s.listExperimentRuns)
 	}
+}
 
+func (s *httpServer) systemHandler(engine *gin.Engine) {
+	api := engine.Group("/api")
 	system := api.Group("/system")
 	{
 		system.GET("/health", s.healthcheck)
