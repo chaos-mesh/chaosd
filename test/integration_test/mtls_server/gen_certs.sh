@@ -23,6 +23,7 @@ openssl req \
 	-newkey rsa:4096 \
 	-keyout server/server_key.pem \
 	-out server/server_cert.pem \
+	-nodes \
 	-days 365 \
 	-subj "/CN=localhost/O=Client\ Certificate\ Demo"
 
@@ -31,6 +32,7 @@ openssl req \
 	-newkey rsa:4096 \
 	-keyout client/valid_key.pem \
 	-out client/valid_csr.pem \
+	-nodes \
 	-days 365 \
 	-subj "/CN=Valid"
 
@@ -41,6 +43,7 @@ openssl x509 \
 	-CA server/server_cert.pem \
 	-CAkey server/server_key.pem \
 	-out client/valid_cert.pem \
+	-set_serial 01 \
 	-days 365
 
 # generate self-signed (invalid) certificate
@@ -48,6 +51,7 @@ openssl req \
 	-newkey rsa:4096 \
 	-keyout client/invalid_key.pem \
 	-out client/invalid_csr.pem \
+	-nodes \
 	-days 365 \
 	-subj "/CN=Invalid"
 
