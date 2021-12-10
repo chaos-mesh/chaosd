@@ -31,10 +31,9 @@ import (
 )
 
 type httpServer struct {
-	conf   *config.Config
-	chaos  *chaosd.Server
-	exp    core.ExperimentStore
-	engine *gin.Engine
+	conf  *config.Config
+	chaos *chaosd.Server
+	exp   core.ExperimentStore
 }
 
 func NewServer(
@@ -42,15 +41,10 @@ func NewServer(
 	chaos *chaosd.Server,
 	exp core.ExperimentStore,
 ) *httpServer {
-	e := gin.Default()
-
-	e.Use(utils.MWHandleErrors())
-
 	return &httpServer{
-		conf:   conf,
-		chaos:  chaos,
-		exp:    exp,
-		engine: e,
+		conf:  conf,
+		chaos: chaos,
+		exp:   exp,
 	}
 }
 
@@ -81,7 +75,7 @@ func (s *httpServer) startHttpServer() error {
 	if s.serverMode() == HTTPServer {
 		s.handler(e)
 	}
-	return s.engine.Run(httpServerAddr)
+	return e.Run(httpServerAddr)
 }
 
 func (s *httpServer) handler(engine *gin.Engine) {

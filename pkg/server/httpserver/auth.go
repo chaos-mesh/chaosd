@@ -16,11 +16,12 @@ package httpserver
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
-	"io/ioutil"
-	"net/http"
 
 	"github.com/chaos-mesh/chaosd/pkg/server/utils"
 )
@@ -76,13 +77,13 @@ func (s *httpServer) startHttpsServer() (err error) {
 		server := &http.Server{
 			Addr:      httpsServerAddr,
 			TLSConfig: tlsConfig,
-			Handler:   s.engine,
+			Handler:   e,
 		}
 
 		err = server.ListenAndServeTLS(s.conf.SSLCertFile, s.conf.SSLKeyFile)
 	} else if mode == TLSServer {
 		log.Info("starting HTTPS server", zap.String("address", httpsServerAddr))
-		err = s.engine.RunTLS(httpsServerAddr, s.conf.SSLCertFile, s.conf.SSLKeyFile)
+		err = e.RunTLS(httpsServerAddr, s.conf.SSLCertFile, s.conf.SSLKeyFile)
 	}
 	return
 }
