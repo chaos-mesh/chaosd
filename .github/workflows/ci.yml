@@ -49,7 +49,7 @@ jobs:
           elif [[ "$job" == "unit-test" ]]; then
             make test
           elif [[ "$job" == "integration-test" ]]; then
-            sudo apt-get install -y stress-ng
+            sudo apt-get update && apt-get install -y stress-ng
             make integration-test
           else
             make $job
