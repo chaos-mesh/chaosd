@@ -56,7 +56,6 @@ func (s *httpServer) startHttpsServer() (err error) {
 	httpsServerAddr := s.conf.HttpsServerAddress()
 	e := gin.Default()
 	e.Use(utils.MWHandleErrors())
-	s.handler(e)
 
 	if mode == MTLSServer {
 		log.Info("starting HTTPS server with Client Auth", zap.String("address", httpsServerAddr))
@@ -76,6 +75,8 @@ func (s *httpServer) startHttpsServer() (err error) {
 		}
 		e.Use(authenticateClientCert(tlsConfig))
 
+		// According to https://github.com/gin-gonic/gin/issues/531, we need to register middlewares before RouterGroup.
+		s.handler(e)
 		server := &http.Server{
 			Addr:      httpsServerAddr,
 			TLSConfig: tlsConfig,
@@ -85,6 +86,7 @@ func (s *httpServer) startHttpsServer() (err error) {
 		err = server.ListenAndServeTLS(s.conf.SSLCertFile, s.conf.SSLKeyFile)
 	} else if mode == TLSServer {
 		log.Info("starting HTTPS server", zap.String("address", httpsServerAddr))
+		s.handler(e)
 		err = e.RunTLS(httpsServerAddr, s.conf.SSLCertFile, s.conf.SSLKeyFile)
 	}
 	return
