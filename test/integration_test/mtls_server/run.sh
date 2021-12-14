@@ -34,7 +34,7 @@ function failtest() {
 
 function request() {
     cert_prefix=$1
-    result_success=$2
+    result_status_code=$2
     cmd="curl -Lskw \n%{http_code} $ENDPOINT"
     if [[ -n "$cert_prefix" ]]; then
         cmd="$cmd --cert client/${cert_prefix}_cert.pem --key client/${cert_prefix}_key.pem"
@@ -42,10 +42,8 @@ function request() {
     response=$($cmd)
     body=$(echo "$response" | head -n1)
     status=$(echo "$response" | tail -n1)
-    if [[ "$result_success" == "true" ]] && [[ "$status" != "200" ]]; then
-        failtest "expected 200, got $status"
-    elif [[ "$result_success" != "true" ]] && [[ "$status" == "200" ]]; then
-        failtest "expected not 200, got $status"
+    if [[ "$status" != "$result_status_code" ]]; then
+        failtest "expected $result_status_code, got $status"
     fi
 }
 
@@ -71,15 +69,15 @@ if ! kill -0 $server_pid > /dev/null 2>&1; then
 fi
 
 echo -n "Test with valid certificate... "
-request 'valid' true
+request 'valid' 200
 echo "Passed"
 
 echo -n "Test with no certificate... "
-request '' false
+request '' 401
 echo "Passed"
 
 echo -n "Test with invalid certificate... "
-request 'invalid' false
+request 'invalid' 403
 echo "Passed"
 
 kill $server_pid
