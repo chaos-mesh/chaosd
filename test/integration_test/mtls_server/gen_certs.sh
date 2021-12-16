@@ -27,7 +27,7 @@ openssl req \
 	-days 365 \
 	-subj "/CN=localhost/O=Client\ Certificate\ Demo"
 
-# generate server-signed (valid) certifcate
+# generate server-signed (valid) certificate
 openssl req \
 	-newkey rsa:4096 \
 	-keyout client/valid_key.pem \
@@ -46,7 +46,7 @@ openssl x509 \
 	-set_serial 01 \
 	-days 365
 
-# generate self-signed (invalid) certifcate
+# generate self-signed (invalid) certificate
 openssl req \
 	-newkey rsa:4096 \
 	-keyout client/invalid_key.pem \

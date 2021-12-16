@@ -22,8 +22,8 @@ bin_path=../../../bin
 
 RED='\033[0;31m'
 NC='\033[0m' # No Color
-PORT=31767
-ENDPOINT="https://localhost:$PORT/api/system/health"
+HTTPS_PORT=31768
+ENDPOINT="https://localhost:$HTTPS_PORT/api/experiments"
 
 function failtest() {
     msg="$1"
@@ -35,7 +35,7 @@ function failtest() {
 function request() {
     cert_prefix=$1
     result_status_code=$2
-    cmd="curl -skw \n%{http_code} $ENDPOINT"
+    cmd="curl -Lskw \n%{http_code} $ENDPOINT"
     if [[ -n "$cert_prefix" ]]; then
         cmd="$cmd --cert client/${cert_prefix}_cert.pem --key client/${cert_prefix}_key.pem"
     fi
@@ -52,7 +52,7 @@ bash +ex ./gen_certs.sh
 
 echo "Starting Server in mTLS mode"
 ${bin_path}/chaosd server \
-    --port $PORT \
+    --https-port $HTTPS_PORT \
     --cert ./server/server_cert.pem \
     --key ./server/server_key.pem \
     --CA ./server/server_cert.pem \
@@ -68,6 +68,10 @@ if ! kill -0 $server_pid > /dev/null 2>&1; then
     exit 1
 fi
 
+echo -n "Test with valid certificate... "
+request 'valid' 200
+echo "Passed"
+
 echo -n "Test with no certificate... "
 request '' 401
 echo "Passed"
@@ -76,8 +80,6 @@ echo -n "Test with invalid certificate... "
 request 'invalid' 403
 echo "Passed"
 
-echo -n "Test with valid certificate... "
-request 'valid' 200
-echo "Passed"
-
 kill $server_pid
+rm -f server.out
+rm -rf client server
