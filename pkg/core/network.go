@@ -213,6 +213,8 @@ func (n *NetworkCommand) CompleteDefaults() {
 		n.setDefaultForNetworkDNS()
 	case NetworkDuplicateAction:
 		n.setDefaultForNetworkDuplicate()
+	case NetworkCorruptAction:
+		n.setDefaultForNetworkCorrupt()
 	}
 }
 
@@ -233,6 +235,12 @@ func (n *NetworkCommand) setDefaultForNetworkLoss() {
 }
 
 func (n *NetworkCommand) setDefaultForNetworkDuplicate() {
+	if len(n.Correlation) == 0 {
+		n.Correlation = "0"
+	}
+}
+
+func (n *NetworkCommand) setDefaultForNetworkCorrupt() {
 	if len(n.Correlation) == 0 {
 		n.Correlation = "0"
 	}
