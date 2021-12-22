@@ -424,7 +424,7 @@ func toNetem(spec *TcParameter) (*pb.Netem, error) {
 	for _, spec := range emSpecs {
 		em, err := spec.ToNetem()
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 		merged = mergeNetem(merged, em)
 	}
