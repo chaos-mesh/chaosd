@@ -15,6 +15,7 @@ package chaosd
 
 import (
 	"fmt"
+	"os/exec"
 	"strconv"
 	"syscall"
 
@@ -65,12 +66,20 @@ func (processAttack) Recover(exp core.Experiment, _ Environment) error {
 	}
 	pcmd := config.(*core.ProcessCommand)
 	if pcmd.Signal != int(syscall.SIGSTOP) {
-		return core.ErrNonRecoverableAttack.New("only SIGSTOP process attack is supported to recover")
-	}
+		if pcmd.RecoverCmd == "" {
+			return core.ErrNonRecoverableAttack.New("only SIGSTOP process attack is supported to recover")
+		}
 
-	for _, pid := range pcmd.PIDs {
-		if err := syscall.Kill(pid, syscall.SIGCONT); err != nil {
+		rcmd := exec.Command("bash", "-c", pcmd.RecoverCmd)
+		if err := rcmd.Start(); err != nil {
 			return errors.WithStack(err)
+		}
+		
+	} else {
+		for _, pid := range pcmd.PIDs {
+			if err := syscall.Kill(pid, syscall.SIGCONT); err != nil {
+				return errors.WithStack(err)
+			}
 		}
 	}
 
