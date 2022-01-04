@@ -69,12 +69,11 @@ if [[ -n ${stat} ]]; then
     echo "target process is not killed by processed kill attack"
     rm dummy.out
     rm proc.out
+    kill ${pid}
     exit 1
 fi
 
 rm dummy.out
 rm proc.out
-
-kill ${pid}
 
 exit 0

@@ -74,7 +74,7 @@ func (processAttack) Recover(exp core.Experiment, _ Environment) error {
 		if err := rcmd.Start(); err != nil {
 			return errors.WithStack(err)
 		}
-		
+
 	} else {
 		for _, pid := range pcmd.PIDs {
 			if err := syscall.Kill(pid, syscall.SIGCONT); err != nil {
