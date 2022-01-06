@@ -171,11 +171,11 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 		bytemanTemplateSpec.Helper = core.SQLHelper
 		bytemanTemplateSpec.Bind = fmt.Sprintf("flag:boolean=matchDBTable($2, \"%s\", \"%s\")", attack.Database, attack.Table)
 		bytemanTemplateSpec.Condition = "flag"
-		if attack.MySQLConnectorVersion == 5 {
+		if attack.MySQLConnectorVersion == "5" {
 			bytemanTemplateSpec.Class = core.MySQL5InjectClass
 			bytemanTemplateSpec.Method = core.MySQL5InjectMethod
 			mysqlException = core.MySQL5Exception
-		} else if attack.MySQLConnectorVersion == 8 {
+		} else if attack.MySQLConnectorVersion == "8" {
 			bytemanTemplateSpec.Class = core.MySQL8InjectClass
 			bytemanTemplateSpec.Method = core.MySQL8InjectMethod
 			mysqlException = core.MySQL8Exception

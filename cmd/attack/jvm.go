@@ -163,7 +163,7 @@ func NewJVMMySQLCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command 
 
 	cmd.Flags().StringVarP(&options.Database, "database", "d", "", "the match database")
 	cmd.Flags().StringVarP(&options.Table, "table", "t", "", "the match table")
-	cmd.Flags().IntVarP(&options.MySQLConnectorVersion, "mysql-connector-version", "v", 5, "the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8)")
+	cmd.Flags().StringVarP(&options.MySQLConnectorVersion, "mysql-connector-version", "v", "8", "the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8)")
 	cmd.Flags().StringVarP(&options.ThrowException, "exception", "", "", "the exception message needs to throw")
 	cmd.Flags().IntVarP(&options.LatencyDuration, "latency", "", 0, "the latency duration, unit ms")
 

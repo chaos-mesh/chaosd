@@ -146,7 +146,7 @@ type JVMStressSpec struct {
 
 type JVMMySQLSpec struct {
 	// the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8) now
-	MySQLConnectorVersion int
+	MySQLConnectorVersion string
 
 	// the match database
 	Database string
