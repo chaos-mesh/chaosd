@@ -66,7 +66,7 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 	case core.NetworkPortOccupiedAction:
 		return env.Chaos.applyPortOccupied(attack)
 
-	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkBandwidthAction:
+	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkBandwidthAction, core.NetworkPartitionAction:
 		if attack.NeedApplyIPSet() {
 			ipsetName, err = env.Chaos.applyIPSet(attack, env.AttackUid)
 			if err != nil {
