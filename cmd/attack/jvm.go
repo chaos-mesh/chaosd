@@ -161,6 +161,7 @@ func NewJVMMySQLCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command 
 		},
 	}
 
+	cmd.Flags().StringVarP(&options.SQLType, "sql-type", "", "", "the match sql type")
 	cmd.Flags().StringVarP(&options.Database, "database", "d", "", "the match database")
 	cmd.Flags().StringVarP(&options.Table, "table", "t", "", "the match table")
 	cmd.Flags().StringVarP(&options.MySQLConnectorVersion, "mysql-connector-version", "v", "8", "the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8)")

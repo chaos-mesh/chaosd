@@ -169,7 +169,10 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 		}
 	case core.JVMMySQLAction:
 		bytemanTemplateSpec.Helper = core.SQLHelper
-		bytemanTemplateSpec.Bind = fmt.Sprintf("flag:boolean=matchDBTable($2, \"%s\", \"%s\")", attack.Database, attack.Table)
+		// the first parameter of matchDBTable is the database which the SQL execute in, because the SQL may not contain database, for example: select * from t1;
+		// can't get the database information now, so use a "" instead
+		// TODO: get the database information and fill it in matchDBTable function
+		bytemanTemplateSpec.Bind = fmt.Sprintf("flag:boolean=matchDBTable(\"\", $2, \"%s\", \"%s\", \"%s\")", attack.Database, attack.Table, attack.SQLType)
 		bytemanTemplateSpec.Condition = "flag"
 		if attack.MySQLConnectorVersion == "5" {
 			bytemanTemplateSpec.Class = core.MySQL5InjectClass

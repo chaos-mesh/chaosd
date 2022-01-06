@@ -67,7 +67,7 @@ AT ENTRY
 BIND {{.Bind}};
 IF {{.Condition}}
 DO
-        {{.Do}};
+	{{.Do}};
 ENDRULE
 `
 
@@ -144,6 +144,10 @@ type JVMStressSpec struct {
 	MemoryType string `json:"mem-type,omitempty"`
 }
 
+// only when SQL match the Database, Table, SQLType, chaosd will inject fault
+// for examle:
+//   SQL is "select * from test.t1",
+//   only when Database is "test", Table is "t1" and SQLType is "select" will inject fault
 type JVMMySQLSpec struct {
 	// the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8) now
 	MySQLConnectorVersion string
@@ -153,6 +157,9 @@ type JVMMySQLSpec struct {
 
 	// the match table
 	Table string
+
+	// the match sql type
+	SQLType string
 }
 
 type BytemanTemplateSpec struct {
