@@ -25,11 +25,12 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
-func NewFileAttackCommand() *cobra.Command {
+func NewFileAttackCommand(uid *string) *cobra.Command {
 	options := core.NewFileCommand()
 	dep := fx.Options(
 		server.Module,
 		fx.Provide(func() *core.FileCommand {
+			options.UID = *uid
 			return options
 		}),
 	)
@@ -124,7 +125,7 @@ func NewFileRenameCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 
 func NewFileAppendCommand(dep fx.Option, options *core.FileCommand) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "append",
+		Use:   "append",
 		Short: "append file",
 
 		Run: func(cmd *cobra.Command, args []string) {
