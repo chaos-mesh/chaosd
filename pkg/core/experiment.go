@@ -38,6 +38,7 @@ const (
 	ClockAttack   = "clock"
 	HostAttack    = "host"
 	JVMAttack     = "jvm"
+	FileAttack    = "file"
 )
 
 const (
