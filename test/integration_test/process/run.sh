@@ -58,13 +58,15 @@ if [[ ${stat} != "S" ]]; then
     exit 1
 fi
 
-# test kill attack
-${bin_path}/chaosd attack process kill -p ${pid} > proc.out
+# test kill attack and recover-cmd
+${bin_path}/chaosd attack process kill -p ${pid} -r "echo \"recover process\" >> proc.out" > proc.out
 
 sleep 1
 
+uid=$(cat proc.out | grep "Attack process ${pid} successfully" | awk -F: '{print $2}')
 stat=$(ps axo pid | grep ${pid})
 
+# test kill attack
 if [[ -n ${stat} ]]; then
     echo "target process is not killed by processed kill attack"
     rm dummy.out
@@ -72,6 +74,18 @@ if [[ -n ${stat} ]]; then
     kill ${pid}
     exit 1
 fi
+
+# test recover-cmd
+${bin_path}/chaosd recover ${uid}
+recover_result=$(cat proc.out | awk 'END {print}')
+
+if [[ ${recover_result} != "recover process" ]]; then
+    echo "target recover process is not executed"
+    rm dummy.out
+    rm proc.out
+    exit 1
+fi
+
 
 rm dummy.out
 rm proc.out
