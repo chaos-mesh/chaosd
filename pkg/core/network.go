@@ -70,6 +70,7 @@ const (
 	NetworkPartitionAction    = "partition"
 	NetworkBandwidthAction    = "bandwidth"
 	NetworkPortOccupiedAction = "occupied"
+	NetworkNicDownAction      = "down"
 )
 
 func (n *NetworkCommand) Validate() error {
