@@ -85,6 +85,8 @@ func NewDiskOption() *DiskOption {
 		CommonAttackConfig: CommonAttackConfig{
 			Kind: DiskAttack,
 		},
+		PayloadProcessNum: 1,
+		FillByFAllocate:   true,
 	}
 }
 
