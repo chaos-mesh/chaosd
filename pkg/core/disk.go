@@ -198,9 +198,8 @@ func initPath(opt *DiskOption) (string, error) {
 					return "", err
 				}
 				return opt.Path, nil
-			} else {
-				return "", err
 			}
+			return "", err
 		}
 		if fi.IsDir() {
 			opt.Path, err = utils.CreateTempFile(opt.Path)
