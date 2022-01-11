@@ -63,10 +63,4 @@ func Test_diskAttack_Attack(t *testing.T) {
 	opt.Path = "./"
 	_, err = opt.PreProcess()
 	assert.Error(t, err)
-
-	opt.Action = core.DiskWritePayloadAction
-	opt.PayloadProcessNum = 4
-	opt.Path = "/tmp/"
-	_, err = opt.PreProcess()
-	assert.NoError(t, err)
 }

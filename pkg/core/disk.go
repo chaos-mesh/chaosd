@@ -179,41 +179,35 @@ func initPath(opt *DiskOption) (string, error) {
 	case DiskFillAction, DiskWritePayloadAction:
 		if opt.Path == "" {
 			var err error
-			opt.Path, err = os.Getwd()
+			// Check if the path is valid.
+			opt.Path, err = utils.CreateTempFile()
 			if err != nil {
-				log.Error("unexpected err when execute os.Getwd()", zap.Error(err))
-				return "", err
-			}
-		}
-
-		fi, err := os.Stat(opt.Path)
-		if err != nil {
-			// check if Path of file is valid when Path is not empty
-			if os.IsNotExist(err) {
-				var b []byte
-				if err := ioutil.WriteFile(opt.Path, b, 0600); err != nil {
-					return "", err
-				}
-				if err := os.Remove(opt.Path); err != nil {
-					return "", err
-				}
-				return opt.Path, nil
-			} else {
-				return "", err
-			}
-		}
-		if fi.IsDir() {
-			opt.Path, err = utils.CreateTempFile(opt.Path)
-			if err != nil {
-				log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action %s with path %s.", opt.Action, opt.Path))
+				log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action: %s", opt.Action))
 				return "", err
 			}
 			if err := os.Remove(opt.Path); err != nil {
 				return "", err
 			}
-			return opt.Path, err
+		} else {
+			_, err := os.Stat(opt.Path)
+			if err != nil {
+				// check if Path of file is valid when Path is not empty
+				if os.IsNotExist(err) {
+					var b []byte
+					if err := ioutil.WriteFile(opt.Path, b, 0600); err != nil {
+						return "", err
+					}
+					if err := os.Remove(opt.Path); err != nil {
+						return "", err
+					}
+				} else {
+					return "", err
+				}
+			} else {
+				return "", fmt.Errorf("fill into an existing file")
+			}
 		}
-		return "", fmt.Errorf("fill into an existing file")
+		return opt.Path, nil
 	case DiskReadPayloadAction:
 		if opt.Path == "" {
 			path, err := utils.GetRootDevice()
