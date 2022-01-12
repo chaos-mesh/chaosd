@@ -62,7 +62,7 @@ func NewProcessKillCommand(dep fx.Option, options *core.ProcessCommand) *cobra.C
 
 	cmd.Flags().StringVarP(&options.Process, "process", "p", "", "The process name or the process ID")
 	cmd.Flags().IntVarP(&options.Signal, "signal", "s", 9, "The signal number to send")
-	cmd.Flags().StringVarP(&options.RecoverCmd, "recover-cmd", "r", "", "The command to be executed at the end of experiment")
+	cmd.Flags().StringVarP(&options.RecoverCmd, "recover-cmd", "r", "", "The command to be executed when recovering experiment")
 
 	return cmd
 }

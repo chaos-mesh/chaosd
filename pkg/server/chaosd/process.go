@@ -67,7 +67,7 @@ func (processAttack) Recover(exp core.Experiment, _ Environment) error {
 	pcmd := config.(*core.ProcessCommand)
 	if pcmd.Signal != int(syscall.SIGSTOP) {
 		if pcmd.RecoverCmd == "" {
-			return core.ErrNonRecoverableAttack.New("only SIGSTOP process attack is supported to recover")
+			return core.ErrNonRecoverableAttack.New("only SIGSTOP process attack and process attack with the recover-cmd are supported to recover")
 		}
 
 		rcmd := exec.Command("bash", "-c", pcmd.RecoverCmd)
