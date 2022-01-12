@@ -21,6 +21,9 @@ import (
 
 	"github.com/mitchellh/go-ps"
 	"github.com/pingcap/errors"
+	"go.uber.org/zap"
+
+	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -74,9 +77,8 @@ func (processAttack) Recover(exp core.Experiment, _ Environment) error {
 		if err := rcmd.Start(); err != nil {
 			return errors.WithStack(err)
 		} else {
-			fmt.Printf("Execute recover-cmd %s successfully\n", pcmd.RecoverCmd)
+			log.Info("Execute recover-cmd successfully", zap.String("recover-cmd", pcmd.RecoverCmd))
 		}
-
 	} else {
 		for _, pid := range pcmd.PIDs {
 			if err := syscall.Kill(pid, syscall.SIGCONT); err != nil {
