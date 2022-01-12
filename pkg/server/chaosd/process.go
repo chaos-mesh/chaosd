@@ -73,6 +73,8 @@ func (processAttack) Recover(exp core.Experiment, _ Environment) error {
 		rcmd := exec.Command("bash", "-c", pcmd.RecoverCmd)
 		if err := rcmd.Start(); err != nil {
 			return errors.WithStack(err)
+		} else {
+			fmt.Printf("Execute recover-cmd %s successfully\n", pcmd.RecoverCmd)
 		}
 
 	} else {
