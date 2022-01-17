@@ -204,7 +204,7 @@ func initPath(opt *DiskOption) (string, error) {
 		if fi.IsDir() {
 			opt.Path, err = utils.CreateTempFile(opt.Path)
 			if err != nil {
-				log.Error(fmt.Sprintf("unexpected err when CreateTempFile in action %s with path %s.", opt.Action, opt.Path))
+				log.Error(fmt.Sprintf("unexpected err : %v , when CreateTempFile in action %s with path %s.", err, opt.Action, opt.Path))
 				return "", err
 			}
 			if err := os.Remove(opt.Path); err != nil {
