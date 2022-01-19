@@ -84,7 +84,7 @@ func TestGenerateRuleData(t *testing.T) {
 					CPUCount: 1,
 				},
 			},
-			"\nRULE test\nCLASS org.chaos_mesh.chaos_agent.TriggerThread\nMETHOD triggerFunc\nHELPER org.chaos_mesh.byteman.helper.StressHelper\nAT ENTRY\nBIND ;\nIF \nDO\n\tinjectCPUStress(\"test\", 1);\nENDRULE\n",
+			"\nRULE test\nCLASS org.chaos_mesh.chaos_agent.TriggerThread\nMETHOD triggerFunc\nHELPER org.chaos_mesh.byteman.helper.StressHelper\nAT ENTRY\nBIND flag:boolean=true;\nIF true\nDO\n\tinjectCPUStress(\"test\", 1);\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{
@@ -97,7 +97,7 @@ func TestGenerateRuleData(t *testing.T) {
 					MemoryType: "heap",
 				},
 			},
-			"\nRULE test\nCLASS org.chaos_mesh.chaos_agent.TriggerThread\nMETHOD triggerFunc\nHELPER org.chaos_mesh.byteman.helper.StressHelper\nAT ENTRY\nBIND ;\nIF \nDO\n\tinjectMemStress(\"test\", heap);\nENDRULE\n",
+			"\nRULE test\nCLASS org.chaos_mesh.chaos_agent.TriggerThread\nMETHOD triggerFunc\nHELPER org.chaos_mesh.byteman.helper.StressHelper\nAT ENTRY\nBIND flag:boolean=true;\nIF true\nDO\n\tinjectMemStress(\"test\", heap);\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{
@@ -107,7 +107,7 @@ func TestGenerateRuleData(t *testing.T) {
 				},
 				Action: core.JVMGCAction,
 			},
-			"\nRULE test\nCLASS org.chaos_mesh.chaos_agent.TriggerThread\nMETHOD triggerFunc\nHELPER org.chaos_mesh.byteman.helper.GCHelper\nAT ENTRY\nBIND ;\nIF \nDO\n\tgc();\nENDRULE\n",
+			"\nRULE test\nCLASS org.chaos_mesh.chaos_agent.TriggerThread\nMETHOD triggerFunc\nHELPER org.chaos_mesh.byteman.helper.GCHelper\nAT ENTRY\nBIND flag:boolean=true;\nIF true\nDO\n\tgc();\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{

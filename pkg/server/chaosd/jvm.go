@@ -174,6 +174,9 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 		bytemanTemplateSpec.Helper = core.StressHelper
 		bytemanTemplateSpec.Class = core.TriggerClass
 		bytemanTemplateSpec.Method = core.TriggerMethod
+		// the bind and condition is useless, only used for fill the template
+		bytemanTemplateSpec.Bind = "flag:boolean=true"
+		bytemanTemplateSpec.Condition = "true"
 		if attack.CPUCount > 0 {
 			bytemanTemplateSpec.Do = fmt.Sprintf("injectCPUStress(\"%s\", %d)", attack.Name, attack.CPUCount)
 		} else {
@@ -183,6 +186,9 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 		bytemanTemplateSpec.Helper = core.GCHelper
 		bytemanTemplateSpec.Class = core.TriggerClass
 		bytemanTemplateSpec.Method = core.TriggerMethod
+		// the bind and condition is useless, only used for fill the template
+		bytemanTemplateSpec.Bind = "flag:boolean=true"
+		bytemanTemplateSpec.Condition = "true"
 		bytemanTemplateSpec.Do = "gc()"
 	case core.JVMMySQLAction:
 		bytemanTemplateSpec.Helper = core.SQLHelper
