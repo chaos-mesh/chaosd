@@ -158,15 +158,19 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 	case core.JVMReturnAction:
 		bytemanTemplateSpec.Do = fmt.Sprintf("return %s", attack.ReturnValue)
 	case core.JVMStressAction:
+		bytemanTemplateSpec.Helper = core.StressHelper
+		bytemanTemplateSpec.Class = core.TriggerClass
+		bytemanTemplateSpec.Method = core.TriggerMethod
 		if attack.CPUCount > 0 {
-			bytemanTemplateSpec.StressType = "CPU"
-			bytemanTemplateSpec.StressValueName = "CPUCOUNT"
-			bytemanTemplateSpec.StressValue = fmt.Sprintf("%d", attack.CPUCount)
+			bytemanTemplateSpec.Do = fmt.Sprintf("injectCPUStress(\"%s\", %d)", attack.Name, attack.CPUCount)
 		} else {
-			bytemanTemplateSpec.StressType = "MEMORY"
-			bytemanTemplateSpec.StressValueName = "MEMORYTYPE"
-			bytemanTemplateSpec.StressValue = attack.MemoryType
+			bytemanTemplateSpec.Do = fmt.Sprintf("injectMemStress(\"%s\", %s)", attack.Name, attack.MemoryType)
 		}
+	case core.JVMGCAction:
+		bytemanTemplateSpec.Helper = core.GCHelper
+		bytemanTemplateSpec.Class = core.TriggerClass
+		bytemanTemplateSpec.Method = core.TriggerMethod
+		bytemanTemplateSpec.Do = "gc()"
 	case core.JVMMySQLAction:
 		bytemanTemplateSpec.Helper = core.SQLHelper
 		// the first parameter of matchDBTable is the database which the SQL execute in, because the SQL may not contain database, for example: select * from t1;
@@ -197,14 +201,10 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 	buf := new(bytes.Buffer)
 	var t *template.Template
 	switch attack.Action {
-	case core.JVMStressAction:
-		t = template.Must(template.New("byteman rule").Parse(core.StressRuleTemplate))
+	case core.JVMStressAction, core.JVMGCAction, core.JVMMySQLAction:
+		t = template.Must(template.New("byteman rule").Parse(core.CompleteRuleTemplate))
 	case core.JVMExceptionAction, core.JVMLatencyAction, core.JVMReturnAction:
 		t = template.Must(template.New("byteman rule").Parse(core.SimpleRuleTemplate))
-	case core.JVMGCAction:
-		t = template.Must(template.New("byteman rule").Parse(core.GCRuleTemplate))
-	case core.JVMMySQLAction:
-		t = template.Must(template.New("byteman rule").Parse(core.CompleteRuleTemplate))
 	default:
 		return "", errors.Errorf("jvm action %s not supported", attack.Action)
 	}

@@ -33,8 +33,14 @@ const (
 	JVMRuleDataAction  = "rule-data"
 	JVMMySQLAction     = "mysql"
 
-	// for action 'mysql'
+	// for action 'mysql', 'gc' and 'stress'
 	SQLHelper = "org.chaos_mesh.byteman.helper.SQLHelper"
+	GCHelper = "org.chaos_mesh.byteman.helper.GCHelper"
+	StressHelper = "org.chaos_mesh.byteman.helper.StressHelper"
+
+	// the trigger point for 'gc' and 'stress'
+	TriggerClass = "org.chaos_mesh.chaos_agent.TriggerThread"
+	TriggerMethod = "triggerFunc"
 
 	MySQL5InjectClass  = "com.mysql.jdbc.MysqlIO"
 	MySQL5InjectMethod = "sqlQueryDirect"
@@ -68,19 +74,6 @@ BIND {{.Bind}};
 IF {{.Condition}}
 DO
 	{{.Do}};
-ENDRULE
-`
-
-	StressRuleTemplate = `
-RULE {{.Name}}
-STRESS {{.StressType}}
-{{.StressValueName}} {{.StressValue}}
-ENDRULE
-`
-
-	GCRuleTemplate = `
-RULE {{.Name}}
-GC
 ENDRULE
 `
 )
