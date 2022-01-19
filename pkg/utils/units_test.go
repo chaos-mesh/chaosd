@@ -80,10 +80,6 @@ func TestSplitByteSize(t *testing.T) {
 					BlockSize: "1M",
 					Count:     "0",
 				},
-				{
-					BlockSize: "",
-					Count:     "",
-				},
 			},
 			wantErr: false,
 		},
@@ -109,8 +105,8 @@ func TestSplitByteSize(t *testing.T) {
 				BlockSize: "524288c",
 				Count:     "1",
 			}, {
-				BlockSize: "1",
-				Count:     "0c",
+				BlockSize: "1M",
+				Count:     "0",
 			}},
 			wantErr: false,
 		}, {
@@ -126,8 +122,8 @@ func TestSplitByteSize(t *testing.T) {
 				BlockSize: "524288c",
 				Count:     "1",
 			}, {
-				BlockSize: "1",
-				Count:     "1c",
+				BlockSize: "1c",
+				Count:     "1",
 			}},
 			wantErr: false,
 		}, {
@@ -143,8 +139,8 @@ func TestSplitByteSize(t *testing.T) {
 				BlockSize: "1M",
 				Count:     "2",
 			}, {
-				BlockSize: "1",
-				Count:     "1048576c",
+				BlockSize: "1048576c",
+				Count:     "1",
 			}},
 			wantErr: false,
 		}, {
@@ -160,8 +156,8 @@ func TestSplitByteSize(t *testing.T) {
 				BlockSize: "1M",
 				Count:     "2",
 			}, {
-				BlockSize: "1",
-				Count:     "1048577c",
+				BlockSize: "1048577c",
+				Count:     "1",
 			}},
 			wantErr: false,
 		},
