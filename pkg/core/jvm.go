@@ -34,12 +34,12 @@ const (
 	JVMMySQLAction     = "mysql"
 
 	// for action 'mysql', 'gc' and 'stress'
-	SQLHelper = "org.chaos_mesh.byteman.helper.SQLHelper"
-	GCHelper = "org.chaos_mesh.byteman.helper.GCHelper"
+	SQLHelper    = "org.chaos_mesh.byteman.helper.SQLHelper"
+	GCHelper     = "org.chaos_mesh.byteman.helper.GCHelper"
 	StressHelper = "org.chaos_mesh.byteman.helper.StressHelper"
 
 	// the trigger point for 'gc' and 'stress'
-	TriggerClass = "org.chaos_mesh.chaos_agent.TriggerThread"
+	TriggerClass  = "org.chaos_mesh.chaos_agent.TriggerThread"
 	TriggerMethod = "triggerFunc"
 
 	MySQL5InjectClass  = "com.mysql.jdbc.MysqlIO"

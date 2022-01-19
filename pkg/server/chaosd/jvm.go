@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 	"text/template"
@@ -59,13 +60,25 @@ func (j jvmAttack) Attack(options core.AttackConfig, env Environment) (err error
 		log.Debug(string(output), zap.Error(err))
 	}
 
+	// submit helper jar
+	bmSubmitCmd := fmt.Sprintf(bmSubmitCommand, attack.Port, "b", fmt.Sprintf("%s/lib/byteman-helper.jar", os.Getenv("BYTEMAN_HOME")))
+	cmd = exec.Command("bash", "-c", bmSubmitCmd)
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Error(string(output), zap.Error(err))
+		return err
+	}
+	if len(output) > 0 {
+		log.Info("submit helper", zap.String("output", string(output)))
+	}
+
 	// submit rules
 	ruleFile, err := j.generateRuleFile(attack)
 	if err != nil {
 		return err
 	}
 
-	bmSubmitCmd := fmt.Sprintf(bmSubmitCommand, attack.Port, "l", ruleFile)
+	bmSubmitCmd = fmt.Sprintf(bmSubmitCommand, attack.Port, "l", ruleFile)
 	cmd = exec.Command("bash", "-c", bmSubmitCmd)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
