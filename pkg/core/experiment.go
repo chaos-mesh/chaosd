@@ -108,6 +108,8 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &JVMCommand{}
 	case ClockAttack:
 		attackConfig = &ClockOption{}
+	case FileAttack:
+		attackConfig = &FileCommand{}
 	default:
 		return nil
 	}

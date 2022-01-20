@@ -78,7 +78,6 @@ func (s *Server) createFile(attack *core.FileCommand, uid string) error {
 }
 
 func (s *Server) modifyFilePrivilege(attack *core.FileCommand, uid string) error {
-
 	cmdStr := "stat -c %a" + " " + attack.FileName
 	cmd := exec.Command("bash", "-c", cmdStr)
 	output, err := cmd.CombinedOutput()
@@ -208,7 +207,6 @@ func (s *Server) appendFile(attack *core.FileCommand, uid string) error {
 				log.Info(string(output))
 			}
 		}
-
 	}
 
 	return nil
@@ -330,7 +328,7 @@ func (s *Server) recoverDeleteFile(attack *core.FileCommand, uid string) error {
 	}
 
 	if err != nil {
-		log.Error("recover delete file/dir faild", zap.Error(err))
+		log.Error("recover delete file/dir failed", zap.Error(err))
 		return errors.WithStack(err)
 	}
 
