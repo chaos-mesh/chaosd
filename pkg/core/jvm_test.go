@@ -72,7 +72,7 @@ func TestJVMCommand(t *testing.T) {
 				Pid:    1234,
 				Action: JVMStressAction,
 			},
-			"must set one of cpu-count and mem-size",
+			"must set one of cpu-count and mem-type",
 		},
 		{
 			&JVMCommand{

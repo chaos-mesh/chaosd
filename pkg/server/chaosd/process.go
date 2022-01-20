@@ -15,11 +15,15 @@ package chaosd
 
 import (
 	"fmt"
+	"os/exec"
 	"strconv"
 	"syscall"
 
 	"github.com/mitchellh/go-ps"
 	"github.com/pingcap/errors"
+	"go.uber.org/zap"
+
+	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -65,12 +69,22 @@ func (processAttack) Recover(exp core.Experiment, _ Environment) error {
 	}
 	pcmd := config.(*core.ProcessCommand)
 	if pcmd.Signal != int(syscall.SIGSTOP) {
-		return core.ErrNonRecoverableAttack.New("only SIGSTOP process attack is supported to recover")
-	}
+		if pcmd.RecoverCmd == "" {
+			return core.ErrNonRecoverableAttack.New("only SIGSTOP process attack and process attack with the recover-cmd are supported to recover")
+		}
 
-	for _, pid := range pcmd.PIDs {
-		if err := syscall.Kill(pid, syscall.SIGCONT); err != nil {
+		rcmd := exec.Command("bash", "-c", pcmd.RecoverCmd)
+		if err := rcmd.Start(); err != nil {
 			return errors.WithStack(err)
+		}
+
+		log.Info("Execute recover-cmd successfully", zap.String("recover-cmd", pcmd.RecoverCmd))
+
+	} else {
+		for _, pid := range pcmd.PIDs {
+			if err := syscall.Kill(pid, syscall.SIGCONT); err != nil {
+				return errors.WithStack(err)
+			}
 		}
 	}
 
