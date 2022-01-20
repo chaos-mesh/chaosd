@@ -15,14 +15,16 @@ package chaosd
 
 import (
 	"fmt"
-	"github.com/chaos-mesh/chaosd/pkg/core"
-	"github.com/pingcap/errors"
-	"github.com/pingcap/log"
-	"go.uber.org/zap"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/pingcap/errors"
+	"github.com/pingcap/log"
+	"go.uber.org/zap"
+
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 type fileAttack struct{}
@@ -77,7 +79,7 @@ func (s *Server) createFile(attack *core.FileCommand, uid string) error {
 
 func (s *Server) modifyFilePrivilege(attack *core.FileCommand, uid string) error {
 
-	cmdStr := "stat -c %a" + " "+ attack.FileName
+	cmdStr := "stat -c %a" + " " + attack.FileName
 	cmd := exec.Command("bash", "-c", cmdStr)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -156,21 +158,21 @@ func (s *Server) appendFile(attack *core.FileCommand, uid string) error {
 	} else {
 
 		if attack.LineNo == 0 {
-			//在文件头部，第一行插入
-           cmdStr := fmt.Sprintf("sed -i '1i %s' %s", attack.Data, attack.FileName)
-           for i := 0; i < attack.Count; i++ {
-			   cmd := exec.Command("bash", "-c", cmdStr)
-			   output, err := cmd.CombinedOutput()
-			   if err != nil {
-				   log.Error(cmd.String()+string(output), zap.Error(err))
-				   return errors.WithStack(err)
-			   }
-			   log.Info(string(output))
-		   }
+			// at the head of file, insert at the first line
+			cmdStr := fmt.Sprintf("sed -i '1i %s' %s", attack.Data, attack.FileName)
+			for i := 0; i < attack.Count; i++ {
+				cmd := exec.Command("bash", "-c", cmdStr)
+				output, err := cmd.CombinedOutput()
+				if err != nil {
+					log.Error(cmd.String()+string(output), zap.Error(err))
+					return errors.WithStack(err)
+				}
+				log.Info(string(output))
+			}
 
 		} else {
-			//这种方式只能在第一行之后插入
-			//实验开始前，检测test.dat文件是否存在，如果存在，删除
+			// insert after the first line
+			// check whether the file is exists before the attack, if exist, delete it
 			if fileExist("test.dat") {
 				if err := deleteTestFile("test.dat"); err != nil {
 					return errors.WithStack(err)
@@ -179,7 +181,7 @@ func (s *Server) appendFile(attack *core.FileCommand, uid string) error {
 
 			println("fileExist has run success")
 
-			//1. 插入的字符串转为文件
+			// 1. write the data into file
 			file, err := generateFile(attack.Data)
 			if err != nil {
 				println("generate file error")
@@ -189,7 +191,7 @@ func (s *Server) appendFile(attack *core.FileCommand, uid string) error {
 
 			println("generate file success")
 
-			//2. 生成的文件插入指定的行 利用sed -i
+			// 2. insert the file into specified line by sed -i
 			c := fmt.Sprintf("%d r %s", attack.LineNo, file.Name())
 			cmdStr := fmt.Sprintf("sed -i '%s' %s", c, attack.FileName)
 			fmt.Println("cmd str is %s", cmdStr)
@@ -237,7 +239,7 @@ func fileEmpty(fileName string) bool {
 	if err != nil {
 		log.Error("get file is empty err", zap.Error(err))
 	}
-	if file.Size() ==0 {
+	if file.Size() == 0 {
 		return true
 	}
 	return false
@@ -245,8 +247,8 @@ func fileEmpty(fileName string) bool {
 
 func generateFile(s string) (*os.File, error) {
 	fileName := "test.dat"
-	dstFile,err := os.Create(fileName)
-	if err!=nil{
+	dstFile, err := os.Create(fileName)
+	if err != nil {
 		fmt.Println(err.Error())
 		return dstFile, err
 	}
@@ -347,18 +349,17 @@ func (s *Server) recoverRenameFile(attack *core.FileCommand) error {
 }
 
 func (s *Server) recoverAppendFile(attack *core.FileCommand) error {
-
-	//实验结束的时候，将生成的临时文件test.dat删除
+	// after attack, delete the generated file
 	if fileExist("test.dat") {
 		if err := deleteTestFile("test.dat"); err != nil {
 			return errors.WithStack(err)
 		}
 	}
 
-	//计算插入的行数
+	// count the number of rows inserted
 	linesByInput := attack.Count * core.GetFileNumber(attack.FileName)
 
-	//从插入的行开始删除，这么多行
+	// delete linesByInput rows starting with the inserted row
 	c := fmt.Sprintf("%d,%dd", attack.LineNo+1, attack.LineNo+linesByInput)
 	cmdStr := fmt.Sprintf("sed -i '%s' %s", c, attack.FileName)
 

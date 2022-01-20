@@ -16,10 +16,11 @@ package core
 import (
 	"bufio"
 	"encoding/json"
+	"os"
+
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
-	"os"
 )
 
 type FileCommand struct {
@@ -148,13 +149,13 @@ func (n *FileCommand) setDefaultForFileAppend() {
 
 	fileNumber := GetFileNumber(n.FileName)
 	if n.LineNo == 0 {
-       n.LineNo = fileNumber + 1
+		n.LineNo = fileNumber + 1
 	}
 }
 
 func GetFileNumber(fileName string) int {
 	file, err := os.Open(fileName)
-	if err != nil{
+	if err != nil {
 		log.Error("open file error", zap.Error(err))
 	}
 	defer file.Close()
@@ -162,7 +163,7 @@ func GetFileNumber(fileName string) int {
 	count := 0
 	for {
 		_, err := fd.ReadString('\n')
-		if err!= nil{
+		if err != nil {
 			break
 		}
 		count++
