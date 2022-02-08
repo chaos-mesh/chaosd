@@ -44,11 +44,11 @@ const (
 
 	MySQL5InjectClass  = "com.mysql.jdbc.MysqlIO"
 	MySQL5InjectMethod = "sqlQueryDirect"
-	MySQL5Exception    = "java.sql.SQLException(%s)"
+	MySQL5Exception    = "java.sql.SQLException(\"%s\")"
 
 	MySQL8InjectClass  = "com.mysql.cj.NativeSession"
 	MySQL8InjectMethod = "execSQL"
-	MySQL8Exception    = "com.mysql.cj.exceptions.CJException(%s)"
+	MySQL8Exception    = "com.mysql.cj.exceptions.CJException(\"%s\")"
 )
 
 // byteman rule template

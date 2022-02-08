@@ -124,7 +124,7 @@ func TestGenerateRuleData(t *testing.T) {
 				},
 				ThrowException: "BOOM",
 			},
-			"\nRULE test\nCLASS com.mysql.cj.NativeSession\nMETHOD execSQL\nHELPER org.chaos_mesh.byteman.helper.SQLHelper\nAT ENTRY\nBIND flag:boolean=matchDBTable(\"\", $2, \"test\", \"t1\", \"select\");\nIF flag\nDO\n\tthrow new com.mysql.cj.exceptions.CJException(BOOM);\nENDRULE\n",
+			"\nRULE test\nCLASS com.mysql.cj.NativeSession\nMETHOD execSQL\nHELPER org.chaos_mesh.byteman.helper.SQLHelper\nAT ENTRY\nBIND flag:boolean=matchDBTable(\"\", $2, \"test\", \"t1\", \"select\");\nIF flag\nDO\n\tthrow new com.mysql.cj.exceptions.CJException(\"BOOM\");\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{
