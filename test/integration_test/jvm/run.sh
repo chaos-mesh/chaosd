@@ -78,9 +78,15 @@ export MYSQL_DSN=jdbc:"mysql://127.0.0.1:4111/test"
 export MYSQL_USER=root                             
 export MYSQL_CONNECTOR_VERSION=8
 mvn exec:java -Dexec.mainClass="com.mysqldemo.App" > mysqldemo.log 2>&1 &
-sleep 3
 # make sure it works
-cat mysqldemo.log
+for (( i=0; i<=20; i++ ))
+do
+    tail_log=`tail -1 mysqldemo.log`
+    if [ "$tail_log" == "Server start!" ]; then
+        break
+    fi
+    sleep 5
+done
 cd -
 
 # TODO: get the PID more accurately
