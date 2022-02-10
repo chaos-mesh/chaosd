@@ -93,6 +93,8 @@ func (n *NetworkCommand) Validate() error {
 		return n.validNetworkOccupied()
 	case NetworkBandwidthAction:
 		return n.validNetworkBandwidth()
+	case NetworkNICDownAction:
+		return n.validNetworkNICDown()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -204,6 +206,14 @@ func (n *NetworkCommand) validNetworkOccupied() error {
 	if len(n.Port) == 0 {
 		return errors.New("port is required")
 	}
+	return nil
+}
+
+func (n *NetworkCommand) validNetworkNICDown() error {
+	if len(n.Time) == 0 {
+		return errors.New("time is required")
+	}
+	
 	return nil
 }
 
