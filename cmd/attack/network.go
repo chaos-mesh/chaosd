@@ -49,7 +49,7 @@ func NewNetworkAttackCommand(uid *string) *cobra.Command {
 		NetworkDNSCommand(dep, options),
 		NewNetworkPortOccupiedCommand(dep, options),
 		NewNetworkBandwidthCommand(dep, options),
-		NewNicDownCommand(dep, options),
+		NewNICDownCommand(dep, options),
 	)
 
 	return cmd
@@ -270,16 +270,19 @@ func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) 
 	return cmd
 }
 
-func NewNicDownCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
+func NewNICDownCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "down",
+		Use:   "down",
 		Short: "down network interface card",
 
 		Run: func(cmd *cobra.Command, args []string) {
-			options.Action = core.NetworkNicDownAction
+			options.Action = core.NetworkNICDownAction
 			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
 		},
 	}
+
+	cmd.Flags().StringVarP(&options.Time, "time", "t", "0s", "duration of disable the nic, set -1 to run continuously")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
 	return cmd
 }

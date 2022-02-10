@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 	"github.com/shirou/gopsutil/process"
@@ -84,6 +85,24 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 			if err = env.Chaos.applyTC(attack, ipsetName, env.AttackUid); err != nil {
 				return errors.WithStack(err)
 			}
+		}
+
+	case core.NetworkNICDownAction:
+		NICDownCommand := fmt.Sprintf("ifconfig %s down", attack.Device)
+
+		cmd := exec.Command("bash", "-c", NICDownCommand)
+		if err = cmd.Start(); err != nil {
+			return errors.WithStack(err)
+		}
+		duration, err := time.ParseDuration(attack.Time)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		time.Sleep(duration)
+
+		if attack.Time != "-1" {
+			env.Chaos.recoverNICDown(attack)
 		}
 	}
 
@@ -348,6 +367,8 @@ func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 				return errors.WithStack(err)
 			}
 		}
+	case core.NetworkNICDownAction:
+		return env.Chaos.recoverNICDown(attack)
 	}
 	return nil
 }
@@ -509,5 +530,16 @@ func (s *Server) recoverEtcHosts(attack *core.NetworkCommand, uid string) error 
 		log.Error(recoverCmd.String()+string(stdout), zap.Error(err))
 		return errors.WithStack(err)
 	}
+	return nil
+}
+
+func (s *Server) recoverNICDown(attack *core.NetworkCommand) error {
+	NICUpCommand := fmt.Sprintf("nohup sudo ifconfig %s up", attack.Device)
+
+	cmd := exec.Command("bash", "-c", NICUpCommand)
+	if err := cmd.Start(); err != nil {
+		return errors.WithStack(err)
+	}
+
 	return nil
 }

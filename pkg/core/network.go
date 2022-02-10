@@ -57,6 +57,9 @@ type NetworkCommand struct {
 	// only the packet which match the tcp flag can be accepted, others will be dropped.
 	// only set when the IPProtocol is tcp, used for partition.
 	AcceptTCPFlags string `json:"accept-tcp-flags,omitempty"`
+
+	// used for down nic
+	Time string `json:"time,omitempty"`
 }
 
 var _ AttackConfig = &NetworkCommand{}
@@ -70,7 +73,7 @@ const (
 	NetworkPartitionAction    = "partition"
 	NetworkBandwidthAction    = "bandwidth"
 	NetworkPortOccupiedAction = "occupied"
-	NetworkNicDownAction      = "down"
+	NetworkNICDownAction      = "down"
 )
 
 func (n *NetworkCommand) Validate() error {
