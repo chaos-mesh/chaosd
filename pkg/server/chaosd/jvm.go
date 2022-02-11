@@ -162,7 +162,6 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 		Method: attack.Method,
 	}
 
-	var mysqlException string
 	switch attack.Action {
 	case core.JVMLatencyAction:
 		bytemanTemplateSpec.Do = fmt.Sprintf("Thread.sleep(%d)", attack.LatencyDuration)
@@ -190,37 +189,12 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 		bytemanTemplateSpec.Bind = "flag:boolean=true"
 		bytemanTemplateSpec.Condition = "true"
 		bytemanTemplateSpec.Do = "gc()"
-	case core.JVMMySQLAction:
-		bytemanTemplateSpec.Helper = core.SQLHelper
-		// the first parameter of matchDBTable is the database which the SQL execute in, because the SQL may not contain database, for example: select * from t1;
-		// can't get the database information now, so use a "" instead
-		// TODO: get the database information and fill it in matchDBTable function
-		bytemanTemplateSpec.Bind = fmt.Sprintf("flag:boolean=matchDBTable(\"\", $2, \"%s\", \"%s\", \"%s\")", attack.Database, attack.Table, attack.SQLType)
-		bytemanTemplateSpec.Condition = "flag"
-		if attack.MySQLConnectorVersion == "5" {
-			bytemanTemplateSpec.Class = core.MySQL5InjectClass
-			bytemanTemplateSpec.Method = core.MySQL5InjectMethod
-			mysqlException = core.MySQL5Exception
-		} else if attack.MySQLConnectorVersion == "8" {
-			bytemanTemplateSpec.Class = core.MySQL8InjectClass
-			bytemanTemplateSpec.Method = core.MySQL8InjectMethod
-			mysqlException = core.MySQL8Exception
-		} else {
-			return "", errors.Errorf("mysql connector version %s is not supported", attack.MySQLConnectorVersion)
-		}
-
-		if len(attack.ThrowException) > 0 {
-			exception := fmt.Sprintf(mysqlException, attack.ThrowException)
-			bytemanTemplateSpec.Do = fmt.Sprintf("throw new %s", exception)
-		} else if attack.LatencyDuration > 0 {
-			bytemanTemplateSpec.Do = fmt.Sprintf("Thread.sleep(%d)", attack.LatencyDuration)
-		}
 	}
 
 	buf := new(bytes.Buffer)
 	var t *template.Template
 	switch attack.Action {
-	case core.JVMStressAction, core.JVMGCAction, core.JVMMySQLAction:
+	case core.JVMStressAction, core.JVMGCAction:
 		t = template.Must(template.New("byteman rule").Parse(core.CompleteRuleTemplate))
 	case core.JVMExceptionAction, core.JVMLatencyAction, core.JVMReturnAction:
 		t = template.Must(template.New("byteman rule").Parse(core.SimpleRuleTemplate))

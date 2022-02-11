@@ -50,7 +50,6 @@ func NewJVMAttackCommand(uid *string) *cobra.Command {
 		NewJVMStressCommand(dep, options),
 		NewJVMGCCommand(dep, options),
 		NewJVMRuleFileCommand(dep, options),
-		NewJVMMySQLCommand(dep, options),
 	)
 
 	return cmd
@@ -147,26 +146,6 @@ func NewJVMRuleFileCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comma
 	}
 
 	cmd.Flags().StringVarP(&options.RuleFile, "path", "p", "", "the path of configured byteman rule file")
-
-	return cmd
-}
-
-func NewJVMMySQLCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "mysql [options]",
-		Short: "inject fault into MySQL client",
-		Run: func(*cobra.Command, []string) {
-			options.Action = core.JVMMySQLAction
-			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
-		},
-	}
-
-	cmd.Flags().StringVarP(&options.SQLType, "sql-type", "", "", "the match sql type")
-	cmd.Flags().StringVarP(&options.Database, "database", "d", "", "the match database")
-	cmd.Flags().StringVarP(&options.Table, "table", "t", "", "the match table")
-	cmd.Flags().StringVarP(&options.MySQLConnectorVersion, "mysql-connector-version", "v", "8", "the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8)")
-	cmd.Flags().StringVarP(&options.ThrowException, "exception", "", "", "the exception message needs to throw")
-	cmd.Flags().IntVarP(&options.LatencyDuration, "latency", "", 0, "the latency duration, unit ms")
 
 	return cmd
 }
