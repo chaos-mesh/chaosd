@@ -24,7 +24,6 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 	"github.com/shirou/gopsutil/process"
@@ -94,7 +93,7 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 		if err = cmd.Start(); err != nil {
 			return errors.WithStack(err)
 		}
-		duration, err := time.ParseDuration(attack.Time)
+		//  duration, err := time.ParseDuration(attack.Time)
 		if err != nil {
 			return errors.WithStack(err)
 		}
