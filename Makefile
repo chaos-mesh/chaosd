@@ -63,6 +63,7 @@ chaosd:
 
 chaos-tools:
 	$(CGOENV) go build -o bin/PortOccupyTool tools/PortOccupyTool.go
+	$(CGOENV) go build -o bin/FileTool tools/file/*.go
 
 swagger_spec:
 ifeq ($(SWAGGER),1)
