@@ -56,8 +56,6 @@ $bin_path/chaosd attack jvm exception  --class Main --method sayhello --port 928
 sleep 1
 check_contains "BOOM" helloworld.log
 
-kill $pid
-
 # TODO: add test for latency, stress and gc
 
 echo "clean"
