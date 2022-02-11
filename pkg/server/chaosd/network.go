@@ -98,10 +98,8 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 		if err != nil {
 			return errors.WithStack(err)
 		}
-
-		time.Sleep(duration)
-
 		if attack.Time != "-1" {
+			// time.Sleep(duration)
 			env.Chaos.recoverNICDown(attack)
 		}
 	}
@@ -534,10 +532,10 @@ func (s *Server) recoverEtcHosts(attack *core.NetworkCommand, uid string) error 
 }
 
 func (s *Server) recoverNICDown(attack *core.NetworkCommand) error {
-	NICUpCommand := fmt.Sprintf("nohup sudo ifconfig %s up", attack.Device)
+	NICUpCommand := fmt.Sprintf("nohup sleep %s && nohup ifconfig %s up", attack.Time, attack.Device)
 
-	cmd := exec.Command("bash", "-c", NICUpCommand)
-	if err := cmd.Start(); err != nil {
+	recoverCmd := exec.Command("/bin/bash", "-c", NICUpCommand)
+	if err := recoverCmd.Start(); err != nil {
 		return errors.WithStack(err)
 	}
 
