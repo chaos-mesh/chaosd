@@ -97,7 +97,7 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		if attack.Time != "-1" {
+		if attack.Duration != "-1" {
 			// time.Sleep(duration)
 			rcmd := fmt.Sprintf("nohup sleep %s && nohup chaosd recover %s", attack.Duration, options.GetUID())
 			exec.Command("/bin/bash", "-c", rcmd)
