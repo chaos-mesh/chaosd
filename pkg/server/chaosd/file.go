@@ -25,6 +25,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 type fileAttack struct{}
@@ -61,16 +62,9 @@ func (fileAttack) Attack(options core.AttackConfig, env Environment) (err error)
 }
 
 func (s *Server) createFile(attack *core.FileCommand, uid string) error {
-
-	var err error
-	if len(attack.FileName) > 0 {
-		_, err = os.Create(attack.DestDir + attack.FileName)
-	} else if len(attack.DirName) > 0 {
-		err = os.Mkdir(attack.DestDir+attack.DirName, os.ModePerm)
-	}
-
+	cmdStr := fmt.Sprintf("FileTool create --dest-dir \"%s\" --dir-name \"%s\" --file-name \"%s\"", attack.DestDir, attack.DirName, attack.FileName)
+	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
-		log.Error("create file/dir failed", zap.Error(err))
 		return errors.WithStack(err)
 	}
 
@@ -79,58 +73,49 @@ func (s *Server) createFile(attack *core.FileCommand, uid string) error {
 
 func (s *Server) modifyFilePrivilege(attack *core.FileCommand, uid string) error {
 	cmdStr := "stat -c %a" + " " + attack.FileName
-	cmd := exec.Command("bash", "-c", cmdStr)
-	output, err := cmd.CombinedOutput()
+	output, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
-		log.Error(string(output), zap.Error(err))
 		return errors.WithStack(err)
 	}
 
-	str1 := strings.Replace(string(output), "\n", "", -1)
-	attack.FileMode, err = strconv.Atoi(string(str1))
+	fileModeStr := strings.Replace(output, "\n", "", -1)
+	attack.FileMode, err = strconv.Atoi(string(fileModeStr))
 	if err != nil {
-		log.Error(str1, zap.Error(err))
+		log.Error("transform string to int failed", zap.String("string", fileModeStr), zap.Error(err))
 		return errors.WithStack(err)
 	}
 
-	cmdStr = fmt.Sprintf("chmod %d %s", attack.Privilege, attack.FileName)
-
-	cmd = exec.Command("bash", "-c", cmdStr)
-	output, err = cmd.CombinedOutput()
+	cmdStr = fmt.Sprintf("FileTool modify --file-name %s --privilege %d", attack.FileName, attack.Privilege)
+	_, err = utils.ExecuteCmd(cmdStr)
 	if err != nil {
-		log.Error(string(output), zap.Error(err))
 		return errors.WithStack(err)
 	}
-	log.Info(string(output))
 
 	return nil
 }
 
+// deleteFile will not really delete the file, just rename it
 func (s *Server) deleteFile(attack *core.FileCommand, uid string) error {
-
-	var err error
+	var sourceFile, destFile string
 	if len(attack.FileName) > 0 {
-		backFile := attack.DestDir + attack.FileName + "." + uid
-		err = os.Rename(attack.DestDir+attack.FileName, backFile)
+		destFile = attack.DestDir + attack.FileName + "." + uid
+		sourceFile = fmt.Sprintf("%s/%s", attack.DestDir, attack.FileName)
 	} else if len(attack.DirName) > 0 {
-		backDir := attack.DestDir + attack.DirName + "." + uid
-		err = os.Rename(attack.DestDir+attack.DirName, backDir)
+		destFile = attack.DestDir + attack.DirName + "." + uid
+		sourceFile = fmt.Sprintf("%s/%s", attack.DestDir, attack.DirName)
 	}
 
-	if err != nil {
-		log.Error("create file/dir faild", zap.Error(err))
-		return errors.WithStack(err)
-	}
-
-	return nil
+	return renameFile(sourceFile, destFile)
 }
 
 func (s *Server) renameFile(attack *core.FileCommand, uid string) error {
+	return renameFile(attack.SourceFile, attack.DstFile)
+}
 
-	err := os.Rename(attack.SourceFile, attack.DstFile)
-
+func renameFile(sourceFile, dstFile string) error {
+	cmdStr := fmt.Sprintf("FileTool rename --old-name %s --new-name %s", sourceFile, dstFile)
+	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
-		log.Error("create file/dir faild", zap.Error(err))
 		return errors.WithStack(err)
 	}
 
@@ -139,81 +124,16 @@ func (s *Server) renameFile(attack *core.FileCommand, uid string) error {
 
 //while the input content has many lines, "\n" is the line break
 func (s *Server) appendFile(attack *core.FileCommand, uid string) error {
-
-	if fileEmpty(attack.FileName) {
-
-		for i := 0; i < attack.Count; i++ {
-			cmdStr := fmt.Sprintf("echo -e '%s' >> %s", attack.Data, attack.FileName)
-			cmd := exec.Command("bash", "-c", cmdStr)
-			output, err := cmd.CombinedOutput()
-			if err != nil {
-				println("append data exec echo error")
-				log.Error(cmd.String()+string(output), zap.Error(err))
-				return errors.WithStack(err)
-			}
-			log.Info(string(output))
-		}
-
-	} else {
-
-		if attack.LineNo == 0 {
-			// at the head of file, insert at the first line
-			cmdStr := fmt.Sprintf("sed -i '1i %s' %s", attack.Data, attack.FileName)
-			for i := 0; i < attack.Count; i++ {
-				cmd := exec.Command("bash", "-c", cmdStr)
-				output, err := cmd.CombinedOutput()
-				if err != nil {
-					log.Error(cmd.String()+string(output), zap.Error(err))
-					return errors.WithStack(err)
-				}
-				log.Info(string(output))
-			}
-
-		} else {
-			// insert after the first line
-			// check whether the file is exists before the attack, if exist, delete it
-			if fileExist("test.dat") {
-				if err := deleteTestFile("test.dat"); err != nil {
-					return errors.WithStack(err)
-				}
-			}
-
-			println("fileExist has run success")
-
-			// 1. write the data into file
-			file, err := generateFile(attack.Data)
-			if err != nil {
-				println("generate file error")
-				log.Error("generate file from input data err", zap.Error(err))
-				return errors.WithStack(err)
-			}
-
-			println("generate file success")
-
-			// 2. insert the file into specified line by sed -i
-			c := fmt.Sprintf("%d r %s", attack.LineNo, file.Name())
-			cmdStr := fmt.Sprintf("sed -i '%s' %s", c, attack.FileName)
-			fmt.Println("cmd str is %s", cmdStr)
-
-			for i := 0; i < attack.Count; i++ {
-
-				cmd := exec.Command("bash", "-c", cmdStr)
-				output, err := cmd.CombinedOutput()
-				if err != nil {
-					println("append data exec cat error")
-					log.Error(cmd.String()+string(output), zap.Error(err))
-					return errors.WithStack(err)
-				}
-				log.Info(string(output))
-			}
-		}
+	cmdStr := fmt.Sprintf("FileTool append --count %d --data %s --file-name", attack.Count, attack.Data, attack.FileName)
+	_, err := utils.ExecuteCmd(cmdStr)
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	return nil
 }
 
 func deleteTestFile(file string) error {
-
 	cmdStr := fmt.Sprintf("rm -rf %s", file)
 	cmd := exec.Command("bash", "-c", cmdStr)
 	output, err := cmd.CombinedOutput()
