@@ -538,7 +538,7 @@ func (s *Server) recoverNICDown(attack *core.NetworkCommand) error {
 }
 
 func (s *Server) recoverNICDownScheduled(attack *core.NetworkCommand) error {
-	NICUpCommand := fmt.Sprintf("nohup sleep %s && nphup ifconfig %s up", attack.Duration, attack.Device)
+	NICUpCommand := fmt.Sprintf("nohup sleep %s && nohup ifconfig %s up", attack.Duration, attack.Device)
 
 	recoverCmd := exec.Command("/bin/bash", "-c", NICUpCommand)
 	if err := recoverCmd.Start(); err != nil {
