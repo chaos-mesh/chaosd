@@ -210,10 +210,10 @@ func (n *NetworkCommand) validNetworkOccupied() error {
 }
 
 func (n *NetworkCommand) validNetworkNICDown() error {
-	if len(n.Time) == 0 {
-		return errors.New("time is required")
+	if len(n.Duration) == 0 {
+		return errors.New("duration is required")
 	}
-	
+
 	return nil
 }
 
