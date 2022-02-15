@@ -23,6 +23,7 @@ import (
 )
 
 const (
+	// jvm action
 	JVMLatencyAction   = "latency"
 	JVMExceptionAction = "exception"
 	JVMReturnAction    = "return"
@@ -30,21 +31,56 @@ const (
 	JVMGCAction        = "gc"
 	JVMRuleFileAction  = "rule-file"
 	JVMRuleDataAction  = "rule-data"
+
+	// for action 'gc' and 'stress'
+	GCHelper     = "org.chaos_mesh.byteman.helper.GCHelper"
+	StressHelper = "org.chaos_mesh.byteman.helper.StressHelper"
+
+	// the trigger point for 'gc' and 'stress'
+	TriggerClass  = "org.chaos_mesh.chaos_agent.TriggerThread"
+	TriggerMethod = "triggerFunc"
+)
+
+// byteman rule template
+const (
+	SimpleRuleTemplate = `
+RULE {{.Name}}
+CLASS {{.Class}}
+METHOD {{.Method}}
+AT ENTRY
+IF true
+DO
+	{{.Do}};
+ENDRULE
+`
+
+	CompleteRuleTemplate = `
+RULE {{.Name}}
+CLASS {{.Class}}
+METHOD {{.Method}}
+HELPER {{.Helper}}
+AT ENTRY
+BIND {{.Bind}};
+IF {{.Condition}}
+DO
+	{{.Do}};
+ENDRULE
+`
 )
 
 type JVMCommand struct {
 	CommonAttackConfig
 
+	JVMCommonSpec
+
+	JVMClassMethodSpec
+
+	JVMStressSpec
+
 	// rule name, should be unique, and will generate by chaosd automatically
 	Name string `json:"name,omitempty"`
 
-	// Java class
-	Class string `json:"class,omitempty"`
-
-	// the method in Java class
-	Method string `json:"method,omitempty"`
-
-	// fault action, values can be latency, exception, return, stress
+	// fault action, values can be latency, exception, return, stress, gc, rule-file, rule-data
 	Action string `json:"action,omitempty"`
 
 	// the return value for action 'return'
@@ -56,35 +92,50 @@ type JVMCommand struct {
 	// the latency duration for action 'latency'
 	LatencyDuration int `json:"latency,omitempty"`
 
-	// the CPU core number, only set it when action is stress
-	CPUCount int `json:"cpu-count,omitempty"`
+	// btm rule file path for action 'rule-file'
+	RuleFile string `json:"rule-file,omitempty"`
 
-	// the memory type to be located, only set it when action is stress, the value can be 'stack' or 'heap'
-	MemoryType string `json:"mem-type,omitempty"`
+	// RuleData used to save the rule file's data, will use it when recover, for action 'rule-data'
+	RuleData string `json:"rule-data,omitempty"`
+}
 
-	// attach or agent
-	Type string
-
+type JVMCommonSpec struct {
 	// the port of agent server
 	Port int `json:"port,omitempty"`
 
-	// the pid of Java process which needs to attach
+	// the pid of Java process which need to attach
 	Pid int `json:"pid,omitempty"`
+}
 
-	// btm rule file path
-	RuleFile string `json:"rule-file,omitempty"`
+type JVMClassMethodSpec struct {
+	// Java class
+	Class string `json:"class,omitempty"`
 
-	// RuleData used to save the rule file's data, will use it when recover
-	RuleData string `json:"rule-data,omitempty"`
+	// the method in Java class
+	Method string `json:"method,omitempty"`
+}
 
-	// below is only used for template
-	Do string `json:"-"`
+type JVMStressSpec struct {
+	// the CPU core number need to use, only set it when action is stress
+	CPUCount int `json:"cpu-count,omitempty"`
 
-	StressType string `json:"-"`
+	// the memory type need to locate, only set it when action is stress, the value can be 'stack' or 'heap'
+	MemoryType string `json:"mem-type,omitempty"`
+}
 
-	StressValueName string `json:"-"`
+type BytemanTemplateSpec struct {
+	Name      string
+	Class     string
+	Method    string
+	Helper    string
+	Bind      string
+	Condition string
+	Do        string
 
-	StressValue string `json:"-"`
+	// below is only used for stress template
+	StressType      string
+	StressValueName string
+	StressValue     string
 }
 
 func (j *JVMCommand) Validate() error {
@@ -108,7 +159,7 @@ func (j *JVMCommand) Validate() error {
 			return errors.New("class not provided")
 		}
 
-		if len(j.Method) == 0 {
+		if len(j.JVMClassMethodSpec.Method) == 0 {
 			return errors.New("method not provided")
 		}
 	case JVMRuleFileAction:

@@ -48,9 +48,10 @@ jobs:
         run: |
 
           # download tools
-          curl -fsSL -o byteman.tar.gz https://mirrors.chaos-mesh.org/latest/byteman.tar.gz
+          BYTEMAN_DIR=byteman-chaos-mesh-download-v4.0.18-0.9
+          curl -fsSL -o ${BYTEMAN_DIR}.tar.gz https://mirrors.chaos-mesh.org/${BYTEMAN_DIR}.tar.gz
           curl -fsSL -o stress-ng https://mirrors.chaos-mesh.org/latest/stress-ng
-          tar zxvf byteman.tar.gz
+          tar zxvf ${BYTEMAN_DIR}.tar.gz
           chmod +x ./stress-ng
 
           # prepare package
@@ -58,7 +59,7 @@ jobs:
           mkdir chaosd-latest-linux-amd64/tools
           mv bin/chaosd chaosd-latest-linux-amd64/
           mv bin/PortOccupyTool chaosd-latest-linux-amd64/tools/
-          mv byteman chaosd-latest-linux-amd64/tools/
+          mv ${BYTEMAN_DIR} chaosd-latest-linux-amd64/tools/byteman
           mv stress-ng chaosd-latest-linux-amd64/tools/
 
           # upload package
