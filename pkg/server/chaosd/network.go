@@ -99,7 +99,8 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 		}
 
 		if attack.Duration != "-1" {
-			env.Chaos.recoverNICDownScheduled(attack)
+			err := env.Chaos.recoverNICDownScheduled(attack)
+			return errors.WithStack(err)
 		}
 	}
 
@@ -531,9 +532,9 @@ func (s *Server) recoverEtcHosts(attack *core.NetworkCommand, uid string) error 
 }
 
 func (s *Server) recoverNICDown(attack *core.NetworkCommand) error {
-	NICUpCommand := fmt.Sprintf("ifconfig %s %s up", attack.Device, attack.IPAddress)
+	NICUpCommand := fmt.Sprintf("ifconfig %s up", attack.Device)
 
-	recoverCmd := exec.Command("/bin/bash", "-c", NICUpCommand)
+	recoverCmd := exec.Command("bash", "-c", NICUpCommand)
 	if err := recoverCmd.Start(); err != nil {
 		return errors.WithStack(err)
 	}
@@ -542,19 +543,21 @@ func (s *Server) recoverNICDown(attack *core.NetworkCommand) error {
 }
 
 func (s *Server) recoverNICDownScheduled(attack *core.NetworkCommand) error {
-	NICUpCommand := fmt.Sprintf("nohup sleep %s && nohup ifconfig %s %s up", attack.Duration, attack.Device, attack.IPAddress)
+	NICUpCommand := fmt.Sprintf("nohup ifconfig %s %s up", attack.Device, attack.IPAddress)
+	fmt.Println("NICUpCommand:", NICUpCommand)
 	recoverCmd := exec.Command("/bin/bash", "-c", NICUpCommand)
 	if err := recoverCmd.Start(); err != nil {
+		fmt.Println("recoverCmd:", recoverCmd.String())
+		fmt.Println(err)
 		return errors.WithStack(err)
 	}
-
 	return nil
 }
 
 func (s *Server) getNICIP(attack *core.NetworkCommand) error {
-	getIPCmd := fmt.Sprintf("ifconfig %s | awk '/inet\\>/ {print $2}'", attack.Device)
+	getIPCommand := fmt.Sprintf("ifconfig %s | awk '/inet\\>/ {print $2}'", attack.Device)
 
-	cmd := exec.Command("bash", "-c", getIPCmd)
+	cmd := exec.Command("bash", "-c", getIPCommand)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return errors.WithStack(err)
@@ -569,7 +572,7 @@ func (s *Server) getNICIP(attack *core.NetworkCommand) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	attack.IPAddress = strings.Replace(string(stdoutBytes), "\n", "", -1)  
+	attack.IPAddress = strings.Replace(string(stdoutBytes), "\n", "", -1)
 
 	return nil
 }
