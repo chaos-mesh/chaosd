@@ -62,8 +62,8 @@ chaosd:
 	$(CGOENV) go build -ldflags '$(LDFLAGS)' -tags "${BUILD_TAGS}" -o bin/chaosd ./cmd/main.go
 
 chaos-tools:
-	$(CGOENV) go build -o bin/PortOccupyTool tools/PortOccupyTool.go
-	$(CGOENV) go build -o bin/FileTool tools/file/*.go
+	$(CGOENV) go build -o bin/tools/PortOccupyTool tools/PortOccupyTool.go
+	$(CGOENV) go build -o bin/tools/FileTool tools/file/*.go
 
 swagger_spec:
 ifeq ($(SWAGGER),1)
