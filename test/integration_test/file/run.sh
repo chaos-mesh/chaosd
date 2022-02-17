@@ -98,7 +98,7 @@ fi
 
 ${bin_path}/chaosd recover 12345
 privilege=`stat -c %a ${chaos_test_file}`
-if [[ ${privilege} -ne 664 ]]; then
+if [[ ${privilege} == 777 ]]; then
     echo "recover modify file failed"
     exit 1
 fi
@@ -128,5 +128,5 @@ if [[ (-e ${chaos_test_file}-bak) ]]; then
     exit 1
 fi
 
-exit 0
 rm ${chaos_test_file}
+exit 0
