@@ -76,6 +76,7 @@ func (s *Server) createFile(attack *core.FileCommand, uid string) error {
 }
 
 func (s *Server) modifyFilePrivilege(attack *core.FileCommand, uid string) error {
+	// get the privilege of file and save it, used for recover
 	cmdStr := "stat -c %a" + " " + attack.FileName
 	output, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
@@ -83,12 +84,13 @@ func (s *Server) modifyFilePrivilege(attack *core.FileCommand, uid string) error
 	}
 
 	fileModeStr := strings.Replace(output, "\n", "", -1)
-	attack.FileMode, err = strconv.Atoi(string(fileModeStr))
+	attack.OriginPrivilege, err = strconv.Atoi(string(fileModeStr))
 	if err != nil {
 		log.Error("transform string to int failed", zap.String("string", fileModeStr), zap.Error(err))
 		return errors.WithStack(err)
 	}
 
+	// modify the file privilege
 	cmdStr = fmt.Sprintf("FileTool modify --file-name %s --privilege %d", attack.FileName, attack.Privilege)
 	_, err = utils.ExecuteCmd(cmdStr)
 	if err != nil {
@@ -194,7 +196,7 @@ func (s *Server) recoverCreateFile(attack *core.FileCommand) error {
 }
 
 func (s *Server) recoverModifyPrivilege(attack *core.FileCommand) error {
-	cmdStr := fmt.Sprintf("FileTool modify --file-name %s --privilege %d", attack.FileName, attack.FileMode)
+	cmdStr := fmt.Sprintf("FileTool modify --file-name %s --privilege %d", attack.FileName, attack.OriginPrivilege)
 	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
 		return errors.WithStack(err)

@@ -22,14 +22,22 @@ import (
 type FileCommand struct {
 	CommonAttackConfig
 
-	FileName   string
-	DirName    string
-	Privilege  uint32
-	SourceFile string
-	DestFile   string
-	Data       string
-	Count      int
-	FileMode   int
+	//	FileName is the name of the file to be created, modified, deleted, renamed, or appended.
+	FileName string `json:"file-name,omitempty"`
+	// DirName is the directory name to create or delete.
+	DirName string `json:"dir-name,omitempty"`
+	// Privilege is the file privilege to be set.
+	Privilege uint32 `json:"privilege,omitempty"`
+	// SourceFile is the name need to be renamed.
+	SourceFile string `json:"source-file,omitempty"`
+	// DestFile is the name to be renamed.
+	DestFile string `json:"dest-file,omitempty"`
+	// Data is the data for append.
+	Data string `json:"data,omitempty"`
+	// Count is the number of times to append the data.
+	Count int `json:"count,omitempty"`
+	// OriginPrivilege used to save the file's origin privilege.
+	OriginPrivilege int `json:"origin-privilege,omitempty"`
 }
 
 var _ AttackConfig = &FileCommand{}
