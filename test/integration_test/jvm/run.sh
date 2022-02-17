@@ -13,15 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -u
+set -eu
 
 cur=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd $cur
 
 bin_path=../../../bin
 
-echo "download && build && run Java example program"
-git clone https://github.com/WangXiangUSTC/byteman-example.git
+echo "download byteman example"
+if [[ ! (-e byteman-example) ]]; then
+    git clone https://github.com/WangXiangUSTC/byteman-example.git
+fi
+
+echo "download byteman && set environment variable"
+byteman_dir="byteman-chaos-mesh-download-v4.0.18-0.9"
+if [[ ! (-e ${byteman_dir}.tar.gz) ]]; then
+    curl -fsSL -o ${byteman_dir}.tar.gz https://mirrors.chaos-mesh.org/${byteman_dir}.tar.gz
+    tar zxvf ${byteman_dir}.tar.gz
+fi
+export BYTEMAN_HOME=$cur/${byteman_dir}
+export PATH=$PATH:${BYTEMAN_HOME}/bin
+
+echo "build && run Java example program helloworld"
 cd byteman-example/example.helloworld
 javac HelloWorld/Main.java
 jar cfme HelloWorld.jar Manifest.txt HelloWorld.Main HelloWorld/Main.class
@@ -33,19 +46,14 @@ cat helloworld.log
 # TODO: get the PID more accurately
 pid=`pgrep -n java`
 
-echo "download byteman && set environment variable"
-curl -fsSL -o chaosd-byteman-download.tar.gz https://mirrors.chaos-mesh.org/jvm/chaosd-byteman-download.tar.gz
-tar zxvf chaosd-byteman-download.tar.gz
-export BYTEMAN_HOME=$cur/chaosd-byteman-download
-export PATH=$PATH:${BYTEMAN_HOME}/bin
-
 echo "run chaosd to inject failure into JVM, and check"
-$bin_path/chaosd attack jvm install --port 9288 --pid $pid
 
-$bin_path/chaosd attack jvm submit return --class Main --method getnum --port 9288  --value 99999
+$bin_path/chaosd attack jvm return --class Main --method getnum --port 9288  --value 99999 --pid $pid
+sleep 1
 check_contains "99999" helloworld.log
 
-$bin_path/chaosd attack jvm submit exception  --class Main --method sayhello --port 9288 --exception 'java.io.IOException("BOOM")'
+$bin_path/chaosd attack jvm exception  --class Main --method sayhello --port 9288 --exception 'java.io.IOException("BOOM")' --pid $pid
+sleep 1
 check_contains "BOOM" helloworld.log
 
 # TODO: add test for latency, stress and gc
