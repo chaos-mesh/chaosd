@@ -15,8 +15,6 @@ package chaosd
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 
@@ -62,7 +60,13 @@ func (fileAttack) Attack(options core.AttackConfig, env Environment) (err error)
 }
 
 func (s *Server) createFile(attack *core.FileCommand, uid string) error {
-	cmdStr := fmt.Sprintf("FileTool create --dest-dir \"%s\" --dir-name \"%s\" --file-name \"%s\"", attack.DestDir, attack.DirName, attack.FileName)
+	var cmdStr string
+	if len(attack.DirName) > 0 {
+		cmdStr = fmt.Sprintf("FileTool create --dir-name %s", attack.DirName)
+	} else {
+		cmdStr = fmt.Sprintf("FileTool create --file-name %s", attack.FileName)
+	}
+
 	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
 		return errors.WithStack(err)
@@ -96,24 +100,24 @@ func (s *Server) modifyFilePrivilege(attack *core.FileCommand, uid string) error
 
 // deleteFile will not really delete the file, just rename it
 func (s *Server) deleteFile(attack *core.FileCommand, uid string) error {
-	var sourceFile, destFile string
+	var source, dest string
 	if len(attack.FileName) > 0 {
-		destFile = attack.DestDir + attack.FileName + "." + uid
-		sourceFile = fmt.Sprintf("%s/%s", attack.DestDir, attack.FileName)
+		dest = fmt.Sprintf("%s.%s", attack.FileName, uid)
+		source = attack.FileName
 	} else if len(attack.DirName) > 0 {
-		destFile = attack.DestDir + attack.DirName + "." + uid
-		sourceFile = fmt.Sprintf("%s/%s", attack.DestDir, attack.DirName)
+		dest = fmt.Sprintf("%s.%s", attack.DirName, uid)
+		source = attack.DirName
 	}
 
-	return renameFile(sourceFile, destFile)
+	return renameFile(source, dest)
 }
 
 func (s *Server) renameFile(attack *core.FileCommand, uid string) error {
-	return renameFile(attack.SourceFile, attack.DstFile)
+	return renameFile(attack.SourceFile, attack.DestFile)
 }
 
-func renameFile(sourceFile, dstFile string) error {
-	cmdStr := fmt.Sprintf("FileTool rename --old-name %s --new-name %s", sourceFile, dstFile)
+func renameFile(source, dest string) error {
+	cmdStr := fmt.Sprintf("FileTool rename --old-name %s --new-name %s", source, dest)
 	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
 		return errors.WithStack(err)
@@ -122,58 +126,22 @@ func renameFile(sourceFile, dstFile string) error {
 	return nil
 }
 
-//while the input content has many lines, "\n" is the line break
 func (s *Server) appendFile(attack *core.FileCommand, uid string) error {
-	cmdStr := fmt.Sprintf("FileTool append --count %d --data %s --file-name", attack.Count, attack.Data, attack.FileName)
+	// first backup the file
+	backupName := getBackupName(attack.FileName, uid)
+	cmdStr := fmt.Sprintf("FileTool copy --file-name %s --copy-file-name %s", attack.FileName, backupName)
 	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	return nil
-}
-
-func deleteTestFile(file string) error {
-	cmdStr := fmt.Sprintf("rm -rf %s", file)
-	cmd := exec.Command("bash", "-c", cmdStr)
-	output, err := cmd.CombinedOutput()
+	cmdStr = fmt.Sprintf("FileTool append --count %d --data %s --file-name %s", attack.Count, attack.Data, attack.FileName)
+	_, err = utils.ExecuteCmd(cmdStr)
 	if err != nil {
-		fmt.Print("delete test file error")
-		log.Error(string(output), zap.Error(err))
 		return errors.WithStack(err)
 	}
-	log.Info(string(output))
 
 	return nil
-}
-
-func fileExist(fileName string) bool {
-	_, err := os.Lstat(fileName)
-	return !os.IsNotExist(err)
-}
-
-func fileEmpty(fileName string) bool {
-	file, err := os.Stat(fileName)
-	if err != nil {
-		log.Error("get file is empty err", zap.Error(err))
-	}
-	if file.Size() == 0 {
-		return true
-	}
-	return false
-}
-
-func generateFile(s string) (*os.File, error) {
-	fileName := "test.dat"
-	dstFile, err := os.Create(fileName)
-	if err != nil {
-		fmt.Println(err.Error())
-		return dstFile, err
-	}
-	defer dstFile.Close()
-	strNew := strings.Replace(s, `\n`, "\n", -1)
-	dstFile.WriteString(strNew)
-	return dstFile, nil
 }
 
 func (fileAttack) Recover(exp core.Experiment, env Environment) error {
@@ -201,7 +169,7 @@ func (fileAttack) Recover(exp core.Experiment, env Environment) error {
 			return errors.WithStack(err)
 		}
 	case core.FileAppendAction:
-		if err = env.Chaos.recoverAppendFile(attack); err != nil {
+		if err = env.Chaos.recoverAppendFile(attack, env.AttackUid); err != nil {
 			return errors.WithStack(err)
 		}
 	}
@@ -209,44 +177,44 @@ func (fileAttack) Recover(exp core.Experiment, env Environment) error {
 }
 
 func (s *Server) recoverCreateFile(attack *core.FileCommand) error {
-
-	var err error
+	var fileName string
 	if len(attack.FileName) > 0 {
-		err = os.Remove(attack.DestDir + attack.FileName)
+		fileName = attack.FileName
 	} else if len(attack.DirName) > 0 {
-		err = os.RemoveAll(attack.DestDir + attack.DirName)
+		fileName = attack.DirName
 	}
 
+	cmdStr := fmt.Sprintf("FileTool delete --file-name %s", fileName)
+	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
-		log.Error("delete file/dir faild", zap.Error(err))
 		return errors.WithStack(err)
 	}
+
 	return nil
 }
 
 func (s *Server) recoverModifyPrivilege(attack *core.FileCommand) error {
-
-	cmdStr := fmt.Sprintf("chmod %d %s", attack.FileMode, attack.FileName)
-	cmd := exec.Command("bash", "-c", cmdStr)
-	output, err := cmd.CombinedOutput()
+	cmdStr := fmt.Sprintf("FileTool modify --file-name %s --privilege %d", attack.FileName, attack.FileMode)
+	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
-		log.Error(string(output), zap.Error(err))
 		return errors.WithStack(err)
 	}
 
 	return nil
 }
 
+// recoverDeleteFile just rename the backup file/dir
 func (s *Server) recoverDeleteFile(attack *core.FileCommand, uid string) error {
-	var err error
+	var backupName, sourceName string
 	if len(attack.FileName) > 0 {
-		backFile := attack.DestDir + attack.FileName + "." + uid
-		err = os.Rename(backFile, attack.DestDir+attack.FileName)
+		backupName = getBackupName(attack.FileName, uid)
+		sourceName = attack.FileName
 	} else if len(attack.DirName) > 0 {
-		backDir := attack.DestDir + attack.DirName + "." + uid
-		err = os.Rename(backDir, attack.DestDir+attack.DirName)
+		backupName = getBackupName(attack.DirName, uid)
+		sourceName = attack.DirName
 	}
 
+	err := renameFile(backupName, sourceName)
 	if err != nil {
 		log.Error("recover delete file/dir failed", zap.Error(err))
 		return errors.WithStack(err)
@@ -256,37 +224,21 @@ func (s *Server) recoverDeleteFile(attack *core.FileCommand, uid string) error {
 }
 
 func (s *Server) recoverRenameFile(attack *core.FileCommand) error {
-	err := os.Rename(attack.DstFile, attack.SourceFile)
+	return renameFile(attack.DestFile, attack.SourceFile)
+}
 
+func (s *Server) recoverAppendFile(attack *core.FileCommand, uid string) error {
+	backupName := getBackupName(attack.FileName, uid)
+	cmdStr := fmt.Sprintf("FileTool rename --old-name %s --new-name %s", backupName, attack.FileName)
+	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
-		log.Error("recover rename file/dir faild", zap.Error(err))
 		return errors.WithStack(err)
 	}
 
 	return nil
 }
 
-func (s *Server) recoverAppendFile(attack *core.FileCommand) error {
-	// after attack, delete the generated file
-	if fileExist("test.dat") {
-		if err := deleteTestFile("test.dat"); err != nil {
-			return errors.WithStack(err)
-		}
-	}
-
-	// count the number of rows inserted
-	linesByInput := attack.Count * core.GetFileNumber(attack.FileName)
-
-	// delete linesByInput rows starting with the inserted row
-	c := fmt.Sprintf("%d,%dd", attack.LineNo+1, attack.LineNo+linesByInput)
-	cmdStr := fmt.Sprintf("sed -i '%s' %s", c, attack.FileName)
-
-	cmd := exec.Command("bash", "-c", cmdStr)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Error(string(output), zap.Error(err))
-		return errors.WithStack(err)
-	}
-
-	return nil
+// getBackupName gets the backup file or directory name
+func getBackupName(source string, uid string) string {
+	return fmt.Sprintf("%s.%s", source, uid)
 }

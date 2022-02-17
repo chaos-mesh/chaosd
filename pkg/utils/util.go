@@ -15,8 +15,8 @@ package utils
 
 import (
 	"math/rand"
-	"time"
 	"os/exec"
+	"time"
 
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
@@ -34,6 +34,7 @@ func RandomStringWithCharset(length int) string {
 }
 
 func ExecuteCmd(cmdStr string) (string, error) {
+	log.Info("execute cmd", zap.String("cmd", cmdStr))
 	cmd := exec.Command("bash", "-c", cmdStr)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -41,7 +42,7 @@ func ExecuteCmd(cmdStr string) (string, error) {
 		return "", err
 	}
 	if len(output) > 0 {
-		log.Info("command output: " + string(output), zap.String("command", cmdStr))
+		log.Info("command output: "+string(output), zap.String("command", cmdStr))
 	}
 
 	return string(output), nil

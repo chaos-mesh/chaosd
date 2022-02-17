@@ -32,7 +32,7 @@ func NewFileAppendCommand() *cobra.Command {
 		Short: "append data to a file",
 
 		Run: func(*cobra.Command, []string) {
-			appendFile(fileName, data, count)
+			exit(appendFile(fileName, data, count))
 		},
 	}
 

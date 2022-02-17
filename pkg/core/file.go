@@ -14,13 +14,9 @@
 package core
 
 import (
-	"bufio"
 	"encoding/json"
-	"os"
 
 	"github.com/pingcap/errors"
-	"github.com/pingcap/log"
-	"go.uber.org/zap"
 )
 
 type FileCommand struct {
@@ -28,13 +24,11 @@ type FileCommand struct {
 
 	FileName   string
 	DirName    string
-	DestDir    string
 	Privilege  uint32
 	SourceFile string
-	DstFile    string
+	DestFile   string
 	Data       string
 	Count      int
-	LineNo     int
 	FileMode   int
 }
 
@@ -70,7 +64,7 @@ func (n *FileCommand) Validate() error {
 
 func (n *FileCommand) validFileCreate() error {
 	if len(n.FileName) == 0 && len(n.DirName) == 0 {
-		return errors.New("filename and dirname can not all null")
+		return errors.New("one of file-name and dir-name is required")
 	}
 
 	return nil
@@ -78,11 +72,11 @@ func (n *FileCommand) validFileCreate() error {
 
 func (n *FileCommand) validFileModify() error {
 	if len(n.FileName) == 0 {
-		return errors.New("filename can not null")
+		return errors.New("file name is required")
 	}
 
 	if n.Privilege == 0 {
-		return errors.New("file privilege can not null")
+		return errors.New("file privilege is required")
 	}
 
 	return nil
@@ -90,15 +84,15 @@ func (n *FileCommand) validFileModify() error {
 
 func (n *FileCommand) validFileDelete() error {
 	if len(n.FileName) == 0 && len(n.DirName) == 0 {
-		return errors.New("filename and dirname can not all null")
+		return errors.New("one of file-name and dir-name is required")
 	}
 
 	return nil
 }
 
 func (n *FileCommand) validFileRename() error {
-	if len(n.SourceFile) == 0 || len(n.DstFile) == 0 {
-		return errors.New("source file and destination file must have value")
+	if len(n.SourceFile) == 0 || len(n.DestFile) == 0 {
+		return errors.New("both source file and destination file are required")
 	}
 
 	return nil
@@ -106,11 +100,11 @@ func (n *FileCommand) validFileRename() error {
 
 func (n *FileCommand) valieFileAppend() error {
 	if len(n.FileName) == 0 {
-		return errors.New("filename can not null")
+		return errors.New("file-name is required")
 	}
 
 	if len(n.Data) == 0 {
-		return errors.New("append data can not null")
+		return errors.New("append data is required")
 	}
 
 	return nil
@@ -118,27 +112,8 @@ func (n *FileCommand) valieFileAppend() error {
 
 func (n *FileCommand) CompleteDefaults() {
 	switch n.Action {
-	case FileCreateAction:
-		n.setDefaultForFileCreate()
-	case FileDeleteAction:
-		n.setDefaultForFileDelete()
 	case FileAppendAction:
 		n.setDefaultForFileAppend()
-	}
-}
-
-func (n *FileCommand) setDefaultForFileCreate() {
-	if len(n.FileName) == 0 && len(n.DirName) == 0 {
-		n.FileName = "chaosd.file"
-	}
-	if len(n.DestDir) > 0 {
-		n.DestDir = n.DestDir + "/"
-	}
-}
-
-func (n *FileCommand) setDefaultForFileDelete() {
-	if len(n.DestDir) > 0 {
-		n.DestDir = n.DestDir + "/"
 	}
 }
 
@@ -146,34 +121,10 @@ func (n *FileCommand) setDefaultForFileAppend() {
 	if n.Count == 0 {
 		n.Count = 1
 	}
-
-	fileNumber := GetFileNumber(n.FileName)
-	if n.LineNo == 0 {
-		n.LineNo = fileNumber + 1
-	}
-}
-
-func GetFileNumber(fileName string) int {
-	file, err := os.Open(fileName)
-	if err != nil {
-		log.Error("open file error", zap.Error(err))
-	}
-	defer file.Close()
-	fd := bufio.NewReader(file)
-	count := 0
-	for {
-		_, err := fd.ReadString('\n')
-		if err != nil {
-			break
-		}
-		count++
-	}
-	return count
 }
 
 func (n FileCommand) RecoverData() string {
 	data, _ := json.Marshal(n)
-
 	return string(data)
 }
 

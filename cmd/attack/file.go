@@ -63,10 +63,8 @@ func NewFileCreateCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.FileName, "filename", "f", "", "create file based on filename")
-	cmd.Flags().StringVarP(&options.DirName, "dirname", "d", "", "create directory based on dirname")
-	cmd.Flags().StringVarP(&options.DestDir, "destdir", "", "", "create a file or directory to the specified destdir")
-	// owner TODO
+	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "the name of file to be created")
+	cmd.Flags().StringVarP(&options.DirName, "dir-name", "d", "", "the name of directory to be created")
 
 	return cmd
 }
@@ -81,7 +79,7 @@ func NewFileModifyPrivilegeCommand(dep fx.Option, options *core.FileCommand) *co
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.FileName, "filename", "f", "", "file to be change privilege")
+	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "file to be change privilege")
 	cmd.Flags().Uint32VarP(&options.Privilege, "privilege", "p", 0, "privilege to be update")
 
 	return cmd
@@ -99,9 +97,8 @@ func NewFileDeleteCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.FileName, "filename", "f", "", "delete file based on filename")
-	cmd.Flags().StringVarP(&options.DirName, "dirname", "d", "", "delete directory based on dirname")
-	cmd.Flags().StringVarP(&options.DestDir, "destdir", "", "", "delete a file or directory to the specified destdir")
+	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "the file to be deleted")
+	cmd.Flags().StringVarP(&options.DirName, "dir-name", "d", "", "the directory to be deleted")
 
 	return cmd
 }
@@ -118,7 +115,7 @@ func NewFileRenameCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 	}
 
 	cmd.Flags().StringVarP(&options.SourceFile, "source-file", "s", "", "the source file/dir of rename")
-	cmd.Flags().StringVarP(&options.DstFile, "dst-file", "d", "", "the destination file/dir of rename")
+	cmd.Flags().StringVarP(&options.DestFile, "dest-file", "d", "", "the destination file/dir of rename")
 
 	return cmd
 }
@@ -134,10 +131,9 @@ func NewFileAppendCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.FileName, "filename", "f", "", "append data to the file")
+	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "append data to the file")
 	cmd.Flags().StringVarP(&options.Data, "data", "d", "", "append data")
 	cmd.Flags().IntVarP(&options.Count, "count", "c", 1, "append count with default value is 1")
-	cmd.Flags().IntVarP(&options.LineNo, "line", "l", 0, "the start line to append with default value is 1")
 
 	return cmd
 }

@@ -34,11 +34,20 @@ func init() {
 		NewFileOrDirRenameCommand(),
 		NewFileModifyPrivilegeCommand(),
 		NewFileAppendCommand(),
+		NewFileCopyCommand(),
+		NewFileDeleteCommand(),
 	)
 }
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, "Error:", err)
+		os.Exit(1)
+	}
+}
+
+func exit(err error) {
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}

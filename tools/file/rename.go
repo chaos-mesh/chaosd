@@ -30,7 +30,7 @@ func NewFileOrDirRenameCommand() *cobra.Command {
 		Short: "rename file or directory",
 
 		Run: func(*cobra.Command, []string) {
-			renameFileOrDir(oldName, newName)
+			exit(renameFileOrDir(oldName, newName))
 		},
 	}
 

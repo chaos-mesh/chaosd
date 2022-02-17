@@ -32,7 +32,7 @@ func NewFileModifyPrivilegeCommand() *cobra.Command {
 		Short: "modify file's privilege",
 
 		Run: func(*cobra.Command, []string) {
-			modifyFilePrivilege(fileName, privilege)
+			exit(modifyFilePrivilege(fileName, privilege))
 		},
 	}
 

@@ -14,7 +14,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/pingcap/errors"
@@ -24,30 +23,29 @@ import (
 )
 
 func NewFileOrDirCreateCommand() *cobra.Command {
-	var fileName, dirName, destDir string
+	var fileName, dirName string
 
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "create file or directory",
 
 		Run: func(*cobra.Command, []string) {
-			createFileOrDir(fileName, dirName, destDir)
+			exit(createFileOrDir(fileName, dirName))
 		},
 	}
 
 	cmd.Flags().StringVarP(&fileName, "file-name", "f", "", "the name of created file")
 	cmd.Flags().StringVarP(&dirName, "dir-name", "d", "", "the name of created directory")
-	cmd.Flags().StringVarP(&destDir, "dest-dir", "", "", "create a file or directory based on the specified directory")
 
 	return cmd
 }
 
-func createFileOrDir(fileName, dirName, destDir string) error {
+func createFileOrDir(fileName, dirName string) error {
 	var err error
 	if len(fileName) > 0 {
-		_, err = os.Create(fmt.Sprintf("%s/%s", destDir, fileName))
+		_, err = os.Create(fileName)
 	} else if len(dirName) > 0 {
-		err = os.Mkdir(fmt.Sprintf("%s/%s", destDir, dirName), os.ModePerm)
+		err = os.Mkdir(dirName, os.ModePerm)
 	}
 
 	if err != nil {
