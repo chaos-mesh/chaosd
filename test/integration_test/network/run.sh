@@ -40,11 +40,9 @@ if [[ -n ${stat} ]]; then
     exit 1
 fi
 
-sleep 2s
-ifconfig
+sleep 1s
+
 stat=$(ifconfig | grep ${test_nic} | sed 's/:0:.*/:0/g')
-echo ${stat}
-echo ${test_nic}
 if [[ ${stat} != ${test_nic} ]]; then
     echo "fail to enable the test nic"
     exit 1

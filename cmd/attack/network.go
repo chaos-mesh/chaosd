@@ -282,7 +282,6 @@ func NewNICDownCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 		},
 	}
 
-	// cmd.Flags().StringVarP(&options.Time, "time", "t", "0s", "duration of disable the nic, set -1 to run continuously")
 	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
 	SetScheduleFlags(cmd, &options.SchedulerConfig)
 	return cmd

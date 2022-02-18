@@ -532,7 +532,7 @@ func (s *Server) recoverEtcHosts(attack *core.NetworkCommand, uid string) error 
 }
 
 func (s *Server) recoverNICDown(attack *core.NetworkCommand) error {
-	NICUpCommand := fmt.Sprintf("ifconfig %s up", attack.Device)
+	NICUpCommand := fmt.Sprintf("ifconfig %s %s up", attack.Device, attack.IPAddress)
 
 	recoverCmd := exec.Command("bash", "-c", NICUpCommand)
 	if err := recoverCmd.Start(); err != nil {
@@ -543,12 +543,10 @@ func (s *Server) recoverNICDown(attack *core.NetworkCommand) error {
 }
 
 func (s *Server) recoverNICDownScheduled(attack *core.NetworkCommand) error {
-	NICUpCommand := fmt.Sprintf("nohup ifconfig %s %s up", attack.Device, attack.IPAddress)
-	fmt.Println("NICUpCommand:", NICUpCommand)
-	recoverCmd := exec.Command("/bin/bash", "-c", NICUpCommand)
+	NICUpCommand := fmt.Sprintf("sleep %s && nohup ifconfig %s %s up", attack.Duration, attack.Device, attack.IPAddress)
+
+	recoverCmd := exec.Command("bash", "-c", NICUpCommand)
 	if err := recoverCmd.Start(); err != nil {
-		fmt.Println("recoverCmd:", recoverCmd.String())
-		fmt.Println(err)
 		return errors.WithStack(err)
 	}
 	return nil
@@ -572,7 +570,7 @@ func (s *Server) getNICIP(attack *core.NetworkCommand) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	attack.IPAddress = strings.Replace(string(stdoutBytes), "\n", "", -1)
+	attack.IPAddress = strings.TrimRight(string(stdoutBytes), "\n\x00")
 
 	return nil
 }
