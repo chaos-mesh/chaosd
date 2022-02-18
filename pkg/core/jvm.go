@@ -140,18 +140,21 @@ type JVMStressSpec struct {
 // only when SQL match the Database, Table, SQLType, chaosd will inject fault
 // for examle:
 //   SQL is "select * from test.t1",
-//   only when Database is "test", Table is "t1" and SQLType is "select" will inject fault
+//   only when ((Database == "test" || Database == "") && (Table == "t1" || Table == "") && (SQLType == "select" || SQLType == "")) is true, chaosd will inject fault
 type JVMMySQLSpec struct {
 	// the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8) now
 	MySQLConnectorVersion string
 
 	// the match database
+	// default value is "", means match all database
 	Database string
 
 	// the match table
+	// default value is "", means match all table
 	Table string
 
 	// the match sql type
+	// default value is "", means match all SQL type
 	SQLType string
 }
 
@@ -203,7 +206,12 @@ func (j *JVMCommand) Validate() error {
 			return errors.New("rule data not provide")
 		}
 	case JVMMySQLAction:
-		// do nothing
+		if len(j.MySQLConnectorVersion) == 0 {
+			return errors.New("MySQL connector version not provided")
+		}
+		if len(j.ThrowException) == 0 && j.LatencyDuration == 0 {
+			return errors.New("must set one of exception or latency")
+		}
 	case "":
 		return errors.New("action not provided")
 	default:
