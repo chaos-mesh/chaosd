@@ -32,62 +32,86 @@ func TestJVMCommand(t *testing.T) {
 		},
 		{
 			&JVMCommand{
-				Pid: 1234,
+				JVMCommonSpec: JVMCommonSpec{
+					Pid: 1234,
+				},
 			},
 			"action not provided",
 		},
 		{
 			&JVMCommand{
-				Pid:    1234,
+				JVMCommonSpec: JVMCommonSpec{
+					Pid: 1234,
+				},
 				Action: "test",
 			},
 			"action test not supported",
 		},
 		{
 			&JVMCommand{
-				Pid:    1234,
+				JVMCommonSpec: JVMCommonSpec{
+					Pid: 1234,
+				},
 				Action: JVMLatencyAction,
 			},
 			"class not provided",
 		},
 		{
 			&JVMCommand{
-				Pid:    1234,
+				JVMCommonSpec: JVMCommonSpec{
+					Pid: 1234,
+				},
 				Action: JVMExceptionAction,
-				Class:  "test",
+				JVMClassMethodSpec: JVMClassMethodSpec{
+					Class: "test",
+				},
 			},
 			"method not provided",
 		},
 		{
 			&JVMCommand{
-				Pid:    1234,
+				JVMCommonSpec: JVMCommonSpec{
+					Pid: 1234,
+				},
 				Action: JVMExceptionAction,
-				Class:  "test",
-				Method: "test",
+				JVMClassMethodSpec: JVMClassMethodSpec{
+					Class:  "test",
+					Method: "test",
+				},
 			},
 			"",
 		},
 		{
 			&JVMCommand{
-				Pid:    1234,
+				JVMCommonSpec: JVMCommonSpec{
+					Pid: 1234,
+				},
 				Action: JVMStressAction,
 			},
-			"must set one of cpu-count and mem-size",
+			"must set one of cpu-count and mem-type",
 		},
 		{
 			&JVMCommand{
-				Pid:        1234,
-				Action:     JVMStressAction,
-				CPUCount:   1,
-				MemoryType: "heap",
+				JVMCommonSpec: JVMCommonSpec{
+					Pid: 1234,
+				},
+				Action: JVMStressAction,
+				JVMStressSpec: JVMStressSpec{
+					CPUCount:   1,
+					MemoryType: "heap",
+				},
 			},
 			"inject stress on both CPU and memory is not support now",
 		},
 		{
 			&JVMCommand{
-				Pid:      1234,
-				Action:   JVMStressAction,
-				CPUCount: 1,
+				JVMCommonSpec: JVMCommonSpec{
+					Pid: 1234,
+				},
+				Action: JVMStressAction,
+				JVMStressSpec: JVMStressSpec{
+					CPUCount: 1,
+				},
 			},
 			"",
 		},

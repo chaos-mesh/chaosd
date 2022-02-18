@@ -51,13 +51,4 @@ func Test_initPath(t *testing.T) {
 	}
 	_, err := initPath(&opt)
 	assert.Error(t, err)
-
-	opt = DiskOption{
-		CommonAttackConfig: CommonAttackConfig{
-			Action: DiskReadPayloadAction,
-		},
-		Path: "/",
-	}
-	_, err = initPath(&opt)
-	assert.NoError(t, err)
 }

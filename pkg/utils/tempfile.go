@@ -15,7 +15,6 @@ package utils
 
 import (
 	"io/ioutil"
-	"os"
 
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
@@ -23,12 +22,7 @@ import (
 )
 
 // CreateTempFile will create a temp file in current directory.
-func CreateTempFile() (string, error) {
-	path, err := os.Getwd()
-	if err != nil {
-		log.Error("unexpected err when execute os.Getwd()", zap.Error(err))
-		return "", err
-	}
+func CreateTempFile(path string) (string, error) {
 	tempFile, err := ioutil.TempFile(path, "example")
 	if err != nil {
 		log.Error("unexpected err when open temp file", zap.Error(err))

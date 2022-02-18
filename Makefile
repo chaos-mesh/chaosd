@@ -100,7 +100,7 @@ tidy:
 	GO111MODULE=on go mod tidy
 	git diff -U --exit-code go.mod go.sum
 
-test:
+unit-test:
 	rm -rf cover.* cover
 	$(GOTEST) $$($(PACKAGE_LIST)) -coverprofile cover.out.tmp
 	cat cover.out.tmp | grep -v "_generated.deepcopy.go" > cover.out

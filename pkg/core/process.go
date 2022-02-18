@@ -30,9 +30,10 @@ type ProcessCommand struct {
 	CommonAttackConfig
 
 	// Process defines the process name or the process ID.
-	Process string `json:"process,omitempty"`
-	Signal  int    `json:"signal,omitempty"`
-	PIDs    []int
+	Process    string `json:"process,omitempty"`
+	Signal     int    `json:"signal,omitempty"`
+	PIDs       []int
+	RecoverCmd string `json:"recoverCmd,omitempty"`
 	// TODO: support these feature
 	// Newest       bool
 	// Oldest       bool

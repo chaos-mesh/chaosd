@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 	"text/template"
@@ -28,30 +29,6 @@ import (
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
-
-const ruleTemplate = `
-RULE {{.Name}}
-CLASS {{.Class}}
-METHOD {{.Method}}
-AT ENTRY
-IF true
-DO 
-	{{.Do}};
-ENDRULE
-`
-
-const stressRuleTemplate = `
-RULE {{.Name}}
-STRESS {{.StressType}}
-{{.StressValueName}} {{.StressValue}}
-ENDRULE
-`
-
-const gcRuleTemplate = `
-RULE {{.Name}}
-GC
-ENDRULE
-`
 
 type jvmAttack struct{}
 
@@ -83,13 +60,25 @@ func (j jvmAttack) Attack(options core.AttackConfig, env Environment) (err error
 		log.Debug(string(output), zap.Error(err))
 	}
 
+	// submit helper jar
+	bmSubmitCmd := fmt.Sprintf(bmSubmitCommand, attack.Port, "b", fmt.Sprintf("%s/lib/byteman-helper.jar", os.Getenv("BYTEMAN_HOME")))
+	cmd = exec.Command("bash", "-c", bmSubmitCmd)
+	output, err = cmd.CombinedOutput()
+	if err != nil {
+		log.Error(string(output), zap.Error(err))
+		return err
+	}
+	if len(output) > 0 {
+		log.Info("submit helper", zap.String("output", string(output)))
+	}
+
 	// submit rules
 	ruleFile, err := j.generateRuleFile(attack)
 	if err != nil {
 		return err
 	}
 
-	bmSubmitCmd := fmt.Sprintf(bmSubmitCommand, attack.Port, "l", ruleFile)
+	bmSubmitCmd = fmt.Sprintf(bmSubmitCommand, attack.Port, "l", ruleFile)
 	cmd = exec.Command("bash", "-c", bmSubmitCmd)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
@@ -127,48 +116,10 @@ func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 		return attack.RuleFile, nil
 	}
 
-	if len(attack.Do) == 0 {
-		switch attack.Action {
-		case core.JVMLatencyAction:
-			attack.Do = fmt.Sprintf("Thread.sleep(%d)", attack.LatencyDuration)
-		case core.JVMExceptionAction:
-			attack.Do = fmt.Sprintf("throw new %s", attack.ThrowException)
-		case core.JVMReturnAction:
-			attack.Do = fmt.Sprintf("return %s", attack.ReturnValue)
-		case core.JVMStressAction:
-			if attack.CPUCount > 0 {
-				attack.StressType = "CPU"
-				attack.StressValueName = "CPUCOUNT"
-				attack.StressValue = fmt.Sprintf("%d", attack.CPUCount)
-			} else {
-				attack.StressType = "MEMORY"
-				attack.StressValueName = "MEMORYTYPE"
-				attack.StressValue = attack.MemoryType
-			}
-		}
-	}
-	buf := new(bytes.Buffer)
-	var t *template.Template
-	switch attack.Action {
-	case core.JVMStressAction:
-		t = template.Must(template.New("byteman rule").Parse(stressRuleTemplate))
-	case core.JVMExceptionAction, core.JVMLatencyAction, core.JVMReturnAction:
-		t = template.Must(template.New("byteman rule").Parse(ruleTemplate))
-	case core.JVMGCAction:
-		t = template.Must(template.New("byteman rule").Parse(gcRuleTemplate))
-	default:
-		return "", errors.Errorf("jvm action %s not supported", attack.Action)
-	}
-	if t == nil {
-		return "", errors.Errorf("parse byeman rule template failed")
-	}
-	err = t.Execute(buf, attack)
+	attack.RuleData, err = generateRuleData(attack)
 	if err != nil {
-		log.Error("executing template", zap.Error(err))
 		return "", err
 	}
-
-	attack.RuleData = buf.String()
 
 	filename, err := writeDataIntoFile(attack.RuleData, "rule.btm")
 	if err != nil {
@@ -202,6 +153,64 @@ func (j jvmAttack) Recover(exp core.Experiment, env Environment) error {
 	log.Info(string(output))
 
 	return nil
+}
+
+func generateRuleData(attack *core.JVMCommand) (string, error) {
+	bytemanTemplateSpec := core.BytemanTemplateSpec{
+		Name:   attack.Name,
+		Class:  attack.Class,
+		Method: attack.Method,
+	}
+
+	switch attack.Action {
+	case core.JVMLatencyAction:
+		bytemanTemplateSpec.Do = fmt.Sprintf("Thread.sleep(%d)", attack.LatencyDuration)
+	case core.JVMExceptionAction:
+		bytemanTemplateSpec.Do = fmt.Sprintf("throw new %s", attack.ThrowException)
+	case core.JVMReturnAction:
+		bytemanTemplateSpec.Do = fmt.Sprintf("return %s", attack.ReturnValue)
+	case core.JVMStressAction:
+		bytemanTemplateSpec.Helper = core.StressHelper
+		bytemanTemplateSpec.Class = core.TriggerClass
+		bytemanTemplateSpec.Method = core.TriggerMethod
+		// the bind and condition is useless, only used for fill the template
+		bytemanTemplateSpec.Bind = "flag:boolean=true"
+		bytemanTemplateSpec.Condition = "true"
+		if attack.CPUCount > 0 {
+			bytemanTemplateSpec.Do = fmt.Sprintf("injectCPUStress(\"%s\", %d)", attack.Name, attack.CPUCount)
+		} else {
+			bytemanTemplateSpec.Do = fmt.Sprintf("injectMemStress(\"%s\", %s)", attack.Name, attack.MemoryType)
+		}
+	case core.JVMGCAction:
+		bytemanTemplateSpec.Helper = core.GCHelper
+		bytemanTemplateSpec.Class = core.TriggerClass
+		bytemanTemplateSpec.Method = core.TriggerMethod
+		// the bind and condition is useless, only used for fill the template
+		bytemanTemplateSpec.Bind = "flag:boolean=true"
+		bytemanTemplateSpec.Condition = "true"
+		bytemanTemplateSpec.Do = "gc()"
+	}
+
+	buf := new(bytes.Buffer)
+	var t *template.Template
+	switch attack.Action {
+	case core.JVMStressAction, core.JVMGCAction:
+		t = template.Must(template.New("byteman rule").Parse(core.CompleteRuleTemplate))
+	case core.JVMExceptionAction, core.JVMLatencyAction, core.JVMReturnAction:
+		t = template.Must(template.New("byteman rule").Parse(core.SimpleRuleTemplate))
+	default:
+		return "", errors.Errorf("jvm action %s not supported", attack.Action)
+	}
+	if t == nil {
+		return "", errors.Errorf("parse byeman rule template failed")
+	}
+	err := t.Execute(buf, bytemanTemplateSpec)
+	if err != nil {
+		log.Error("executing template", zap.Error(err))
+		return "", err
+	}
+
+	return buf.String(), nil
 }
 
 func writeDataIntoFile(data string, filename string) (string, error) {
