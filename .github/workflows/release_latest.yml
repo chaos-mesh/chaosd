@@ -20,7 +20,7 @@ jobs:
       - name: Prepare build environment
         run: |
           # actions/checkout require git v2.X
-          yum -y install https://packages.endpoint.com/rhel/7/os/x86_64/endpoint-repo-1.7-1.x86_64.rpm
+          yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
           yum install -y gcc
           yum install -y make
           yum install -y binutils
