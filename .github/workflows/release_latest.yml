@@ -1,6 +1,6 @@
 name: Release latest binary
 on:
-  push:
+  pull_request:
     branches:
       - main
 
@@ -46,22 +46,6 @@ jobs:
 
       - name: Upload files
         run: |
-
-          # download tools
-          BYTEMAN_DIR=byteman-chaos-mesh-download-v4.0.18-0.9
-          curl -fsSL -o ${BYTEMAN_DIR}.tar.gz https://mirrors.chaos-mesh.org/${BYTEMAN_DIR}.tar.gz
-          curl -fsSL -o stress-ng https://mirrors.chaos-mesh.org/latest/stress-ng
-          tar zxvf ${BYTEMAN_DIR}.tar.gz
-          chmod +x ./stress-ng
-
-          # prepare package
-          mkdir chaosd-latest-linux-amd64
-          mkdir chaosd-latest-linux-amd64/tools
-          mv bin/chaosd chaosd-latest-linux-amd64/
-          mv bin/PortOccupyTool chaosd-latest-linux-amd64/tools/
-          mv ${BYTEMAN_DIR} chaosd-latest-linux-amd64/tools/byteman
-          mv stress-ng chaosd-latest-linux-amd64/tools/
-
-          # upload package
-          tar czvf chaosd-latest-linux-amd64.tar.gz chaosd-latest-linux-amd64
-          aws s3 cp chaosd-latest-linux-amd64.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-latest-linux-amd64.tar.gz
+          mv bin chaosd-test-linux-amd64
+          tar czvf chaosd-test-linux-amd64.tar.gz chaosd-test-linux-amd64
+          aws s3 cp chaosd-test-linux-amd64.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-test-linux-amd64.tar.gz
