@@ -45,7 +45,6 @@ You can either build directly from the source or download the binary to finish t
 
     ```bash
     make chaosd
-    mv chaosd /usr/local/bin/chaosd
     ```
 
     Build or download tools related to Chaosd:

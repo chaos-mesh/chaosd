@@ -1,6 +1,6 @@
 name: Release latest binary
 on:
-  pull_request:
+  push:
     branches:
       - main
 
@@ -41,11 +41,11 @@ jobs:
           pip3 install awscli
           printf "%s\n" ${{ secrets.AWS_ACCESS_KEY }} ${{ secrets.AWS_SECRET_KEY }} ${{ secrets.AWS_REGION }} "json" | aws configure
 
-      - name: Build binary
+      - name: Build binary and related tools
         run: make build
 
       - name: Upload files
         run: |
-          mv bin chaosd-test-linux-amd64
-          tar czvf chaosd-test-linux-amd64.tar.gz chaosd-test-linux-amd64
-          aws s3 cp chaosd-test-linux-amd64.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-test-linux-amd64.tar.gz
+          mv bin chaosd-latest-linux-amd64
+          tar czvf chaosd-latest-linux-amd64.tar.gz chaosd-latest-linux-amd64
+          aws s3 cp chaosd-latest-linux-amd64.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-latest-linux-amd64.tar.gz
