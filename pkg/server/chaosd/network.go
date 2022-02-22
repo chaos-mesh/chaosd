@@ -547,7 +547,7 @@ func (s *Server) recoverNICDown(attack *core.NetworkCommand) error {
 }
 
 func (s *Server) recoverNICDownScheduled(attack *core.NetworkCommand) error {
-	NICUpCommand := fmt.Sprintf("sudo sleep %s && nohup ifconfig %s %s up", attack.Duration, attack.Device, attack.IPAddress)
+	NICUpCommand := fmt.Sprintf("sleep %s && ifconfig %s %s up", attack.Duration, attack.Device, attack.IPAddress)
 
 	recoverCmd := exec.Command("bash", "-c", NICUpCommand)
 	stdout, err := recoverCmd.CombinedOutput()
