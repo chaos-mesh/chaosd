@@ -165,8 +165,8 @@ func (n *NetworkCommand) validNetworkPartition() error {
 		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
 	}
 
-	if n.Direction != "to" && n.Direction != "from" {
-		return errors.Errorf("direction should be one of 'to' and 'from'")
+	if n.Direction != "to" && n.Direction != "from" && n.Direction != "both" {
+		return errors.Errorf("direction should be one of to, from or both, but got %s", n.Direction)
 	}
 
 	if len(n.AcceptTCPFlags) > 0 && n.IPProtocol != "tcp" {
@@ -469,12 +469,37 @@ func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
 		return nil, nil
 	}
 
+	chains := make([]*pb.Chain, 0, 2)
+	var toChains, fromChains []*pb.Chain
+	var err error
+
+	if n.Direction == "to" || n.Direction == "both" {
+		toChains, err = n.getPartitionChain(ipset, "to")
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	if n.Direction == "from" || n.Direction == "both" {
+		fromChains, err = n.getPartitionChain(ipset, "from")
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
+
+	chains = append(chains, toChains...)
+	chains = append(chains, fromChains...)
+
+	return chains, nil
+}
+
+func (n *NetworkCommand) getPartitionChain(ipset, direction string) ([]*pb.Chain, error) {
 	var directionStr string
 	var directionChain pb.Chain_Direction
-	if n.Direction == "to" {
+	if direction == "to" {
 		directionStr = "OUTPUT"
 		directionChain = pb.Chain_OUTPUT
-	} else if n.Direction == "from" {
+	} else if direction == "from" {
 		directionStr = "INPUT"
 		directionChain = pb.Chain_INPUT
 	} else {
