@@ -522,6 +522,7 @@ func (n *NetworkCommand) getPartitionChain(ipset, direction string) ([]*pb.Chain
 		Name:      fmt.Sprintf("%s/1", directionStr),
 		Ipsets:    []string{ipset},
 		Direction: directionChain,
+		Protocol:  n.IPProtocol,
 		Target:    "DROP",
 	})
 
