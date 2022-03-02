@@ -555,6 +555,9 @@ func (s *Server) recoverNICDownScheduled(attack *core.NetworkCommand) error {
 	return nil
 }
 
+// getNICIP() uses `ifconfig` to get interfaces' IP. The reason for
+// not using net.Interfaces() is that net.Interfaces() can't get
+// sub interfaces.
 func (s *Server) getNICIP(attack *core.NetworkCommand) error {
 	getIPCommand := fmt.Sprintf("ifconfig %s | awk '/inet\\>/ {print $2}'", attack.Device)
 
@@ -573,6 +576,9 @@ func (s *Server) getNICIP(attack *core.NetworkCommand) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	// The number of recived bytes is smaller than 1024, when stdoutBytes is
+	// converted to string, the string will be IPAddress and sort of zeros,
+	// so this string needs to be trimmed trailing zeros.
 	attack.IPAddress = strings.TrimRight(string(stdoutBytes), "\n\x00")
 
 	return nil
