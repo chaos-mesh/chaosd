@@ -576,9 +576,8 @@ func (s *Server) getNICIP(attack *core.NetworkCommand) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	// The number of recived bytes is smaller than 1024, when stdoutBytes is
-	// converted to string, the string will be IPAddress and sort of zeros,
-	// so this string needs to be trimmed trailing zeros.
+	// When stdoutBytes is converted to string, the string will be IPAddress with a few unnecessary 
+	// zeros, which makes IPAddress' format wrong, so the trailing zeros needs to be trimmed.
 	attack.IPAddress = strings.TrimRight(string(stdoutBytes), "\n\x00")
 
 	return nil
