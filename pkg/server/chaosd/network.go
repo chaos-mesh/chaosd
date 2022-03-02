@@ -94,9 +94,8 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 		NICDownCommand := fmt.Sprintf("ifconfig %s down", attack.Device)
 
 		cmd := exec.Command("bash", "-c", NICDownCommand)
-		stdout, err := cmd.CombinedOutput()
+		_, err := cmd.CombinedOutput()
 		if err != nil {
-			log.Error(cmd.String()+string(stdout), zap.Error(err))
 			return errors.WithStack(err)
 		}
 
@@ -537,9 +536,8 @@ func (s *Server) recoverNICDown(attack *core.NetworkCommand) error {
 	NICUpCommand := fmt.Sprintf("ifconfig %s %s up", attack.Device, attack.IPAddress)
 
 	recoverCmd := exec.Command("bash", "-c", NICUpCommand)
-	stdout, err := recoverCmd.CombinedOutput()
+	_, err := recoverCmd.CombinedOutput()
 	if err != nil {
-		log.Error(recoverCmd.String()+string(stdout), zap.Error(err))
 		return errors.WithStack(err)
 	}
 
@@ -550,9 +548,8 @@ func (s *Server) recoverNICDownScheduled(attack *core.NetworkCommand) error {
 	NICUpCommand := fmt.Sprintf("sleep %s && ifconfig %s %s up", attack.Duration, attack.Device, attack.IPAddress)
 
 	recoverCmd := exec.Command("bash", "-c", NICUpCommand)
-	stdout, err := recoverCmd.CombinedOutput()
+	_, err := recoverCmd.CombinedOutput()
 	if err != nil {
-		log.Error(recoverCmd.String()+string(stdout), zap.Error(err))
 		return errors.WithStack(err)
 	}
 	return nil
