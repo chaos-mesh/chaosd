@@ -74,10 +74,17 @@ You can either build directly from the source or download the binary to finish t
     curl -fsSL -o chaosd-v1.1.1-linux-amd64.tar.gz https://mirrors.chaos-mesh.org/chaosd-v1.1.1-linux-amd64.tar.gz
     ```
 
-    Then uncompress the archived file, and you can go into the folder and execute chaosd：
+    Then uncompress the archived file：
 
     ```bash
-    tar zxvf chaosd-latest-linux-amd64.tar.gz && cd chaosd-latest-linux-amd64
+    tar zxvf chaosd-latest-linux-amd64.tar.gz
+    ```
+
+    Put Chaosd into `PATH`:
+
+    ```bash
+    mv ./chaosd-latest-linux-amd64 /usr/local/chaosd
+    export PATH=$PATH:/usr/local/chaosd
     ```
 
 ## Document
