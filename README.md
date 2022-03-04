@@ -4,6 +4,10 @@
 
 chaosd is an easy-to-use Chaos Engineering tool used to inject failures to a physical node. 
 
+## Document
+
+For details about the introduction and usage of chaosd, refer to the [documentation](https://chaos-mesh.org/docs/chaosd-overview/).
+
 ## Types of fault
 
 You can use Chaosd to simulate the following fault types:
@@ -86,7 +90,3 @@ You can either build directly from the source or download the binary to finish t
     mv ./chaosd-latest-linux-amd64 /usr/local/chaosd
     export PATH=$PATH:/usr/local/chaosd
     ```
-
-## Document
-
-For details about the introduction and usage of chaosd, refer to the [documentation](https://chaos-mesh.org/docs/chaosd-overview/).
