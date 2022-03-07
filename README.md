@@ -2,23 +2,31 @@
 
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/chaos-mesh/chaosd)
 
-chaosd is an easy-to-use Chaos Engineering tool used to inject failures to a physical node. Currently, two modes are supported:
+chaosd is an easy-to-use Chaos Engineering tool used to inject failures to a physical node. 
 
-- **Command mode** - Using chaosd as a command-line tool. Supported failure types are:
-  
-    - [Process attack](#process-attack)
-    - [Network attack](#network-attack)
-    - [Stress attack](#stress-attack)
-    - [Disk attack](#disk-attack)
-    - [Host attack](#host-attack)
-    - [Recover attack](#recover-attack)
+## Document
 
-- **Server mode** - Running chaosd as a daemon server. Supported failure types are:
-    - [Process attack](#process-attack-1)
-    - [Network attack](#network-attack-1)
-    - [Stress attack](#stress-attack-1)
-    - [Disk attack](#disk-attack-1)
-    - [Recover attack](#recover-attack-1)
+For details about the introduction and usage of chaosd, refer to the [documentation](https://chaos-mesh.org/docs/chaosd-overview/).
+
+## Types of fault
+
+You can use Chaosd to simulate the following fault types:
+
+- Process: Injects faults into the processes. Operations such as killing the process or stopping the process are supported.
+- Network: Injects faults into the network of physical machines. Operations such as increasing network latency, losing packets, and corrupting packets are supported.
+- Stress: Injects stress on the CPU or memory of the physical machines.
+- Disk: Injects faults into disks of the physical machines. Operations such as increasing disk load of reads and writes, and filling disks are supported.
+- Host: Injects faults into the physical machine. Operations such as shutdown the physical machine are supported.
+
+For details about the introduction and usage of each fault type, refer to the related documentation.
+
+## Work modes
+
+You can use Chaosd in the following modes:
+
+- Command-line mode: Run Chaosd directly as a command-line tool to inject and recover faults.
+
+- Service mode: Run Chaosd as a service in the background, to inject and recover faults by sending HTTP requests.
 
 ## Prerequisites
 
@@ -36,9 +44,24 @@ You can either build directly from the source or download the binary to finish t
 
 - Build from source code
 
+
+    Build chaosd:
+
     ```bash
     make chaosd
-    mv chaosd /usr/local/bin/chaosd
+    ```
+
+    Build or download tools related to Chaosd:
+
+    ```bash
+    make chaos-tools
+    ```
+
+    Put Chaosd into `PATH`:
+
+    ```
+    mv ./bin /usr/local/chaosd
+    export PATH=$PATH:/usr/local/chaosd
     ```
 
 - Download binary
@@ -49,325 +72,21 @@ You can either build directly from the source or download the binary to finish t
     curl -fsSL -o chaosd-latest-linux-amd64.tar.gz https://mirrors.chaos-mesh.org/chaosd-latest-linux-amd64.tar.gz
     ```
 
-    If you want to download the release version, you can replace the `latest` in the above command with the version number. For example, download `v1.0.0` by executing the command below:
+    If you want to download the release version, you can replace the `latest` in the above command with the version number. For example, download `v1.1.1` by executing the command below:
 
     ```bash
-    curl -fsSL -o chaosd-v1.0.0-linux-amd64.tar.gz https://mirrors.chaos-mesh.org/chaosd-v1.0.0-linux-amd64.tar.gz
+    curl -fsSL -o chaosd-v1.1.1-linux-amd64.tar.gz https://mirrors.chaos-mesh.org/chaosd-v1.1.1-linux-amd64.tar.gz
     ```
 
-    Then uncompress the archived file, and you can go into the folder and execute chaosd：
+    Then uncompress the archived file：
 
     ```bash
-    tar zxvf chaosd-latest-linux-amd64.tar.gz && cd chaosd-latest-linux-amd64
+    tar zxvf chaosd-latest-linux-amd64.tar.gz
     ```
 
-## Usages
-
-### Command mode
-
-#### Process attack
-
-Attacks a process according to the PID or process name. Supported tasks are:
-
-- **kill process** 
-  
-    Description: Kills a process by sending the `SIGKILL` signal
-  
-    Sample usage:
+    Put Chaosd into `PATH`:
 
     ```bash
-    $ chaosd attack process kill -p [pid] # set pid or pod name
-    # the generated uid is used to recover chaos attack
-    Attack network successfully, uid: 2c865e6f-299f-4adf-ab37-94dc4fb8fea6
+    mv ./chaosd-latest-linux-amd64 /usr/local/chaosd
+    export PATH=$PATH:/usr/local/chaosd
     ```
-
-- **stop process**
-
-    Description: Stop a process by sending the `SIGSTOP` signal
-
-    Sample usage:
-
-    ```bash
-    $ chaosd attack process stop -p [pid] # set pid or pod name
-    ```
-
-#### Network attack
-
-Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
-
-- **delay network packet**
-
-    Description: Sends messages with the specified latency
-
-    Sample usage:
-
-    ```bash
-    $ chaosd attack network delay -d eth0 -i 172.16.4.4 -l 10ms
-    ```
-
-- **lose network packet**
-
-    Description: Drops network packets randomly
-
-    Sample usage:
-
-    ```bash
-    $ chaosd attack network loss -d eth0 -i 172.16.4.4 --percent 50
-    ```
-
-- **corrupt network packet**
-
-    Description: Causes packet corruption
-
-    Sample usage:
-
-    ```bash
-    $ chaosd attack network corrupt -d eth0 -i 172.16.4.4 --percent 50
-    ```
-
-- **duplicate network packet**
-
-    Description: Sends duplicated packets
-
-    Sample usage:
-
-    ```bash
-    $ chaosd attack network duplicate -d eth0 -i 172.16.4.4 --percent 50
-    ```
-
-#### Stress attack
-
-Generates stress on the host. Supported tasks are:
-
-- **CPU stress**
-
-   Description: Generates stress on the host CPU
-
-   Sample usage:
-
-    ```bash
-    $ chaosd attack stress cpu -l 100 -w 2 # stress 2 CPU and each cpu loads 100%
-    ```
-
-- **Memory stress**
-
-   Description: Generates stress on the host memory
-
-   Sample usage:
-
-    ```bash
-    $ chaosd attack stress mem -w 2
-    ```
-
-#### Disk attack
-
-Attacks the disk by increasing write/read payload, or filling up the disk. Supported tasks are:
-
-- **add payload**
-
-    Description: Add read/write payload
-
-    Sample usage:
-
-    ```bash
-    ./bin/chaosd attack disk add-payload read --path /tmp/temp --size 100
-    ```
-
-    ```bash
-    ./bin/chaosd attack disk add-payload write --path /tmp/temp --size 100
-    ```
-
-- **fill disk**
-
-    Description: Fills up the disk
-
-    Sample usage:
-
-
-    ```bash
-    ./bin/chaosd attack disk fill --fallocate true --path /tmp/temp --size 100   //filling using fallocate
-    ```
-
-    ```bash
-    ./bin/chaosd attack disk fill --fallocate false --path /tmp/temp --size 100  //filling by writing data to files
-    ```
-
-#### Host attack
-
-Shuts down the host
-
-Sample usage:
-
-```bash
-./bin/chaosd attack host shutdown
-```
-
-> **Note:**
->
-> This command will shut down the host. Be cautious when you execute it.
-
-#### Recover attack
-
-Recovers an attack
-
-Sample usage:
-
-```bash
-$ chaosd recover 2c865e6f-299f-4adf-ab37-94dc4fb8fea6
-```
-
-### Server Mode
-
-To enter server mode, execute the following:
-
-```bash
-nohup ./bin/chaosd server > chaosd.log 2>&1 &
-```
-
-And then you can inject failures by sending HTTP requests.
-
-> **Note**:
->
-> Make sure you are operating with the privileges to run iptables, ipset, etc. Or you can run chaosd with `sudo`.
-
-#### Process attack
-
-Attacks a process according to the PID or process name. Supported tasks are:
-
-- **kill process**
-
-    Description: Kills a process by sending the `SIGKILL` signal
-  
-    Sample usage:
-
-    ```bash
-    curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/json"  -d '{"process": "{pid}", "signal": 9}' # set pid or pod name
-    {"status":200,"message":"attack successfully","uid":"e6d01a30-4528-4c70-b4fb-4dc47c4d39be"}
-    ```
-
-- **stop process**
-
-    Description: Kills a process by sending the `SIGKILL` signal
-
-    Sample usage:
-
-    ```bash
-    curl -X POST "127.0.0.1:31767/api/attack/process" -H "Content-Type: application/json"  -d '{"process": "{pid}", "signal": 15}' # set pid or pod name
-    {"status":200,"message":"attack successfully","uid":"ecf3f564-c4c0-4aaf-83c6-4b511a6e3a85"}
-    ```
-
-#### Network attack
-
-Attacks the network using `iptables`, `ipset`, and `tc`. Supported tasks are:
-
-- **delay network packet**
-
-    Description: Sends messages with the specified latency
-
-    Sample usage:
-
-    ```bash
-    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ip-address": "172.16.4.4", "action": "delay", "latency": "10ms", "jitter": "10ms", "correlation": "0"}'
-    ```
-
-- **lose network packet**
-
-    Description: Drops network packets randomly
-
-    Sample usage:
-
-    ```bash
-    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ip-address": "172.16.4.4", "action": "loss", "percent": "50", "correlation": "0"}'
-    ```
-
-- **corrupt network packet**
-
-    Description: Causes packet corruption
-
-    Sample usage:
-
-    ```bash
-    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ip-address": "172.16.4.4", "action": "corrupt", "percent": "50",  "correlation": "0"}'
-    ```
-
-- **duplicate network packet**
-
-    Description: Sends duplicated packets
-
-    Sample usage:
-
-    ```bash
-    $ curl -X POST "127.0.0.1:31767/api/attack/network" -H "Content-Type: application/json"  -d '{"device": "eth0", "ip-address": "172.16.4.4", "action": "duplicate", "percent": "50", "correlation": "0"}'
-    ```
-
-#### Stress attack
-
-Generates stress on the host. Supported tasks are:
-
-- **CPU stress**
-
-   Description: Generates stress on the host CPU
-
-   Sample usage:
-
-    ```bash
-    $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"cpu", "load": 100, "workers": 2}'
-    ```
-
-- **Memory stress**
-
-   Description: Generates stress on the host memory
-
-   Sample usage:
-
-    ```bash
-    $ curl -X POST 127.0.0.1:31767/api/attack/stress -H "Content-Type:application/json" -d '{"action":"mem", "workers": 2}'
-    ```
-
-#### Disk attack
-
-Attacks the disk by increasing write/read payload, or filling up the disk. Supported tasks are:
-
-- Add payload
-
-    Description: Add read/write payload
-
-    Sample usage:
-
-    ```bash
-    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"read-payload","size":1024,"path":"temp"}'
-    ```
-
-    ```bash
-    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"write-payload","size":1024,"path":"temp"}'
-    ```
-
-- Fill disk
-
-    Description: Fills up the disk
-
-    Sample usage:
-
-    ```bash
-    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill-by-fallocate": true}' //filling using fallocate
-    ```
-
-    ```bash
-    curl -X POST "127.0.0.1:31767/api/attack/disk" -H "Content-Type: application/json" -d '{"action":"fill", "size":1024, "path":"temp", "fill-by-fallocate": false}' //filling by writing data to files
-    ```
-
-#### Recover attack
-
-Recovers an attack
-
-Sample usage:
-
-```bash
-$ curl -X DELETE "127.0.0.1:31767/api/attack/20df86e9-96e7-47db-88ce-dd31bc70c4f0"
-```
-
-## Development
-
-You can develop chaosd directly from your browser in a pre-configured development environment in the cloud:
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/chaos-mesh/chaosd)
