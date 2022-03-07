@@ -31,14 +31,24 @@ const (
 	JVMGCAction        = "gc"
 	JVMRuleFileAction  = "rule-file"
 	JVMRuleDataAction  = "rule-data"
+	JVMMySQLAction     = "mysql"
 
-	// for action 'gc' and 'stress'
+	// for action 'mysql', 'gc' and 'stress'
+	SQLHelper    = "org.chaos_mesh.byteman.helper.SQLHelper"
 	GCHelper     = "org.chaos_mesh.byteman.helper.GCHelper"
 	StressHelper = "org.chaos_mesh.byteman.helper.StressHelper"
 
 	// the trigger point for 'gc' and 'stress'
 	TriggerClass  = "org.chaos_mesh.chaos_agent.TriggerThread"
 	TriggerMethod = "triggerFunc"
+
+	MySQL5InjectClass  = "com.mysql.jdbc.MysqlIO"
+	MySQL5InjectMethod = "sqlQueryDirect"
+	MySQL5Exception    = "java.sql.SQLException(\"%s\")"
+
+	MySQL8InjectClass  = "com.mysql.cj.NativeSession"
+	MySQL8InjectMethod = "execSQL"
+	MySQL8Exception    = "com.mysql.cj.exceptions.CJException(\"%s\")"
 )
 
 // byteman rule template
@@ -77,19 +87,23 @@ type JVMCommand struct {
 
 	JVMStressSpec
 
+	JVMMySQLSpec
+
 	// rule name, should be unique, and will generate by chaosd automatically
 	Name string `json:"name,omitempty"`
 
-	// fault action, values can be latency, exception, return, stress, gc, rule-file, rule-data
+	// fault action, values can be latency, exception, return, stress, gc, rule-file, rule-data, mysql
 	Action string `json:"action,omitempty"`
 
 	// the return value for action 'return'
 	ReturnValue string `json:"value,omitempty"`
 
 	// the exception which needs to throw for action `exception`
+	// or the exception message needs to throw in action `mysql`
 	ThrowException string `json:"exception,omitempty"`
 
 	// the latency duration for action 'latency'
+	// or the latency duration in action `mysql`
 	LatencyDuration int `json:"latency,omitempty"`
 
 	// btm rule file path for action 'rule-file'
@@ -121,6 +135,28 @@ type JVMStressSpec struct {
 
 	// the memory type need to locate, only set it when action is stress, the value can be 'stack' or 'heap'
 	MemoryType string `json:"mem-type,omitempty"`
+}
+
+// JVMMySQLSpec is the specification of MySQL fault injection in JVM
+// only when SQL match the Database, Table and SQLType, chaosd will inject fault
+// for examle:
+//   SQL is "select * from test.t1",
+//   only when ((Database == "test" || Database == "") && (Table == "t1" || Table == "") && (SQLType == "select" || SQLType == "")) is true, chaosd will inject fault
+type JVMMySQLSpec struct {
+	// the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8) now
+	MySQLConnectorVersion string
+
+	// the match database
+	// default value is "", means match all database
+	Database string
+
+	// the match table
+	// default value is "", means match all table
+	Table string
+
+	// the match sql type
+	// default value is "", means match all SQL type
+	SQLType string
 }
 
 type BytemanTemplateSpec struct {
@@ -169,6 +205,13 @@ func (j *JVMCommand) Validate() error {
 	case JVMRuleDataAction:
 		if len(j.RuleData) == 0 {
 			return errors.New("rule data not provide")
+		}
+	case JVMMySQLAction:
+		if len(j.MySQLConnectorVersion) == 0 {
+			return errors.New("MySQL connector version not provided")
+		}
+		if len(j.ThrowException) == 0 && j.LatencyDuration == 0 {
+			return errors.New("must set one of exception or latency")
 		}
 	case "":
 		return errors.New("action not provided")

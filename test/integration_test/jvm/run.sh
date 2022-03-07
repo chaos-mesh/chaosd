@@ -56,7 +56,53 @@ $bin_path/chaosd attack jvm exception  --class Main --method sayhello --port 928
 sleep 1
 check_contains "BOOM" helloworld.log
 
+kill $pid
+
 # TODO: add test for latency, stress and gc
+
+echo "download && run tidb"
+tidb_dir="tidb-v5.3.0-linux-amd64"
+if [[ ! (-e ${tidb_dir}.tar.gz) ]]; then
+    curl -fsSL -o ${tidb_dir}.tar.gz https://download.pingcap.org/${tidb_dir}.tar.gz
+    tar zxvf ${tidb_dir}.tar.gz
+fi
+${tidb_dir}/bin/tidb-server -store mocktikv -P 4111 > tidb.log 2>&1 &
+sleep 5
+tidb_pid=`pgrep -n tidb-server`
+
+echo "build && run Java example program mysqldemo"
+cd byteman-example/mysqldemo
+mvn -X package -Dmaven.test.skip=true -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true
+
+export MYSQL_DSN=jdbc:"mysql://127.0.0.1:4111/test"                        
+export MYSQL_USER=root                             
+export MYSQL_CONNECTOR_VERSION=8
+mvn exec:java -Dexec.mainClass="com.mysqldemo.App" > mysqldemo.log 2>&1 &
+# make sure it works
+for (( i=0; i<=20; i++ ))
+do
+    tail_log=`tail -1 mysqldemo.log`
+    if [ "$tail_log" == "Server start!" ]; then
+        break
+    fi
+    sleep 5
+done
+cd -
+
+# TODO: get the PID more accurately
+pid=`pgrep -n java`
+
+echo "send request to mysqldemo, and can get result success"
+curl -X GET "http://127.0.0.1:8001/query?sql=SELECT%20*%20FROM%20mysql.user" > user_info.log
+check_contains "root" user_info.log
+
+$bin_path/chaosd attack jvm mysql --database mysql --table user --port 9299  --exception "BOOM" --pid $pid
+sleep 1
+
+echo "send request to mysqldemo, and will get a BOOM exception"
+curl -X GET "http://127.0.0.1:8001/query?sql=SELECT%20*%20FROM%20mysql.user" > user_info.log
+check_contains "BOOM" user_info.log
 
 echo "clean"
 kill $pid
+kill $tidb_pid
