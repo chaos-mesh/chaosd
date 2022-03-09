@@ -10,6 +10,7 @@ GO     := $(GOENV) go
 CGO    := $(CGOENV) go
 GOTEST := TEST_USE_EXISTING_CLUSTER=false NO_PROXY="${NO_PROXY},testhost" go test
 SHELL    := /usr/bin/env bash
+BYTEMAN_DIR := byteman-chaos-mesh-download-v4.0.18-0.9
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -61,9 +62,19 @@ endif
 chaosd:
 	$(CGOENV) go build -ldflags '$(LDFLAGS)' -tags "${BUILD_TAGS}" -o bin/chaosd ./cmd/main.go
 
+
 chaos-tools:
 	$(CGOENV) go build -o bin/tools/PortOccupyTool tools/PortOccupyTool.go
 	$(CGOENV) go build -o bin/tools/FileTool tools/file/*.go
+ifeq (,$(wildcard bin/tools/stress-ng))
+	curl -fsSL -o ./bin/tools/stress-ng https://mirrors.chaos-mesh.org/latest/stress-ng
+	chmod +x ./bin/tools/stress-ng
+endif
+ifeq (,$(wildcard bin/tools/byteman))
+	curl -fsSL -o ${BYTEMAN_DIR}.tar.gz https://mirrors.chaos-mesh.org/${BYTEMAN_DIR}.tar.gz
+	tar zxvf ${BYTEMAN_DIR}.tar.gz
+	mv ${BYTEMAN_DIR} ./bin/tools/byteman
+endif
 
 swagger_spec:
 ifeq ($(SWAGGER),1)

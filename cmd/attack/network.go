@@ -49,6 +49,7 @@ func NewNetworkAttackCommand(uid *string) *cobra.Command {
 		NetworkDNSCommand(dep, options),
 		NewNetworkPortOccupiedCommand(dep, options),
 		NewNetworkBandwidthCommand(dep, options),
+		NewNICDownCommand(dep, options),
 	)
 
 	return cmd
@@ -266,5 +267,22 @@ func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) 
 	}
 
 	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "this specified port is to occupied")
+	return cmd
+}
+
+func NewNICDownCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "down",
+		Short: "down network interface card",
+
+		Run: func(cmd *cobra.Command, args []string) {
+			options.Action = core.NetworkNICDownAction
+			options.CompleteDefaults()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	SetScheduleFlags(cmd, &options.SchedulerConfig)
 	return cmd
 }
