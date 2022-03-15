@@ -17,6 +17,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 // NewCompletionCommand returns the completion command
@@ -56,15 +58,23 @@ func NewCompletionCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			switch args[0] {
 			case "bash":
-				cmd.Root().GenBashCompletion(os.Stdout)
+				if err := cmd.Root().GenBashCompletion(os.Stdout); err != nil {
+					utils.ExitWithError(utils.ExitError, err)
+				}
 			case "zsh":
-				cmd.Root().GenZshCompletion(os.Stdout)
+				if err := cmd.Root().GenZshCompletion(os.Stdout); err != nil {
+					utils.ExitWithError(utils.ExitError, err)
+				}
 			case "fish":
-				cmd.Root().GenFishCompletion(os.Stdout, true)
+				if err := cmd.Root().GenFishCompletion(os.Stdout, true); err != nil {
+					utils.ExitWithError(utils.ExitError, err)
+				}
 			// TODO: powershell completion is still not fully supported, see https://github.com/spf13/cobra/pull/1208
 			// Need to update cobra version when this PR is merged
 			case "powershell":
-				cmd.Root().GenPowerShellCompletion(os.Stdout)
+				if err := cmd.Root().GenPowerShellCompletion(os.Stdout); err != nil {
+					utils.ExitWithError(utils.ExitError, err)
+				}
 			}
 		},
 	}

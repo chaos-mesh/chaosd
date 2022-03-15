@@ -20,10 +20,12 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
+	"github.com/pingcap/errors"
+	"github.com/pingcap/log"
+
 	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 	"github.com/chaos-mesh/chaosd/pkg/utils"
-	"github.com/pingcap/log"
 )
 
 type recoverCommand struct {
@@ -74,7 +76,11 @@ func completeUid(cmd *cobra.Command, args []string, toComplete string) ([]string
 	)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go func() { utils.FxNewAppWithoutLog(completionDep, fx.Invoke(listUid)).Start(ctx) }()
+	go func() {
+		if err := utils.FxNewAppWithoutLog(completionDep, fx.Invoke(listUid)).Start(ctx); err != nil {
+			log.Error(errors.Wrap(err, "start application").Error())
+		}
+	}()
 	var uids []string
 	for {
 		select {
