@@ -14,27 +14,33 @@
 package recover
 
 import (
-	"context"
-
 	"github.com/pkg/errors"
 
+	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 )
 
 type completionContext struct {
-	uids []string
-	err  error
+	uids chan string
+	err  chan error
+}
+
+func newCompletionCtx() *completionContext {
+	return &completionContext{
+		uids: make(chan string),
+		err:  make(chan error),
+	}
 }
 
 func listUid(ctx *completionContext, chaos *chaosd.Server) {
-	exps, err := chaos.List(context.TODO())
+	exps, err := chaos.Search(&core.SearchCommand{All: true})
 	if err != nil {
-		ctx.err = errors.Wrap(err, "list exp")
+		ctx.err <- errors.Wrap(err, "list exp")
 		return
 	}
 
 	for _, exp := range exps {
-		ctx.uids = append(ctx.uids, exp.Uid)
+		ctx.uids <- exp.Uid
 	}
-	return
+	close(ctx.uids)
 }
