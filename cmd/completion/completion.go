@@ -83,12 +83,6 @@ PS> ./bin/chaosd completion powershell > chaosd.ps1
 				if err := cmd.Root().GenFishCompletion(os.Stdout, true); err != nil {
 					utils.ExitWithError(utils.ExitError, err)
 				}
-			// TODO: powershell completion is still not fully supported, see https://github.com/spf13/cobra/pull/1208
-			// Need to update cobra version when this PR is merged
-			case "powershell":
-				if err := cmd.Root().GenPowerShellCompletion(os.Stdout); err != nil {
-					utils.ExitWithError(utils.ExitError, err)
-				}
 			}
 		},
 	}
