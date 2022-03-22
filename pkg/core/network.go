@@ -70,6 +70,7 @@ const (
 	NetworkPartitionAction    = "partition"
 	NetworkBandwidthAction    = "bandwidth"
 	NetworkPortOccupiedAction = "occupied"
+	NetworkNICDownAction      = "down"
 )
 
 func (n *NetworkCommand) Validate() error {
@@ -89,6 +90,8 @@ func (n *NetworkCommand) Validate() error {
 		return n.validNetworkOccupied()
 	case NetworkBandwidthAction:
 		return n.validNetworkBandwidth()
+	case NetworkNICDownAction:
+		return n.validNetworkNICDown()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -200,6 +203,18 @@ func (n *NetworkCommand) validNetworkOccupied() error {
 	if len(n.Port) == 0 {
 		return errors.New("port is required")
 	}
+	return nil
+}
+
+func (n *NetworkCommand) validNetworkNICDown() error {
+	if len(n.Duration) == 0 {
+		return errors.New("duration is required")
+	}
+
+	if len(n.Device) == 0 {
+		return errors.New("device is required")
+	}
+
 	return nil
 }
 
