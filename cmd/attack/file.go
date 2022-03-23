@@ -46,6 +46,7 @@ func NewFileAttackCommand(uid *string) *cobra.Command {
 		NewFileDeleteCommand(dep, options),
 		NewFileRenameCommand(dep, options),
 		NewFileAppendCommand(dep, options),
+		NewFileReplaceCommand(dep, options),
 	)
 
 	return cmd
@@ -134,6 +135,25 @@ func NewFileAppendCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "append data to the file")
 	cmd.Flags().StringVarP(&options.Data, "data", "d", "", "append data")
 	cmd.Flags().IntVarP(&options.Count, "count", "c", 1, "append count with default value is 1")
+
+	return cmd
+}
+
+func NewFileReplaceCommand(dep fx.Option, options *core.FileCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "replace",
+		Short: "replace data in file",
+
+		Run: func(cmd *cobra.Command, args []string) {
+			options.Action = core.FileReplaceAction
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonFileAttackFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "replace data in the file")
+	cmd.Flags().StringVarP(&options.OriginStr, "origin-string", "o", "", "the origin string to be replaced")
+	cmd.Flags().StringVarP(&options.DestStr, "dest-string", "d", "", "the destination string to replace the origin string")
+	cmd.Flags().IntVarP(&options.Line, "line", "l", 0, "the line number to replace, default is 0, means replace all lines")
 
 	return cmd
 }

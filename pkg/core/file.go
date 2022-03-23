@@ -38,6 +38,13 @@ type FileCommand struct {
 	Count int `json:"count,omitempty"`
 	// OriginPrivilege used to save the file's origin privilege.
 	OriginPrivilege int `json:"origin-privilege,omitempty"`
+
+	// OriginStr is the origin string of the file.
+	OriginStr string `json:"origin-string,omitempty"`
+	// DestStr is the destination string of the file.
+	DestStr string `json:"dest-string,omitempty"`
+	// Line is the line number of the file to be replaced.
+	Line int `json:"line,omitempty"`
 }
 
 var _ AttackConfig = &FileCommand{}
@@ -48,6 +55,7 @@ const (
 	FileDeleteAction          = "delete"
 	FileRenameAction          = "rename"
 	FileAppendAction          = "append"
+	FileReplaceAction         = "replace"
 )
 
 func (n *FileCommand) Validate() error {
@@ -64,7 +72,9 @@ func (n *FileCommand) Validate() error {
 	case FileRenameAction:
 		return n.validFileRename()
 	case FileAppendAction:
-		return n.valieFileAppend()
+		return n.validFileAppend()
+	case FileReplaceAction:
+		return n.validFileReplace()
 	default:
 		return errors.Errorf("file action %s not supported", n.Action)
 	}
@@ -106,13 +116,25 @@ func (n *FileCommand) validFileRename() error {
 	return nil
 }
 
-func (n *FileCommand) valieFileAppend() error {
+func (n *FileCommand) validFileAppend() error {
 	if len(n.FileName) == 0 {
 		return errors.New("file-name is required")
 	}
 
 	if len(n.Data) == 0 {
 		return errors.New("append data is required")
+	}
+
+	return nil
+}
+
+func (n *FileCommand) validFileReplace() error {
+	if len(n.FileName) == 0 {
+		return errors.New("file-name is required")
+	}
+
+	if len(n.OriginStr) == 0 || len(n.DestStr) == 0 {
+		return errors.New("both origin and destination string are required")
 	}
 
 	return nil

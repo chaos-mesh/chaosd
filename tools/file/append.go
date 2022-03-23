@@ -43,7 +43,6 @@ func NewFileAppendCommand() *cobra.Command {
 	return cmd
 }
 
-// while the input content has many lines, "\n" is the line break
 func appendFile(fileName, data string, count int) error {
 	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

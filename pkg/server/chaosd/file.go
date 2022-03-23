@@ -54,6 +54,10 @@ func (fileAttack) Attack(options core.AttackConfig, env Environment) (err error)
 		if err = env.Chaos.appendFile(attack, env.AttackUid); err != nil {
 			return errors.WithStack(err)
 		}
+	case core.FileReplaceAction:
+		if err = env.Chaos.replaceFile(attack, env.AttackUid); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	return nil
@@ -139,6 +143,16 @@ func (s *Server) appendFile(attack *core.FileCommand, uid string) error {
 
 	cmdStr = fmt.Sprintf("FileTool append --count %d --data %s --file-name %s", attack.Count, attack.Data, attack.FileName)
 	_, err = utils.ExecuteCmd(cmdStr)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func (s *Server) replaceFile(attack *core.FileCommand, uid string) error {
+	cmdStr := fmt.Sprintf("FileTool replace --file-name %s --origin-string %s --dest-string %s --line %d", attack.FileName, attack.OriginStr, attack.DestStr, attack.Line)
+	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
 		return errors.WithStack(err)
 	}

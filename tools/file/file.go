@@ -36,6 +36,7 @@ func init() {
 		NewFileAppendCommand(),
 		NewFileCopyCommand(),
 		NewFileDeleteCommand(),
+		NewFileReplaceCommand(),
 	)
 }
 
