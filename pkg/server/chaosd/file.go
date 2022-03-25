@@ -260,8 +260,8 @@ func (s *Server) recoverAppendFile(attack *core.FileCommand, uid string) error {
 
 func (s *Server) recoverReplaceFile(attack *core.FileCommand, uid string) error {
 	// TODO: this is not a good way to recover
-	// For example: 
-	//	 The origin content is "test text", and replace "test" with "text", the result is "text text". 
+	// For example:
+	//	 The origin content is "test text", and replace "test" with "text", the result is "text text".
 	//   After recover, the file content is "test test", not equal to the origin content.
 	cmdStr := fmt.Sprintf("FileTool replace --file-name %s --origin-string %s --dest-string %s --line %d", attack.FileName, attack.DestStr, attack.OriginStr, attack.Line)
 	_, err := utils.ExecuteCmd(cmdStr)
