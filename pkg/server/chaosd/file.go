@@ -188,6 +188,10 @@ func (fileAttack) Recover(exp core.Experiment, env Environment) error {
 		if err = env.Chaos.recoverAppendFile(attack, env.AttackUid); err != nil {
 			return errors.WithStack(err)
 		}
+	case core.FileReplaceAction:
+		if err = env.Chaos.recoverReplaceFile(attack, env.AttackUid); err != nil {
+			return errors.WithStack(err)
+		}
 	}
 	return nil
 }
@@ -246,6 +250,20 @@ func (s *Server) recoverRenameFile(attack *core.FileCommand) error {
 func (s *Server) recoverAppendFile(attack *core.FileCommand, uid string) error {
 	backupName := getBackupName(attack.FileName, uid)
 	cmdStr := fmt.Sprintf("FileTool rename --old-name %s --new-name %s", backupName, attack.FileName)
+	_, err := utils.ExecuteCmd(cmdStr)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func (s *Server) recoverReplaceFile(attack *core.FileCommand, uid string) error {
+	// TODO: this is not a good way to recover
+	// For example: 
+	//	 The origin content is "test text", and replace "test" with "text", the result is "text text". 
+	//   After recover, the file content is "test test", not equal to the origin content.
+	cmdStr := fmt.Sprintf("FileTool replace --file-name %s --origin-string %s --dest-string %s --line %d", attack.FileName, attack.DestStr, attack.OriginStr, attack.Line)
 	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
 		return errors.WithStack(err)
