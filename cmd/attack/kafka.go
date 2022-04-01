@@ -40,6 +40,12 @@ func NewKafkaAttackCommand(uid *string) *cobra.Command {
 		Short: "Kafka attack related commands",
 	}
 
+	cmd.PersistentFlags().StringVarP(&options.Topic, "topic", "T", "", "the topic to attack")
+	cmd.PersistentFlags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka server")
+	cmd.PersistentFlags().Uint16VarP(&options.Port, "port", "p", 9092, "the port of kafka server")
+	cmd.PersistentFlags().StringVarP(&options.Username, "username", "u", "", "the username of kafka client")
+	cmd.PersistentFlags().StringVarP(&options.Password, "password", "P", "", "the password of kafka client")
+	_ = cmd.MarkPersistentFlagRequired("topic")
 	cmd.AddCommand(
 		NewKafkaFloodCommand(dep, options),
 		NewKafkaIOCommand(dep, options),
@@ -59,6 +65,9 @@ func NewKafkaFloodCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Comm
 		},
 	}
 
+	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 1024, "the size of message")
+	cmd.Flags().UintVarP(&options.Threads, "threads", "t", 1, "the numbers of worker threads")
+	cmd.Flags().Uint64VarP(&options.RequestPerSecond, "rps", "r", 1024, "the request per second for each worker")
 	return cmd
 }
 
@@ -73,6 +82,8 @@ func NewKafkaIOCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Command
 		},
 	}
 
+	cmd.Flags().BoolVarP(&options.NonReadable, "non-readable", "r", false, "make kafka cluster non-readable")
+	cmd.Flags().BoolVarP(&options.NonWritable, "non-writable", "w", false, "make kafka cluster non-writable")
 	return cmd
 }
 

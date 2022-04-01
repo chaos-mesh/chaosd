@@ -15,6 +15,8 @@ package core
 
 import (
 	"encoding/json"
+
+	"github.com/pkg/errors"
 )
 
 type KafkaAttackAction string
@@ -30,10 +32,60 @@ var _ AttackConfig = &KafkaCommand{}
 type KafkaCommand struct {
 	CommonAttackConfig
 
+	// required options
 	Action KafkaAttackAction
+	Topic  string
+
+	// optional options
+	Host     string
+	Port     uint16
+	Username string
+	Password string
+
+	// options for flood attack
+	Threads          uint
+	RequestPerSecond uint64
+	MessageSize      uint
+
+	// options for io attack
+	NonReadable bool
+	NonWritable bool
 }
 
 func (c *KafkaCommand) Validate() error {
+	if c.Action != KafkaFloodAction && c.Action != KafkaIOAction {
+		return errors.Errorf("invalid action: %s", c.Action)
+	}
+
+	if c.Topic == "" {
+		return errors.New("topic is required")
+	}
+
+	if c.Host == "" {
+		return errors.New("host is required")
+	}
+
+	if c.Port == 0 {
+		return errors.New("port is required")
+	}
+
+	if c.Action == KafkaFloodAction {
+		if c.Threads == 0 {
+			return errors.New("threads is required")
+		}
+
+		if c.RequestPerSecond == 0 {
+			return errors.New("request per second is required")
+		}
+
+		if c.MessageSize == 0 {
+			return errors.New("message size is required")
+		}
+	}
+
+	if c.Action == KafkaIOAction && !c.NonReadable && !c.NonWritable {
+		return errors.New("at least one of non-readable or non-writable is required")
+	}
 	return nil
 }
 
