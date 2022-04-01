@@ -32,17 +32,15 @@ var _ AttackConfig = &KafkaCommand{}
 type KafkaCommand struct {
 	CommonAttackConfig
 
-	// required options
+	// global options
 	Action KafkaAttackAction
 	Topic  string
 
-	// optional options
-	Host     string
-	Port     uint16
-	Username string
-	Password string
-
 	// options for flood attack
+	Host             string
+	Port             uint16
+	Username         string
+	Password         string
 	Threads          uint
 	RequestPerSecond uint64
 	MessageSize      uint
@@ -61,15 +59,15 @@ func (c *KafkaCommand) Validate() error {
 		return errors.New("topic is required")
 	}
 
-	if c.Host == "" {
-		return errors.New("host is required")
-	}
-
-	if c.Port == 0 {
-		return errors.New("port is required")
-	}
-
 	if c.Action == KafkaFloodAction {
+		if c.Host == "" {
+			return errors.New("host is required")
+		}
+
+		if c.Port == 0 {
+			return errors.New("port is required")
+		}
+
 		if c.Threads == 0 {
 			return errors.New("threads is required")
 		}
