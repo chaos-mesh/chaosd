@@ -41,7 +41,7 @@ func NewRedisAttackCommand(uid *string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		// NewRedisSentinelRestartCommand(dep, options),
+		NewRedisSentinelRestartCommand(dep, options),
 		NewRedisSentinelStopCommand(dep, options),
 	)
 
@@ -50,13 +50,18 @@ func NewRedisAttackCommand(uid *string) *cobra.Command {
 
 func NewRedisSentinelRestartCommand(dep fx.Option, options *core.RedisCommand) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "restart",
+		Use:   "sentinel-restart",
 		Short: "restart sentinel",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.RedisSentinelRestartAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(redisAttackF)).Run()
 		},
 	}
+
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The signal")
+	cmd.Flags().IntVarP(&options.DB, "db", "", 0, "The command to be run when recovering experiment")
+	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config of redis server")
 
 	return cmd
 }

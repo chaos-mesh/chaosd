@@ -65,6 +65,8 @@ func (s *Server) RecoverAttack(uid string) error {
 			attackType = JVMAttack
 		case core.ClockAttack:
 			attackType = ClockAttack
+		case core.RedisAttack:
+			attackType = RedisAttack
 		default:
 			return perr.Errorf("chaos experiment kind %s not found", exp.Kind)
 		}
