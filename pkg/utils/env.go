@@ -37,10 +37,14 @@ func SetRuntimeEnv() error {
 	if err != nil {
 		return err
 	}
+
 	err = os.Setenv("PATH", fmt.Sprintf("%s/tools:%s/bin:%s", wd, bytemanHome, path))
 	if err != nil {
 		return err
 	}
+
+	path = os.Getenv("PATH")
+	fmt.Println("PATH:", path)
 
 	return nil
 }
