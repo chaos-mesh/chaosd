@@ -60,7 +60,8 @@ func NewRedisSentinelRestartCommand(dep fx.Option, options *core.RedisCommand) *
 
 	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
-	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config of redis server")
+	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config of Redis server")
+	cmd.Flags().BoolVarP(&options.FlushConfig, "flush-config", "", true, " Force Sentinel to rewrite its configuration on disk")
 
 	return cmd
 }
@@ -78,8 +79,8 @@ func NewRedisSentinelStopCommand(dep fx.Option, options *core.RedisCommand) *cob
 
 	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
-	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config path of redis server")
-
+	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config path of Redis server")
+	cmd.Flags().BoolVarP(&options.FlushConfig, "flush-config", "", true, " Force Sentinel to rewrite its configuration on disk")
 	return cmd
 }
 

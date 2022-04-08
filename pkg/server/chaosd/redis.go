@@ -71,20 +71,22 @@ func (redisAttack) Recover(exp core.Experiment, env Environment) error {
 }
 
 func (s *Server) shutdownSentinelServer(attack *core.RedisCommand, cli *redis.Client) error {
-	// Because redis.Client doesn't have the func `FlushConfig()`, a redis.SentinelClient has to be created
-	sentinelCli := redis.NewSentinelClient(&redis.Options{
-		Addr: attack.Addr,
-	})
-	result, err := sentinelCli.FlushConfig(sentinelCli.Context()).Result()
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	if result != STATUSOK {
-		return errors.WithStack(errors.Errorf("redis command status is %s", result))
+	if attack.FlushConfig {
+		// Because redis.Client doesn't have the func `FlushConfig()`, a redis.SentinelClient has to be created
+		sentinelCli := redis.NewSentinelClient(&redis.Options{
+			Addr: attack.Addr,
+		})
+		result, err := sentinelCli.FlushConfig(sentinelCli.Context()).Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if result != STATUSOK {
+			return errors.WithStack(errors.Errorf("redis command status is %s", result))
+		}
 	}
 
 	// If cli.Shutdown() runs successfully, the result will be nil and the err will be "connection refused"
-	result, err = cli.Shutdown(cli.Context()).Result()
+	result, err := cli.Shutdown(cli.Context()).Result()
 	if result != "" {
 		return errors.WithStack(err)
 	}

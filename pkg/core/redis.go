@@ -29,9 +29,10 @@ var _ AttackConfig = &RedisCommand{}
 type RedisCommand struct {
 	CommonAttackConfig
 
-	Addr     string `json:"addr,omitempty"`
-	Password string `json:"password,omitempty"`
-	Conf     string `json:"conf,omitempty"`
+	Addr        string `json:"addr,omitempty"`
+	Password    string `json:"password,omitempty"`
+	Conf        string `json:"conf,omitempty"`
+	FlushConfig bool   `json:"flushConfig,omitempty"`
 }
 
 func (p *RedisCommand) Validate() error {
