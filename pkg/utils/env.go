@@ -43,8 +43,5 @@ func SetRuntimeEnv() error {
 		return err
 	}
 
-	path = os.Getenv("PATH")
-	fmt.Println("PATH:", path)
-
 	return nil
 }
