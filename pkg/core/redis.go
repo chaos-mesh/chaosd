@@ -31,7 +31,6 @@ type RedisCommand struct {
 
 	Addr     string `json:"addr,omitempty"`
 	Password string `json:"password,omitempty"`
-	DB       int    `json:"db,omitempty"`
 	Conf     string `json:"conf,omitempty"`
 }
 
@@ -42,7 +41,6 @@ func (p *RedisCommand) Validate() error {
 	if len(p.Addr) == 0 {
 		return errors.New("addr not provided")
 	}
-	// TODO: validate signal
 
 	return nil
 }

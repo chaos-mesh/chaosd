@@ -36,7 +36,6 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 	cli := redis.NewClient(&redis.Options{
 		Addr:     attack.Addr,
 		Password: attack.Password,
-		DB:       attack.DB,
 	})
 	_, err := cli.Ping(cli.Context()).Result()
 	if err != nil {
@@ -94,6 +93,9 @@ func (s *Server) shutdownSentinelServer(attack *core.RedisCommand, cli *redis.Cl
 }
 
 func (s *Server) recoverSentinelStop(attack *core.RedisCommand) error {
+	if attack.Conf == "" {
+		return errors.WithStack(errors.Errorf("redis config is not present"))
+	}
 	recoverCmd := exec.Command("redis-server", attack.Conf, "--sentinel")
 	_, err := recoverCmd.CombinedOutput()
 	if err != nil {

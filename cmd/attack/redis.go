@@ -59,8 +59,7 @@ func NewRedisSentinelRestartCommand(dep fx.Option, options *core.RedisCommand) *
 	}
 
 	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
-	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The signal")
-	cmd.Flags().IntVarP(&options.DB, "db", "", 0, "The command to be run when recovering experiment")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config of redis server")
 
 	return cmd
@@ -78,9 +77,8 @@ func NewRedisSentinelStopCommand(dep fx.Option, options *core.RedisCommand) *cob
 	}
 
 	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
-	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The signal")
-	cmd.Flags().IntVarP(&options.DB, "db", "", 0, "The command to be run when recovering experiment")
-	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config of redis server")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
+	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config path of redis server")
 
 	return cmd
 }
