@@ -85,6 +85,24 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 				return errors.WithStack(err)
 			}
 		}
+
+	case core.NetworkNICDownAction:
+		if err := env.Chaos.getNICIP(attack); err != nil {
+			return errors.WithStack(err)
+		}
+
+		NICDownCommand := fmt.Sprintf("ifconfig %s down", attack.Device)
+
+		cmd := exec.Command("bash", "-c", NICDownCommand)
+		_, err := cmd.CombinedOutput()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if attack.Duration != "-1" {
+			err := env.Chaos.recoverNICDownScheduled(attack)
+			return errors.WithStack(err)
+		}
 	}
 
 	return nil
@@ -348,6 +366,8 @@ func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 				return errors.WithStack(err)
 			}
 		}
+	case core.NetworkNICDownAction:
+		return env.Chaos.recoverNICDown(attack)
 	}
 	return nil
 }
@@ -509,5 +529,56 @@ func (s *Server) recoverEtcHosts(attack *core.NetworkCommand, uid string) error 
 		log.Error(recoverCmd.String()+string(stdout), zap.Error(err))
 		return errors.WithStack(err)
 	}
+	return nil
+}
+
+func (s *Server) recoverNICDown(attack *core.NetworkCommand) error {
+	NICUpCommand := fmt.Sprintf("ifconfig %s %s up", attack.Device, attack.IPAddress)
+
+	recoverCmd := exec.Command("bash", "-c", NICUpCommand)
+	_, err := recoverCmd.CombinedOutput()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+func (s *Server) recoverNICDownScheduled(attack *core.NetworkCommand) error {
+	NICUpCommand := fmt.Sprintf("sleep %s && ifconfig %s %s up", attack.Duration, attack.Device, attack.IPAddress)
+
+	recoverCmd := exec.Command("bash", "-c", NICUpCommand)
+	_, err := recoverCmd.CombinedOutput()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	return nil
+}
+
+// getNICIP() uses `ifconfig` to get interfaces' IP. The reason for
+// not using net.Interfaces() is that net.Interfaces() can't get
+// sub interfaces.
+func (s *Server) getNICIP(attack *core.NetworkCommand) error {
+	getIPCommand := fmt.Sprintf("ifconfig %s | awk '/inet\\>/ {print $2}'", attack.Device)
+
+	cmd := exec.Command("bash", "-c", getIPCommand)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if err = cmd.Start(); err != nil {
+		return errors.WithStack(err)
+	}
+
+	stdoutBytes := make([]byte, 1024)
+	_, err = stdout.Read(stdoutBytes)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	// When stdoutBytes is converted to string, the string will be IPAddress with a few unnecessary
+	// zeros, which makes IPAddress' format wrong, so the trailing zeros needs to be trimmed.
+	attack.IPAddress = strings.TrimRight(string(stdoutBytes), "\n\x00")
+
 	return nil
 }

@@ -20,7 +20,7 @@ jobs:
       - name: Prepare build environment
         run: |
           # actions/checkout require git v2.X
-          yum -y install https://packages.endpoint.com/rhel/7/os/x86_64/endpoint-repo-1.7-1.x86_64.rpm
+          yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
           yum install -y gcc
           yum install -y make
           yum install -y binutils
@@ -41,27 +41,11 @@ jobs:
           pip3 install awscli
           printf "%s\n" ${{ secrets.AWS_ACCESS_KEY }} ${{ secrets.AWS_SECRET_KEY }} ${{ secrets.AWS_REGION }} "json" | aws configure
 
-      - name: Build binary
+      - name: Build binary and related tools
         run: make build
 
       - name: Upload files
         run: |
-
-          # download tools
-          BYTEMAN_DIR=byteman-chaos-mesh-download-v4.0.18-0.9
-          curl -fsSL -o ${BYTEMAN_DIR}.tar.gz https://mirrors.chaos-mesh.org/${BYTEMAN_DIR}.tar.gz
-          curl -fsSL -o stress-ng https://mirrors.chaos-mesh.org/latest/stress-ng
-          tar zxvf ${BYTEMAN_DIR}.tar.gz
-          chmod +x ./stress-ng
-
-          # prepare package
-          mkdir chaosd-latest-linux-amd64
-          mkdir chaosd-latest-linux-amd64/tools
-          mv bin/chaosd chaosd-latest-linux-amd64/
-          mv bin/PortOccupyTool chaosd-latest-linux-amd64/tools/
-          mv ${BYTEMAN_DIR} chaosd-latest-linux-amd64/tools/byteman
-          mv stress-ng chaosd-latest-linux-amd64/tools/
-
-          # upload package
+          mv bin chaosd-latest-linux-amd64
           tar czvf chaosd-latest-linux-amd64.tar.gz chaosd-latest-linux-amd64
           aws s3 cp chaosd-latest-linux-amd64.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-latest-linux-amd64.tar.gz

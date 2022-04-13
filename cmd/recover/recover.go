@@ -14,10 +14,14 @@
 package recover
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
+
+	"github.com/pingcap/errors"
+	"github.com/pingcap/log"
 
 	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
@@ -38,9 +42,10 @@ func NewRecoverCommand() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "recover UID",
-		Short: "Recover a chaos experiment",
-		Args:  cobra.MinimumNArgs(1),
+		Use:               "recover UID",
+		Short:             "Recover a chaos experiment",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: completeUid,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				utils.ExitWithMsg(utils.ExitBadArgs, "UID is required")
@@ -59,4 +64,34 @@ func recoverCommandF(chaos *chaosd.Server, options *recoverCommand) {
 	}
 
 	utils.NormalExit(fmt.Sprintf("Recover %s successfully", options.uid))
+}
+
+func completeUid(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	completionCtx := newCompletionCtx()
+	completionDep := fx.Options(
+		server.Module,
+		fx.Provide(func() *completionContext {
+			return completionCtx
+		}),
+	)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() {
+		if err := utils.FxNewAppWithoutLog(completionDep, fx.Invoke(listUid)).Start(ctx); err != nil {
+			log.Error(errors.Wrap(err, "start application").Error())
+		}
+	}()
+	var uids []string
+	for {
+		select {
+		case uid := <-completionCtx.uids:
+			if len(uid) == 0 {
+				return uids, cobra.ShellCompDirectiveNoFileComp
+			}
+			uids = append(uids, uid)
+		case err := <-completionCtx.err:
+			log.Error(err.Error())
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+	}
 }
