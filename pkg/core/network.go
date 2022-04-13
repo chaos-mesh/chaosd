@@ -476,14 +476,14 @@ func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
 	if n.Direction == "to" || n.Direction == "both" {
 		toChains, err = n.getPartitionChain(ipset, "to")
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return nil, err
 		}
 	}
 
 	if n.Direction == "from" || n.Direction == "both" {
 		fromChains, err = n.getPartitionChain(ipset, "from")
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return nil, err
 		}
 	}
 
