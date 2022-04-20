@@ -15,6 +15,7 @@ package chaosd
 
 import (
 	"errors"
+	"io/fs"
 	"strings"
 	"syscall"
 
@@ -91,6 +92,10 @@ func (stressAttack) Recover(exp core.Experiment, _ Environment) error {
 	attack := config.(*core.StressCommand)
 	proc, err := process.NewProcess(attack.StressngPid)
 	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+
 		return err
 	}
 

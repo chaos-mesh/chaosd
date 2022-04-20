@@ -25,6 +25,7 @@ import (
 	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/chaos-mesh/chaosd/cmd/attack"
+	"github.com/chaos-mesh/chaosd/cmd/completion"
 	"github.com/chaos-mesh/chaosd/cmd/recover"
 	"github.com/chaos-mesh/chaosd/cmd/search"
 	"github.com/chaos-mesh/chaosd/cmd/server"
@@ -50,6 +51,7 @@ func init() {
 		recover.NewRecoverCommand(),
 		search.NewSearchCommand(),
 		version.NewVersionCommand(),
+		completion.NewCompletionCommand(),
 	)
 
 	_ = utils.SetRuntimeEnv()
