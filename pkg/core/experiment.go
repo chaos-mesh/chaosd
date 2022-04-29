@@ -39,6 +39,7 @@ const (
 	HostAttack    = "host"
 	JVMAttack     = "jvm"
 	KafkaAttack   = "kafka"
+	FileAttack    = "file"
 )
 
 const (
@@ -110,6 +111,8 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &ClockOption{}
 	case KafkaAttack:
 		attackConfig = &KafkaCommand{}
+	case FileAttack:
+		attackConfig = &FileCommand{}
 	default:
 		return nil
 	}
