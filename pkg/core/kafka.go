@@ -34,9 +34,10 @@ type KafkaCommand struct {
 	CommonAttackConfig
 
 	// global options
-	Action   KafkaAttackAction
-	Topic    string
-	NoSilent bool
+	Action    KafkaAttackAction
+	Topic     string
+	Partition int
+	NoSilent  bool
 
 	// options for fill and flood attack
 	Host        string

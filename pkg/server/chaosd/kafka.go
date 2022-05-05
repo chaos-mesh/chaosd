@@ -62,7 +62,7 @@ func attackKafkaFill(attack *core.KafkaCommand, env Environment) (err error) {
 	// TODO: make it configurable
 	const messagePerRequest = 128
 	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
-	conn, err := client.DialLeader(context.Background(), "tcp", endpoint, attack.Topic, 0)
+	conn, err := client.DialLeader(context.Background(), "tcp", endpoint, attack.Topic, attack.Partition)
 	if err != nil {
 		return perr.Wrapf(err, "dial kafka leader %s", endpoint)
 	}
@@ -93,7 +93,7 @@ func attackKafkaFill(attack *core.KafkaCommand, env Environment) (err error) {
 
 func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand, env Environment) (err error) {
 	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
-	conn, err := client.DialLeader(context.Background(), "tcp", endpoint, attack.Topic, 0)
+	conn, err := client.DialLeader(context.Background(), "tcp", endpoint, attack.Topic, attack.Partition)
 	if err != nil {
 		return perr.Wrapf(err, "dial kafka leader %s", endpoint)
 	}
