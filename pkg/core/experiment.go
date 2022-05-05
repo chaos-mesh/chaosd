@@ -39,6 +39,7 @@ const (
 	HostAttack    = "host"
 	JVMAttack     = "jvm"
 	KafkaAttack   = "kafka"
+	RedisAttack   = "redis"
 	FileAttack    = "file"
 )
 
@@ -111,6 +112,8 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &ClockOption{}
 	case KafkaAttack:
 		attackConfig = &KafkaCommand{}
+	case RedisAttack:
+		attackConfig = &RedisCommand{}
 	case FileAttack:
 		attackConfig = &FileCommand{}
 	default:
