@@ -33,6 +33,7 @@ type RedisCommand struct {
 	Password    string `json:"password,omitempty"`
 	Conf        string `json:"conf,omitempty"`
 	FlushConfig bool   `json:"flushConfig,omitempty"`
+	RedisPath   string `json:"redisPath,omitempty"`
 }
 
 func (p *RedisCommand) Validate() error {
