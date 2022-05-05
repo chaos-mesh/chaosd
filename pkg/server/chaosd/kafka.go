@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/pingcap/log"
 	perr "github.com/pkg/errors"
 	client "github.com/segmentio/kafka-go"
@@ -59,7 +60,7 @@ func (j kafkaAttack) Recover(exp core.Experiment, env Environment) error {
 
 func attackKafkaFill(attack *core.KafkaCommand, env Environment) (err error) {
 	// TODO: make it configurable
-	const messagePerRequest = 1024
+	const messagePerRequest = 128
 	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
 	conn, err := client.DialLeader(context.Background(), "tcp", endpoint, attack.Topic, 0)
 	if err != nil {
@@ -72,10 +73,20 @@ func attackKafkaFill(attack *core.KafkaCommand, env Environment) (err error) {
 		msgList = append(msgList, client.Message{Value: msg})
 	}
 
+	counter := uint64(0)
+	start := time.Now()
+	written := "0 B"
+
 	for {
-		_, err := conn.WriteMessages(msgList...)
+		n, err := conn.WriteMessages(msgList...)
 		if err != nil {
 			return perr.Wrap(err, "write messages")
+		}
+		counter += uint64(n)
+		newWritten := humanize.Bytes(counter)
+		if newWritten != written {
+			written = newWritten
+			log.Info(fmt.Sprintf("write %s in %s", written, time.Now().Sub(start)))
 		}
 	}
 }

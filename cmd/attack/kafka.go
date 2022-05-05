@@ -66,7 +66,7 @@ func NewKafkaFillCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Comma
 	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka leader")
 	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "the username of kafka client")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "the password of kafka client")
-	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 1024*1024, "the size of each message")
+	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 4*1024, "the size of each message")
 	return cmd
 }
 

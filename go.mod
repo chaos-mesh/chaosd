@@ -8,6 +8,7 @@ require (
 	github.com/containerd/containerd v1.2.3
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-logr/zapr v0.1.0
