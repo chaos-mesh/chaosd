@@ -27,6 +27,10 @@ import (
 	"github.com/chaos-mesh/chaos-mesh/pkg/time/utils"
 )
 
+const (
+	ClockAction = "clock"
+)
+
 type ClockOption struct {
 	CommonAttackConfig
 

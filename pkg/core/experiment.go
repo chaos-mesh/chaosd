@@ -39,6 +39,7 @@ const (
 	HostAttack    = "host"
 	JVMAttack     = "jvm"
 	FileAttack    = "file"
+	VMAttack      = "vm"
 )
 
 const (
@@ -110,6 +111,8 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &ClockOption{}
 	case FileAttack:
 		attackConfig = &FileCommand{}
+	case VMAttack:
+		attackConfig = &VMOption{}
 	default:
 		return nil
 	}
