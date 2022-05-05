@@ -109,12 +109,18 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand, env Enviro
 						err := conn.SetWriteDeadline(time.Now().Add(timeout))
 						if err != nil {
 							failed++
-							break
+							if attack.NoSilent {
+								logger.Error("set write deadline", zap.Error(err))
+							}
+							continue
 						}
 						_, err = conn.Write(msg)
 						if err != nil {
 							failed++
-							break
+							if attack.NoSilent {
+								logger.Error("write message", zap.Error(err))
+							}
+							continue
 						}
 						succeeded++
 					}
