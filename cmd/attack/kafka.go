@@ -66,7 +66,7 @@ func NewKafkaFloodCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Comm
 	cmd.Flags().StringVarP(&options.Password, "password", "P", "", "the password of kafka client")
 	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 1024, "the size of message")
 	cmd.Flags().UintVarP(&options.Threads, "threads", "t", 1, "the numbers of worker threads")
-	cmd.Flags().Uint64VarP(&options.RequestPerSecond, "rps", "r", 1024, "the request per second for each worker")
+	cmd.Flags().Uint64VarP(&options.RequestPerSecond, "rps", "r", 1<<32, "the request per second for each worker")
 	return cmd
 }
 
