@@ -43,10 +43,29 @@ func NewKafkaAttackCommand(uid *string) *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&options.Topic, "topic", "T", "", "the topic to attack")
 	_ = cmd.MarkPersistentFlagRequired("topic")
 	cmd.AddCommand(
+		NewKafkaFillCommand(dep, options),
 		NewKafkaFloodCommand(dep, options),
 		NewKafkaIOCommand(dep, options),
 	)
 
+	return cmd
+}
+
+func NewKafkaFillCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "fill [options]",
+		Short:             "fill kafka cluster with messages",
+		ValidArgsFunction: cobra.NoFileCompletions,
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.KafkaFillAction
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(kafkaCommandFunc)).Run()
+		},
+	}
+	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka leader")
+	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka leader")
+	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "the username of kafka client")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "the password of kafka client")
+	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 1024*1024, "the size of each message")
 	return cmd
 }
 
@@ -60,11 +79,11 @@ func NewKafkaFloodCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Comm
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(kafkaCommandFunc)).Run()
 		},
 	}
-	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka server")
-	cmd.Flags().Uint16VarP(&options.Port, "port", "p", 9092, "the port of kafka server")
+	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka leader")
+	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka leader")
 	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "the username of kafka client")
-	cmd.Flags().StringVarP(&options.Password, "password", "P", "", "the password of kafka client")
-	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 1024, "the size of message")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "the password of kafka client")
+	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 1024, "the size of each message")
 	cmd.Flags().UintVarP(&options.Threads, "threads", "t", 1, "the numbers of worker threads")
 	cmd.Flags().Uint64VarP(&options.RequestPerSecond, "rps", "r", 1<<32, "the request per second for each worker")
 	return cmd

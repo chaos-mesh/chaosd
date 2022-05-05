@@ -23,6 +23,7 @@ type KafkaAttackAction string
 
 const (
 	// Kafka actions
+	KafkaFillAction  = "fill"
 	KafkaFloodAction = "flood"
 	KafkaIOAction    = "io"
 )
@@ -51,12 +52,26 @@ type KafkaCommand struct {
 }
 
 func (c *KafkaCommand) Validate() error {
-	if c.Action != KafkaFloodAction && c.Action != KafkaIOAction {
+	if c.Action != KafkaFloodAction && c.Action != KafkaIOAction && c.Action != KafkaFillAction {
 		return errors.Errorf("invalid action: %s", c.Action)
 	}
 
 	if c.Topic == "" {
 		return errors.New("topic is required")
+	}
+
+	if c.Action == KafkaFillAction {
+		if c.Host == "" {
+			return errors.New("host is required")
+		}
+
+		if c.Port == 0 {
+			return errors.New("port is required")
+		}
+
+		if c.MessageSize == 0 {
+			return errors.New("message size is required")
+		}
 	}
 
 	if c.Action == KafkaFloodAction {
