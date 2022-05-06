@@ -167,8 +167,8 @@ func attackKafkaIO(attack *core.KafkaCommand) (err error) {
 		return perr.Wrapf(err, "stat partition dir %s", attack.PartitionDir)
 	}
 
-	attack.OriginPerm = uint16(stat.Mode().Perm())
-	mode := stat.Mode()
+	mode := stat.Mode() & ^os.FileMode(0111) // the files in the partition dir are not executable
+	attack.OriginPerm = uint16(mode.Perm())
 	if attack.NonReadable {
 		mode &= ^os.FileMode(0444)
 	}
@@ -178,9 +178,16 @@ func attackKafkaIO(attack *core.KafkaCommand) (err error) {
 	if attack.NoSilent {
 		log.Info(fmt.Sprintf("change permission of %s to %s", attack.PartitionDir, mode))
 	}
-	err = os.Chmod(attack.PartitionDir, mode)
+
+	files, err := os.ReadDir(attack.PartitionDir)
 	if err != nil {
-		return perr.Wrapf(err, "change permission of %s", attack.PartitionDir)
+		return perr.Wrapf(err, "read partition dir %s", attack.PartitionDir)
+	}
+	for _, file := range files {
+		err = os.Chmod(path.Join(attack.PartitionDir, file.Name()), mode)
+		if err != nil {
+			return perr.Wrapf(err, "change permission of %s", file.Name())
+		}
 	}
 	return nil
 }
@@ -190,9 +197,15 @@ func recoverKafkaIO(attack *core.KafkaCommand, env Environment) (err error) {
 	if err != nil {
 		return perr.Wrapf(err, "stat partition dir %s", attack.PartitionDir)
 	}
-	err = os.Chmod(attack.PartitionDir, stat.Mode()|os.FileMode(attack.OriginPerm))
+	files, err := os.ReadDir(attack.PartitionDir)
 	if err != nil {
-		return perr.Wrapf(err, "change permission of %s", attack.PartitionDir)
+		return perr.Wrapf(err, "read partition dir %s", attack.PartitionDir)
+	}
+	for _, file := range files {
+		err = os.Chmod(path.Join(attack.PartitionDir, file.Name()), stat.Mode()|os.FileMode(attack.OriginPerm))
+		if err != nil {
+			return perr.Wrapf(err, "change permission of %s", attack.PartitionDir)
+		}
 	}
 	return nil
 }
