@@ -58,7 +58,6 @@ type KafkaCommand struct {
 
 	// recover data for io attack
 	PartitionDir string
-	OriginPerm   uint16
 }
 
 func (c *KafkaCommand) Validate() error {
