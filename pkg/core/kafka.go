@@ -55,6 +55,10 @@ type KafkaCommand struct {
 	ConfigFile  string
 	NonReadable bool
 	NonWritable bool
+
+	// recover data for io attack
+	PartitionDir string
+	OriginPerm   uint16
 }
 
 func (c *KafkaCommand) Validate() error {

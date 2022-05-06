@@ -17,10 +17,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/magiconair/properties"
 	"github.com/pingcap/log"
 	perr "github.com/pkg/errors"
 	client "github.com/segmentio/kafka-go"
@@ -37,11 +41,11 @@ func (j kafkaAttack) Attack(options core.AttackConfig, env Environment) (err err
 	attack := options.(*core.KafkaCommand)
 	switch attack.Action {
 	case core.KafkaFillAction:
-		return attackKafkaFill(attack, env)
+		return attackKafkaFill(attack)
 	case core.KafkaFloodAction:
-		return attackKafkaFlood(context.TODO(), attack, env)
+		return attackKafkaFlood(context.TODO(), attack)
 	case core.KafkaIOAction:
-		return attackKafkaIO(attack, env)
+		return attackKafkaIO(attack)
 	default:
 		return nil
 	}
@@ -58,7 +62,7 @@ func (j kafkaAttack) Recover(exp core.Experiment, env Environment) error {
 	return nil
 }
 
-func attackKafkaFill(attack *core.KafkaCommand, env Environment) (err error) {
+func attackKafkaFill(attack *core.KafkaCommand) (err error) {
 	// TODO: make it configurable
 	const messagePerRequest = 128
 	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
@@ -91,7 +95,7 @@ func attackKafkaFill(attack *core.KafkaCommand, env Environment) (err error) {
 	}
 }
 
-func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand, env Environment) (err error) {
+func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error) {
 	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
 	conn, err := client.DialLeader(context.Background(), "tcp", endpoint, attack.Topic, attack.Partition)
 	if err != nil {
@@ -148,10 +152,58 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand, env Enviro
 	return nil
 }
 
-func attackKafkaIO(attack *core.KafkaCommand, env Environment) (err error) {
+func attackKafkaIO(attack *core.KafkaCommand) (err error) {
+	p, err := properties.LoadFile(attack.ConfigFile, properties.UTF8)
+	if err != nil {
+		return perr.Wrapf(err, "load config file %s", attack.ConfigFile)
+	}
+	attack.PartitionDir, err = findPartitionDir(attack, strings.Split(p.GetString("log.dirs", "/var/lib/kafka"), ","))
+	if err != nil {
+		return err
+	}
+
+	stat, err := os.Stat(attack.PartitionDir)
+	if err != nil {
+		return perr.Wrapf(err, "stat partition dir %s", attack.PartitionDir)
+	}
+
+	attack.OriginPerm = uint16(stat.Mode().Perm())
+	mode := stat.Mode()
+	if attack.NonReadable {
+		mode &= ^os.FileMode(0444)
+	}
+	if attack.NonWritable {
+		mode &= ^os.FileMode(0222)
+	}
+	os.Chmod(attack.PartitionDir, mode)
 	return nil
 }
 
 func recoverKafkaIO(attack *core.KafkaCommand, env Environment) (err error) {
+	stat, err := os.Stat(attack.PartitionDir)
+	if err != nil {
+		return perr.Wrapf(err, "stat partition dir %s", attack.PartitionDir)
+	}
+	os.Chmod(attack.PartitionDir, stat.Mode()|os.FileMode(attack.OriginPerm))
 	return nil
+}
+
+func findPartitionDir(attack *core.KafkaCommand, logDirs []string) (string, error) {
+	dirName := fmt.Sprintf("%s-%d", attack.Topic, attack.Partition)
+	for _, dir := range logDirs {
+		entries, err := os.ReadDir(strings.TrimSpace(dir))
+		if err != nil {
+			if attack.NoSilent {
+				log.Error("read dir", zap.Error(err))
+			}
+			continue
+		}
+		for _, entry := range entries {
+			if entry.IsDir() && entry.Name() == dirName {
+				return path.Join(strings.TrimSpace(dir), entry.Name()), nil
+			}
+		}
+
+	}
+	return "", perr.Errorf("partition dir %s not found", dirName)
 }

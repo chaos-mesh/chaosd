@@ -17,7 +17,10 @@ require (
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/joomcode/errorx v1.0.1
 	github.com/json-iterator/go v1.1.11 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/magiconair/properties v1.8.6
 	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/onsi/gomega v1.18.1
 	github.com/pingcap/errors v0.11.5-0.20190809092503-95897b64e011
@@ -38,11 +41,13 @@ require (
 	go.uber.org/fx v1.13.1
 	go.uber.org/zap v1.17.0
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
+	golang.org/x/mod v0.6.0-dev.0.20211013180041-c96bc1413d57 // indirect
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602 // indirect
-	golang.org/x/tools v0.1.1 // indirect
+	golang.org/x/tools v0.1.8-0.20211029000441-d6a9af8af023 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210402141018-6c239bbf2bb1 // indirect
 	google.golang.org/grpc v1.38.0
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.20.7
 	k8s.io/api v0.18.2
