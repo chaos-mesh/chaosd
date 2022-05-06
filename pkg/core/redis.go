@@ -20,8 +20,9 @@ import (
 )
 
 const (
-	RedisSentinelRestartAction = "restart"
-	RedisSentinelStopAction    = "stop"
+	RedisSentinelRestartAction  = "restart"
+	RedisSentinelStopAction     = "stop"
+	RedisCachePenetrationAction = "penetration"
 )
 
 var _ AttackConfig = &RedisCommand{}
@@ -34,6 +35,7 @@ type RedisCommand struct {
 	Conf        string `json:"conf,omitempty"`
 	FlushConfig bool   `json:"flushConfig,omitempty"`
 	RedisPath   string `json:"redisPath,omitempty"`
+	RequestNum  int    `json:"requestNum,omitempty"`
 }
 
 func (p *RedisCommand) Validate() error {

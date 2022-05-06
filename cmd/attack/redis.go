@@ -43,6 +43,7 @@ func NewRedisAttackCommand(uid *string) *cobra.Command {
 	cmd.AddCommand(
 		NewRedisSentinelRestartCommand(dep, options),
 		NewRedisSentinelStopCommand(dep, options),
+		NewRedisCachePenetrationCommand(dep, options),
 	)
 
 	return cmd
@@ -82,6 +83,23 @@ func NewRedisSentinelStopCommand(dep fx.Option, options *core.RedisCommand) *cob
 	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config path of Redis server")
 	cmd.Flags().BoolVarP(&options.FlushConfig, "flush-config", "", true, "Force Sentinel to rewrite its configuration on disk")
 	cmd.Flags().StringVarP(&options.RedisPath, "redis-path", "", "", "The path of the redis-server command")
+	return cmd
+}
+
+func NewRedisCachePenetrationCommand(dep fx.Option, options *core.RedisCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cache-penetration",
+		Short: "penetrate cache",
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.RedisCachePenetrationAction
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(redisAttackF)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
+	cmd.Flags().IntVarP(&options.RequestNum, "requestnum", "", 0, "The number of requests")
+
 	return cmd
 }
 
