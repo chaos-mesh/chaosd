@@ -15,6 +15,7 @@ package core
 
 import (
 	"encoding/json"
+	"os"
 
 	"github.com/pkg/errors"
 )
@@ -51,6 +52,7 @@ type KafkaCommand struct {
 	RequestPerSecond uint64
 
 	// options for io attack
+	ConfigFile  string
 	NonReadable bool
 	NonWritable bool
 }
@@ -100,8 +102,13 @@ func (c *KafkaCommand) Validate() error {
 		}
 	}
 
-	if c.Action == KafkaIOAction && !c.NonReadable && !c.NonWritable {
-		return errors.New("at least one of non-readable or non-writable is required")
+	if c.Action == KafkaIOAction {
+		if _, err := os.Stat(c.ConfigFile); errors.Is(err, os.ErrNotExist) {
+			return errors.Errorf("config file %s not exists", c.ConfigFile)
+		}
+		if !c.NonReadable && !c.NonWritable {
+			return errors.New("at least one of non-readable or non-writable is required")
+		}
 	}
 	return nil
 }

@@ -102,6 +102,7 @@ func NewKafkaIOCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Command
 		},
 	}
 
+	cmd.Flags().StringVarP(&options.ConfigFile, "config", "c", "/etc/kafka/server.properties", "the path of server config")
 	cmd.Flags().BoolVarP(&options.NonReadable, "non-readable", "r", false, "make kafka cluster non-readable")
 	cmd.Flags().BoolVarP(&options.NonWritable, "non-writable", "w", false, "make kafka cluster non-writable")
 	return cmd
@@ -119,5 +120,5 @@ func kafkaCommandFunc(options *core.KafkaCommand, chaos *chaosd.Server) {
 		utils.ExitWithError(utils.ExitError, err)
 	}
 
-	utils.NormalExit(fmt.Sprintf("Attack jvm successfully, uid: %s", uid))
+	utils.NormalExit(fmt.Sprintf("Attack kafka successfully, uid: %s", uid))
 }
