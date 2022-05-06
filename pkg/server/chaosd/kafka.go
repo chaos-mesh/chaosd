@@ -175,7 +175,13 @@ func attackKafkaIO(attack *core.KafkaCommand) (err error) {
 	if attack.NonWritable {
 		mode &= ^os.FileMode(0222)
 	}
-	os.Chmod(attack.PartitionDir, mode)
+	if attack.NoSilent {
+		log.Info(fmt.Sprintf("change permission of %s to %s", attack.PartitionDir, mode))
+	}
+	err = os.Chmod(attack.PartitionDir, mode)
+	if err != nil {
+		return perr.Wrapf(err, "change permission of %s", attack.PartitionDir)
+	}
 	return nil
 }
 
@@ -184,7 +190,10 @@ func recoverKafkaIO(attack *core.KafkaCommand, env Environment) (err error) {
 	if err != nil {
 		return perr.Wrapf(err, "stat partition dir %s", attack.PartitionDir)
 	}
-	os.Chmod(attack.PartitionDir, stat.Mode()|os.FileMode(attack.OriginPerm))
+	err = os.Chmod(attack.PartitionDir, stat.Mode()|os.FileMode(attack.OriginPerm))
+	if err != nil {
+		return perr.Wrapf(err, "change permission of %s", attack.PartitionDir)
+	}
 	return nil
 }
 
