@@ -52,7 +52,7 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 
 	case core.RedisSentinelStopAction:
 		return env.Chaos.shutdownSentinelServer(attack, cli)
-	
+
 	case core.RedisCachePenetrationAction:
 		pipe := cli.Pipeline()
 		for i := 0; i < attack.RequestNum; i++ {
