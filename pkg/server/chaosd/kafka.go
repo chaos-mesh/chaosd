@@ -28,6 +28,7 @@ import (
 	"github.com/pingcap/log"
 	perr "github.com/pkg/errors"
 	client "github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/sasl/scram"
 	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
@@ -60,6 +61,25 @@ func (j kafkaAttack) Recover(exp core.Experiment, env Environment) error {
 		return recoverKafkaIO(attack, env)
 	}
 	return nil
+}
+
+func dial(attack *core.KafkaCommand) (conn *client.Conn, err error) {
+	dialer := &client.Dialer{
+		Timeout:   10 * time.Second,
+		DualStack: true,
+	}
+	if attack.Username != "" {
+		dialer.SASLMechanism, err = scram.Mechanism(scram.SHA512, attack.Username, attack.Password)
+		if err != nil {
+			return nil, perr.Wrap(err, "create scram mechanism")
+		}
+	}
+	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
+	conn, err = dialer.DialLeader(context.Background(), "tcp", endpoint, attack.Topic, attack.Partition)
+	if err != nil {
+		return nil, perr.Wrapf(err, "dial kafka leader %s", endpoint)
+	}
+	return conn, nil
 }
 
 func attackKafkaFill(attack *core.KafkaCommand) (err error) {
