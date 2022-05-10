@@ -101,7 +101,7 @@ func attackKafkaFill(attack *core.KafkaCommand) (err error) {
 	start := time.Now()
 	written := "0 B"
 
-	for {
+	for counter < attack.MaxBytes {
 		n, err := conn.WriteMessages(msgList...)
 		if err != nil {
 			return perr.Wrap(err, "write messages")
@@ -113,6 +113,7 @@ func attackKafkaFill(attack *core.KafkaCommand) (err error) {
 			log.Info(fmt.Sprintf("write %s in %s", written, time.Now().Sub(start)))
 		}
 	}
+	return nil
 }
 
 func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error) {

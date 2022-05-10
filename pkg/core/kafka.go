@@ -46,6 +46,7 @@ type KafkaCommand struct {
 	Username    string
 	Password    string
 	MessageSize uint
+	MaxBytes    uint64
 
 	// options for flood attack
 	Threads          uint
@@ -80,6 +81,10 @@ func (c *KafkaCommand) Validate() error {
 
 		if c.MessageSize == 0 {
 			return errors.New("message size is required")
+		}
+
+		if c.MaxBytes == 0 {
+			return errors.New("max bytes is required")
 		}
 	}
 
