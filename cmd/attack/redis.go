@@ -98,7 +98,7 @@ func NewRedisCachePenetrationCommand(dep fx.Option, options *core.RedisCommand) 
 
 	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
-	cmd.Flags().IntVarP(&options.RequestNum, "requestnum", "", 0, "The number of requests")
+	cmd.Flags().IntVarP(&options.RequestNum, "request-num", "", 0, "The number of requests")
 
 	return cmd
 }

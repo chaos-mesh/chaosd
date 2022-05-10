@@ -59,7 +59,7 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 			pipe.Get(cli.Context(), "CHAOS_MESH_nqE3BWm7khHv")
 		}
 		_, err := pipe.Exec(cli.Context())
-		if err.Error() != "redis: nil" {
+		if err != redis.Nil {
 			return errors.WithStack(err)
 		}
 	}
