@@ -236,7 +236,7 @@ func (c clockAttack) Recover(exp core.Experiment, env Environment) error {
 }
 
 // FindSymbolInEntry finds symbol in entry through parsing elf
-func FindSymbolInEntry(p ptrace.TracedProgram, symbolName string, entry *mapreader.Entry) (uint64, uint64, error) {
+func FindSymbolInEntry(p ptrace.TracedProgram, symbolName string, entry *mapreader.Entry) (addr uint64, size uint64, err error) {
 	libBuffer, err := p.GetLibBuffer(entry)
 	if err != nil {
 		return 0, 0, err
