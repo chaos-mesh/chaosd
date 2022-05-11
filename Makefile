@@ -65,6 +65,7 @@ chaosd:
 
 chaos-tools:
 	$(CGOENV) go build -o bin/tools/PortOccupyTool tools/PortOccupyTool.go
+	$(CGOENV) go build -o bin/tools/FileTool tools/file/*.go
 ifeq (,$(wildcard bin/tools/stress-ng))
 	curl -fsSL -o ./bin/tools/stress-ng https://mirrors.chaos-mesh.org/latest/stress-ng
 	chmod +x ./bin/tools/stress-ng
