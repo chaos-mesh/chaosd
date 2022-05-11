@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"debug/elf"
 	"fmt"
+	"github.com/go-logr/zapr"
 	"runtime"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/mapreader"
@@ -82,12 +83,17 @@ func (c clockAttack) Attack(options core.AttackConfig, env Environment) error {
 	if opt, ok = options.(*core.ClockOption); !ok {
 		return fmt.Errorf("AttackConfig -> *ClockOption meet error")
 	}
-
 	runtime.LockOSThread()
 	defer func() {
 		runtime.UnlockOSThread()
 	}()
-	program, err := ptrace.Trace(opt.Pid)
+
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
+	logger := zapr.NewLogger(zapLogger)
+	program, err := ptrace.Trace(opt.Pid, logger)
 	if err != nil {
 		return err
 	}
@@ -220,7 +226,14 @@ func (c clockAttack) Recover(exp core.Experiment, env Environment) error {
 	defer func() {
 		runtime.UnlockOSThread()
 	}()
-	program, err := ptrace.Trace(opt.Pid)
+
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
+	logger := zapr.NewLogger(zapLogger)
+
+	program, err := ptrace.Trace(opt.Pid, logger)
 	if err != nil {
 		return err
 	}
