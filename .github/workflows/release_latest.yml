@@ -11,10 +11,10 @@ jobs:
     # glibc version 2.17
     container: docker.io/centos:7.2.1511
     steps:
-      - name: Set up Go 1.16
+      - name: Set up Go 1.168
         uses: actions/setup-go@v1
         with:
-          go-version: 1.16.2
+          go-version: 1.18.2
         id: go
 
       - name: Prepare build environment
