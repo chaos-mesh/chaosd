@@ -183,6 +183,7 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	}
 
 	tcs = append(tcs, newTC)
+	//TODO: Fix tc here , device para in TcsRequest is removed.
 	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, EnterNS: false}); err != nil {
 		return errors.WithStack(err)
 	}
