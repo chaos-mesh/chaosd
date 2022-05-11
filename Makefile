@@ -31,10 +31,10 @@ PACKAGE_LIST := go list ./... | grep -vE "chaos-daemon/test|pkg/ptrace|zz_genera
 PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/chaos-mesh/chaosd/||'
 
 $(GOBIN)/revive:
-	$(GO) get github.com/mgechev/revive@v1.0.2-0.20200225072153-6219ca02fffb
+	$(GO) install github.com/mgechev/revive@v1.0.2-0.20200225072153-6219ca02fffb
 
 $(GOBIN)/goimports:
-	$(GO) get golang.org/x/tools/cmd/goimports@v0.1.1
+	$(GO) install golang.org/x/tools/cmd/goimports@v0.1.1
 
 build: binary
 
