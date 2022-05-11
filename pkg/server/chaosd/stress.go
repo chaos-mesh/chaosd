@@ -14,7 +14,9 @@
 package chaosd
 
 import (
+	"context"
 	"errors"
+	"github.com/go-logr/zapr"
 	"io/fs"
 	"strings"
 	"syscall"
@@ -54,26 +56,31 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 		}
 	}
 
-	errs := stressors.Validate(field.NewPath("stressors"))
+	errs := stressors.Validate(nil, field.NewPath("stressors"))
 	if len(errs) > 0 {
 		return errors.New(errs.ToAggregate().Error())
 	}
 
-	stressorsStr, err := stressors.Normalize()
+	stressorsStr, _, err := stressors.Normalize()
 	if err != nil {
 		return
 	}
 	log.Info("stressors normalize", zap.String("arguments", stressorsStr))
 
 	cmd := bpm.DefaultProcessBuilder("stress-ng", strings.Fields(stressorsStr)...).
-		Build()
+		Build(context.Background())
 
 	// Build will set SysProcAttr.Pdeathsig = syscall.SIGTERM, and so stress-ng will exit while chaosd exit
 	// so reset it here
 	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
 
-	backgroundProcessManager := bpm.NewBackgroundProcessManager()
-	err = backgroundProcessManager.StartProcess(cmd)
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
+	logger := zapr.NewLogger(zapLogger)
+	backgroundProcessManager := bpm.StartBackgroundProcessManager(nil, logger)
+	_, err = backgroundProcessManager.StartProcess(context.Background(), cmd)
 	if err != nil {
 		return
 	}
