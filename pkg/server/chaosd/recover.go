@@ -65,6 +65,8 @@ func (s *Server) RecoverAttack(uid string) error {
 			attackType = JVMAttack
 		case core.ClockAttack:
 			attackType = ClockAttack
+		case core.RedisAttack:
+			attackType = RedisAttack
 		case core.FileAttack:
 			attackType = FileAttack
 		default:

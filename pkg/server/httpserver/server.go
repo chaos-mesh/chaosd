@@ -92,6 +92,7 @@ func (s *httpServer) handler(engine *gin.Engine) {
 		attack.POST("/disk", s.createDiskAttack)
 		attack.POST("/clock", s.createClockAttack)
 		attack.POST("/jvm", s.createJVMAttack)
+		attack.POST("/redis", s.createRedisAttack)
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
@@ -297,6 +298,38 @@ func (s *httpServer) createJVMAttack(c *gin.Context) {
 	}
 
 	uid, err := s.chaos.ExecuteAttack(chaosd.JVMAttack, options, core.ServerMode)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+// @Summary Create redis attack.
+// @Description Create redis attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.RedisCommand true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/redis [post]
+func (s *httpServer) createRedisAttack(c *gin.Context) {
+	attack := core.NewRedisCommand()
+	if err := c.ShouldBindJSON(attack); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	attack.CompleteDefaults()
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
+	uid, err := s.chaos.ExecuteAttack(chaosd.RedisAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
