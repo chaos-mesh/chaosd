@@ -17,8 +17,9 @@ import (
 	"bytes"
 	"debug/elf"
 	"fmt"
-	"github.com/go-logr/zapr"
 	"runtime"
+
+	"github.com/go-logr/zapr"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/mapreader"
 	"github.com/chaos-mesh/chaos-mesh/pkg/ptrace"

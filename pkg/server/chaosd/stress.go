@@ -16,10 +16,11 @@ package chaosd
 import (
 	"context"
 	"errors"
-	"github.com/go-logr/zapr"
 	"io/fs"
 	"strings"
 	"syscall"
+
+	"github.com/go-logr/zapr"
 
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"

@@ -18,13 +18,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-logr/zapr"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"syscall"
+
+	"github.com/go-logr/zapr"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 	"github.com/shirou/gopsutil/process"
