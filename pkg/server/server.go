@@ -14,11 +14,12 @@
 package server
 
 import (
+	"os"
+
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
-	"os"
 
 	"go.uber.org/fx"
 
