@@ -15,11 +15,13 @@ package core
 
 import (
 	"encoding/json"
-	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/tproxyconfig"
-	"github.com/pingcap/errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
+
+	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/tproxyconfig"
+	"github.com/pingcap/errors"
 )
 
 const (
@@ -37,7 +39,8 @@ var _ AttackConfig = &HTTPAttackConfig{}
 
 type HTTPAttackConfig struct {
 	CommonAttackConfig
-	Config tproxyconfig.Config
+	Config  tproxyconfig.Config
+	process *exec.Cmd
 }
 
 func (c HTTPAttackConfig) RecoverData() string {

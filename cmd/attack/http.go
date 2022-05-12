@@ -14,12 +14,15 @@
 package attack
 
 import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+	"go.uber.org/fx"
+
 	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
 	"github.com/chaos-mesh/chaosd/pkg/utils"
-	"github.com/spf13/cobra"
-	"go.uber.org/fx"
 )
 
 func NewHTTPAttackCommand(uid *string) *cobra.Command {
@@ -86,7 +89,7 @@ func setTarget(cmd *cobra.Command, o *core.HTTPAttackOption) {
 	cmd.Flags().UintSliceVarP(&o.ProxyPorts, "proxy_ports", "p", nil,
 		"composed with one of the port of HTTP connection, "+
 			"we will only attack HTTP connection with port inside proxy_ports")
-	cmd.Flags().StringVarP((*string)(&o.Rule.Target), "target", "t", "Request",
+	cmd.Flags().StringVarP((*string)(&o.Rule.Target), "target", "t", "",
 		"HTTP target: Request or Response")
 }
 
@@ -112,5 +115,15 @@ func NewHTTPFileCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command 
 }
 
 func processHTTPAttack(o *core.HTTPAttackOption, chaos *chaosd.Server) {
+	attackConfig, err := o.PreProcess()
+	if err != nil {
+		utils.ExitWithError(utils.ExitBadArgs, err)
+	}
 
+	uid, err := chaos.ExecuteAttack(chaosd.AttackHTTP, attackConfig, core.CommandMode)
+	if err != nil {
+		utils.ExitWithError(utils.ExitError, err)
+	}
+
+	utils.NormalExit(fmt.Sprintf("HTTP attack successfully, uid: %s", uid))
 }
