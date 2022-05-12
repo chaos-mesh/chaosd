@@ -14,7 +14,6 @@
 package attack
 
 import (
-	"fmt"
 	"github.com/chaos-mesh/chaosd/cmd/server"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/server/chaosd"
@@ -24,12 +23,12 @@ import (
 )
 
 func NewHTTPAttackCommand(uid *string) *cobra.Command {
-	config := &core.HTTPAttackConfig{}
+	option := core.NewHTTPAttackOption()
 	dep := fx.Options(
 		server.Module,
-		fx.Provide(func() *core.HTTPAttackConfig {
-			config.UID = *uid
-			return config
+		fx.Provide(func() *core.HTTPAttackOption {
+			option.UID = *uid
+			return option
 		}),
 	)
 
@@ -39,73 +38,79 @@ func NewHTTPAttackCommand(uid *string) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		NewHTTPAbortCommand(dep, config),
-		NewHTTPDelayCommand(dep, config),
+		NewHTTPAbortCommand(dep, option),
+		NewHTTPDelayCommand(dep, option),
+		NewHTTPFileCommand(dep, option),
 	)
 
 	return cmd
 }
 
-func NewHTTPAbortCommand(dep fx.Option, c *core.HTTPAttackConfig) *cobra.Command {
+func NewHTTPAbortCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "abort",
 		Short: "abort selected HTTP Package",
 		Run: func(*cobra.Command, []string) {
-			c.Action = core.HTTPAbortAction
+			o.Action = core.HTTPAbortAction
 			abort := true
-			c.Rule.Actions.Abort = &abort
+			o.Rule.Actions.Abort = &abort
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
 		},
 	}
 
-	cmdTarget(cmd, c)
-	cmdSelector(cmd, c)
+	setTarget(cmd, o)
+	setSelector(cmd, o)
 	return cmd
 }
 
-func NewHTTPDelayCommand(dep fx.Option, c *core.HTTPAttackConfig) *cobra.Command {
+func NewHTTPDelayCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delay",
 		Short: "delay selected HTTP Package",
 		Run: func(*cobra.Command, []string) {
-			c.Action = core.HTTPAbortAction
+			o.Action = core.HTTPDelayAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
 		},
 	}
 
-	cmdTarget(cmd, c)
-	cmdSelector(cmd, c)
+	setTarget(cmd, o)
+	setSelector(cmd, o)
 
 	delay := ""
-	c.Rule.Actions.Delay = &delay
-	cmd.Flags().StringVarP(c.Rule.Actions.Delay, "delay time", "d", "", "Delay represents the delay of the target request/response.")
+	o.Rule.Actions.Delay = &delay
+	cmd.Flags().StringVarP(o.Rule.Actions.Delay, "delay time", "d", "", "Delay represents the delay of the target request/response.")
 	return cmd
 }
 
-func cmdTarget(cmd *cobra.Command, c *core.HTTPAttackConfig) {
-	cmd.Flags().UintSliceVarP(&c.ProxyPorts, "proxy_ports", "p", nil,
+func setTarget(cmd *cobra.Command, o *core.HTTPAttackOption) {
+	cmd.Flags().UintSliceVarP(&o.ProxyPorts, "proxy_ports", "p", nil,
 		"composed with one of the port of HTTP connection, "+
 			"we will only attack HTTP connection with port inside proxy_ports")
-	cmd.Flags().StringVarP((*string)(&c.Rule.Target), "target", "t", "Request",
+	cmd.Flags().StringVarP((*string)(&o.Rule.Target), "target", "t", "Request",
 		"HTTP target: Request or Response")
 }
 
-func cmdSelector(cmd *cobra.Command, c *core.HTTPAttackConfig) {
-	port := int32(0)
-	c.Rule.Selector.Port = &port
+func setSelector(cmd *cobra.Command, c *core.HTTPAttackOption) {
 	cmd.Flags().Int32Var(c.Rule.Selector.Port, "port", 0, "port is a rule to select server listening on specific port.")
-	path := ""
-	c.Rule.Selector.Path = &path
 	cmd.Flags().StringVar(c.Rule.Selector.Path, "path", "",
 		"Mathc path of Uri with wildcard matches.")
-	meth := ""
-	c.Rule.Selector.Method = &meth
 	cmd.Flags().StringVarP(c.Rule.Selector.Method, "method", "m", "", "HTTP method")
-	code := int32(0)
-	c.Rule.Selector.Code = &code
 	cmd.Flags().Int32VarP(c.Rule.Selector.Code, "code", "c", 0, "Code is a rule to select target by http status code in response.")
 }
 
-func processHTTPAttack(c *core.HTTPAttackConfig, chaos *chaosd.Server) {
-	utils.NormalExit(fmt.Sprintf("%v,%v\n", c, chaos))
+func NewHTTPFileCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "file",
+		Short: "attack with config file",
+		Run: func(*cobra.Command, []string) {
+			o.Action = core.HTTPFileAction
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
+		},
+	}
+	cmd.Flags().StringVarP(&o.Path, "file path", "p", "", "Config file path.")
+	return cmd
+}
+
+func processHTTPAttack(o *core.HTTPAttackOption, chaos *chaosd.Server) {
+
 }

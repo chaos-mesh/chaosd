@@ -40,6 +40,7 @@ const (
 	JVMAttack     = "jvm"
 	RedisAttack   = "redis"
 	FileAttack    = "file"
+	HTTPAttack    = "http"
 )
 
 const (

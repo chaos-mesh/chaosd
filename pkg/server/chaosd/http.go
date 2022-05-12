@@ -12,3 +12,20 @@
 // limitations under the License.
 
 package chaosd
+
+import (
+	"github.com/chaos-mesh/chaosd/pkg/core"
+)
+
+type attackHTTP struct{}
+
+func (a attackHTTP) Attack(options core.AttackConfig, env Environment) error {
+
+}
+
+func (a attackHTTP) Recover(experiment core.Experiment, env Environment) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+var AttackHTTP AttackType = attackHTTP{}
