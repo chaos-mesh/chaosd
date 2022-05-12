@@ -14,6 +14,7 @@
 package chaosd
 
 import (
+	"fmt"
 	"os/exec"
 
 	"github.com/go-redis/redis/v8"
@@ -52,6 +53,22 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 
 	case core.RedisSentinelStopAction:
 		return env.Chaos.shutdownSentinelServer(attack, cli)
+
+	case core.RedisCacheLimitAction:
+		cacheSize, err := cli.ConfigGet(cli.Context(), "maxmemory").Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		// Get the value of maxmemory
+		attack.OriginCacheSize = fmt.Sprint(cacheSize[1])
+
+		result, err := cli.ConfigSet(cli.Context(), "maxmemory", attack.CacheSize).Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if result != STATUSOK {
+			return errors.WithStack(errors.Errorf("redis command status is %s", result))
+		}
 	}
 	return nil
 }
@@ -63,9 +80,23 @@ func (redisAttack) Recover(exp core.Experiment, env Environment) error {
 	}
 	attack := config.(*core.RedisCommand)
 
+	cli := redis.NewClient(&redis.Options{
+		Addr:     attack.Addr,
+		Password: attack.Password,
+	})
+
 	switch attack.Action {
 	case core.RedisSentinelStopAction:
 		return env.Chaos.recoverSentinelStop(attack)
+
+	case core.RedisCacheLimitAction:
+		result, err := cli.ConfigSet(cli.Context(), "maxmemory", attack.OriginCacheSize).Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if result != STATUSOK {
+			return errors.WithStack(errors.Errorf("redis command status is %s", result))
+		}
 	}
 	return nil
 }
