@@ -55,6 +55,7 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 		return env.Chaos.shutdownSentinelServer(attack, cli)
 
 	case core.RedisCacheLimitAction:
+		// `cacheSize` is an interface listwith content similar to `[maxmemory 1024]`
 		cacheSize, err := cli.ConfigGet(cli.Context(), "maxmemory").Result()
 		if err != nil {
 			return errors.WithStack(err)
