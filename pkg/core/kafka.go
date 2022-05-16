@@ -101,7 +101,6 @@ func (c *KafkaCommand) validateFloodAction() error {
 	if c.Threads == 0 {
 		return errors.New("threads is required")
 	}
-
 	if c.RequestPerSecond == 0 {
 		return errors.New("request per second is required")
 	}
