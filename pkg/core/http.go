@@ -132,7 +132,7 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 		return nil, errors.Errorf("unsupported action: %s", o.CommonAttackConfig.Action)
 	}
 	if len(c.ProxyPorts) == 0 {
-		return nil, errors.New("proxy_ports is not an option, you must offer it.")
+		return nil, errors.New("proxy_ports is not an option, you must offer it")
 	}
 
 	return &HTTPAttackConfig{

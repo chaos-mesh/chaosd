@@ -18,14 +18,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/chaos-mesh/chaosd/pkg/core"
-	"github.com/pkg/errors"
-	"github.com/shirou/gopsutil/process"
 	"io"
 	"io/fs"
 	"net/http"
 	"os/exec"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/shirou/gopsutil/process"
+
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 type attackHTTP struct{}
