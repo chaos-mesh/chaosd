@@ -20,8 +20,12 @@ import (
 	"fmt"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/pkg/errors"
+	"github.com/shirou/gopsutil/process"
+	"io"
+	"io/fs"
 	"net/http"
 	"os/exec"
+	"strings"
 )
 
 type attackHTTP struct{}
@@ -68,16 +72,63 @@ func (attackHTTP) Attack(options core.AttackConfig, env Environment) error {
 	}
 
 	resp, err := http.ReadResponse(bufio.NewReader(stdout), req)
-	fmt.Println(resp.Body, err)
-
-	err = cmd.Wait()
 	if err != nil {
-		return errors.Wrap(err, "waiting cmd")
+		return errors.Wrap(err, "cannot read response")
+	}
+	if resp.StatusCode != http.StatusOK {
+		by, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return errors.Wrapf(err, "cannot read err resp body, %s", resp.Status)
+		}
+		return errors.Errorf("%s: %s", resp.Status, string(by))
+	}
+
+	by, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return errors.Wrapf(err, "cannot read resp body")
+	}
+	fmt.Println(string(by))
+
+	attackConf.ProxyPID = cmd.Process.Pid
+	err = cmd.Process.Release()
+	if err != nil {
+		return errors.Wrapf(err, "Fatal error : release process fail , please clear PID: %d", attackConf.ProxyPID)
 	}
 	return nil
 }
 
-func (attackHTTP) Recover(experiment core.Experiment, env Environment) error {
-	//TODO implement me
-	panic("implement me")
+func (attackHTTP) Recover(exp core.Experiment, env Environment) error {
+	config, err := exp.GetRequestCommand()
+	if err != nil {
+		return err
+	}
+	attack, ok := config.(*core.HTTPAttackConfig)
+	if !ok {
+		return fmt.Errorf("AttackConfig -> *HTTPAttackConfig meet error")
+	}
+
+	proc, err := process.NewProcess(int32(attack.ProxyPID))
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+
+		return err
+	}
+
+	procName, err := proc.Name()
+	if err != nil {
+		return errors.Wrapf(err, "unexpected error when proc.Name. process pid: %d", proc.Pid)
+	}
+
+	if !strings.Contains(procName, "tproxy") {
+		fmt.Printf("the process %s:%d is not chaos-tproxy, please check and clear it manually\n", procName, attack.ProxyPID)
+		return nil
+	}
+
+	if err := proc.Kill(); err != nil {
+		fmt.Printf("the chaos-tproxy process kill failed with error: %s\n", err.Error())
+		return nil
+	}
+	return nil
 }

@@ -16,7 +16,6 @@ package core
 import (
 	"encoding/json"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -39,8 +38,8 @@ var _ AttackConfig = &HTTPAttackConfig{}
 
 type HTTPAttackConfig struct {
 	CommonAttackConfig
-	Config  tproxyconfig.Config
-	process *exec.Cmd
+	Config   tproxyconfig.Config
+	ProxyPID int
 }
 
 func (c HTTPAttackConfig) RecoverData() string {
