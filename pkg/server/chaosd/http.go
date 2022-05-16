@@ -126,7 +126,7 @@ func (attackHTTP) Recover(exp core.Experiment, _ Environment) error {
 		return nil
 	}
 
-	if err := proc.Kill(); err != nil {
+	if err := proc.Terminate(); err != nil {
 		fmt.Printf("the chaos-tproxy process kill failed with error: %s\n", err.Error())
 		return nil
 	}
