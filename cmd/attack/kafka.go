@@ -42,7 +42,6 @@ func NewKafkaAttackCommand(uid *string) *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(&options.Topic, "topic", "T", "", "the topic to attack")
 	cmd.PersistentFlags().IntVarP(&options.Partition, "partition", "", 0, "the partition to attack")
-	cmd.PersistentFlags().BoolVarP(&options.NoSilent, "no-silent", "", false, "print more information")
 	_ = cmd.MarkPersistentFlagRequired("topic")
 	cmd.AddCommand(
 		NewKafkaFillCommand(dep, options),

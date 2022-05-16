@@ -145,17 +145,13 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error
 						err := conn.SetWriteDeadline(time.Now().Add(timeout))
 						if err != nil {
 							failed++
-							if attack.NoSilent {
-								logger.Error("set write deadline", zap.Error(err))
-							}
+							logger.Debug("set write deadline", zap.Error(err))
 							continue
 						}
 						_, err = conn.Write(msg)
 						if err != nil {
 							failed++
-							if attack.NoSilent {
-								logger.Error("write message", zap.Error(err))
-							}
+							logger.Debug("write message", zap.Error(err))
 							continue
 						}
 						succeeded++
@@ -194,9 +190,7 @@ func attackKafkaIO(attack *core.KafkaCommand) error {
 	if attack.NonWritable {
 		mode &= ^os.FileMode(0200)
 	}
-	if attack.NoSilent {
-		log.Info(fmt.Sprintf("change permission of %s to %s", attack.PartitionDir, mode))
-	}
+	log.Debug(fmt.Sprintf("change permission of %s to %s", attack.PartitionDir, mode))
 	err = os.Chmod(attack.PartitionDir, mode)
 	if err != nil {
 		return perr.Wrapf(err, "change permission of %s", dir.Name())
@@ -223,9 +217,7 @@ func attackKafkaIO(attack *core.KafkaCommand) error {
 		if attack.NonWritable {
 			mode &= ^os.FileMode(0200)
 		}
-		if attack.NoSilent {
-			log.Info(fmt.Sprintf("change permission of %s to %s", filePath, mode))
-		}
+		log.Debug(fmt.Sprintf("change permission of %s to %s", filePath, mode))
 		err = os.Chmod(filePath, mode)
 		if err != nil {
 			return perr.Wrapf(err, "change permission of %s", file.Name())
@@ -246,9 +238,7 @@ func recoverKafkaIO(attack *core.KafkaCommand, env Environment) (err error) {
 	if attack.NonWritable {
 		mode |= os.FileMode(0200)
 	}
-	if attack.NoSilent {
-		log.Info(fmt.Sprintf("change permission of %s to %s", attack.PartitionDir, mode))
-	}
+	log.S().Debugf("change permission of %s to %s", attack.PartitionDir, mode)
 	err = os.Chmod(attack.PartitionDir, mode)
 	if err != nil {
 		return perr.Wrapf(err, "change permission of %s", dir.Name())
@@ -271,9 +261,7 @@ func recoverKafkaIO(attack *core.KafkaCommand, env Environment) (err error) {
 		if attack.NonWritable {
 			mode |= os.FileMode(0200)
 		}
-		if attack.NoSilent {
-			log.Info(fmt.Sprintf("change permission of %s to %s", filePath, mode))
-		}
+		log.S().Debugf("change permission of %s to %s", filePath, mode)
 		err = os.Chmod(filePath, mode)
 		if err != nil {
 			return perr.Wrapf(err, "change permission of %s", attack.PartitionDir)
@@ -287,9 +275,7 @@ func findPartitionDir(attack *core.KafkaCommand, logDirs []string) (string, erro
 	for _, dir := range logDirs {
 		entries, err := os.ReadDir(strings.TrimSpace(dir))
 		if err != nil {
-			if attack.NoSilent {
-				log.Error("read dir", zap.Error(err))
-			}
+			log.Debug("read dir", zap.Error(err))
 			continue
 		}
 		for _, entry := range entries {

@@ -38,7 +38,6 @@ type KafkaCommand struct {
 	Action    KafkaAttackAction
 	Topic     string
 	Partition int
-	NoSilent  bool
 
 	// options for fill and flood attack
 	Host        string
