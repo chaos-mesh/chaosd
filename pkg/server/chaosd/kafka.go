@@ -25,6 +25,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/magiconair/properties"
+	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	perr "github.com/pkg/errors"
 	client "github.com/segmentio/kafka-go"
@@ -48,7 +49,7 @@ func (j kafkaAttack) Attack(options core.AttackConfig, env Environment) (err err
 	case core.KafkaIOAction:
 		return attackKafkaIO(attack)
 	default:
-		return nil
+		return errors.Errorf("invalid action: %s", attack.Action)
 	}
 }
 
