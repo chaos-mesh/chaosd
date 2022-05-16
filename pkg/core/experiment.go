@@ -114,6 +114,8 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &RedisCommand{}
 	case FileAttack:
 		attackConfig = &FileCommand{}
+	case HTTPAttack:
+		attackConfig = &HTTPAttackConfig{}
 	default:
 		return nil
 	}

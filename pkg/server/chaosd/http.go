@@ -32,7 +32,7 @@ type attackHTTP struct{}
 
 var AttackHTTP AttackType = attackHTTP{}
 
-func (attackHTTP) Attack(options core.AttackConfig, env Environment) error {
+func (attackHTTP) Attack(options core.AttackConfig, _ Environment) error {
 	var attackConf *core.HTTPAttackConfig
 	var ok bool
 	if attackConf, ok = options.(*core.HTTPAttackConfig); !ok {
@@ -97,7 +97,7 @@ func (attackHTTP) Attack(options core.AttackConfig, env Environment) error {
 	return nil
 }
 
-func (attackHTTP) Recover(exp core.Experiment, env Environment) error {
+func (attackHTTP) Recover(exp core.Experiment, _ Environment) error {
 	config, err := exp.GetRequestCommand()
 	if err != nil {
 		return err
