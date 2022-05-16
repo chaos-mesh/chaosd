@@ -51,7 +51,8 @@ func (attackHTTP) Attack(options core.AttackConfig, env Environment) error {
 		return errors.Wrapf(err, "start command `%s`", cmd.String())
 	}
 
-	config, err := json.Marshal(&attackConf)
+	config, err := json.Marshal(&attackConf.Config)
+	fmt.Println(string(config))
 	if err != nil {
 		return errors.Wrap(err, "applying HTTP attack")
 	}
@@ -67,8 +68,7 @@ func (attackHTTP) Attack(options core.AttackConfig, env Environment) error {
 	}
 
 	resp, err := http.ReadResponse(bufio.NewReader(stdout), req)
-
-	fmt.Println(resp)
+	fmt.Println(resp.Body, err)
 
 	err = cmd.Wait()
 	if err != nil {

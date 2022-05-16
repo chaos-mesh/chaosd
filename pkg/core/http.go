@@ -99,10 +99,13 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 			return nil, errors.New("HTTP Attack Target must be Request or Response")
 		}
 		if o.CommonAttackConfig.Action == HTTPDelayAction {
+			o.Rule.Actions.Abort = nil
 			_, err := time.ParseDuration(*o.Rule.Actions.Delay)
 			if err != nil {
 				return nil, errors.Wrapf(err, "HTTP Delay")
 			}
+		} else {
+			o.Rule.Actions.Delay = nil
 		}
 		ports := make([]uint32, len(o.ProxyPorts))
 		for i, port := range o.ProxyPorts {
