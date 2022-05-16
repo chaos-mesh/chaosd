@@ -61,61 +61,59 @@ type KafkaCommand struct {
 }
 
 func (c *KafkaCommand) Validate() error {
-	if c.Action != KafkaFloodAction && c.Action != KafkaIOAction && c.Action != KafkaFillAction {
-		return errors.Errorf("invalid action: %s", c.Action)
-	}
-
 	if c.Topic == "" {
 		return errors.New("topic is required")
 	}
 
-	if c.Action == KafkaFillAction {
-		if c.Host == "" {
-			return errors.New("host is required")
-		}
+	switch c.Action {
+	case KafkaFillAction:
+		return c.validateFillAction()
+	case KafkaFloodAction:
+		return c.validateFloodAction()
+	case KafkaIOAction:
+		return c.validateIOAction()
+	default:
+		return errors.Errorf("invalid action: %s", c.Action)
+	}
+}
 
-		if c.Port == 0 {
-			return errors.New("port is required")
-		}
+func (c *KafkaCommand) validateDSNAndMessageSize() error {
+	if c.Host == "" {
+		return errors.New("host is required")
+	}
+	if c.Port == 0 {
+		return errors.New("port is required")
+	}
+	if c.MessageSize == 0 {
+		return errors.New("message size is required")
+	}
+	return nil
+}
 
-		if c.MessageSize == 0 {
-			return errors.New("message size is required")
-		}
+func (c *KafkaCommand) validateFillAction() error {
+	if c.MaxBytes == 0 {
+		return errors.New("max bytes is required")
+	}
+	return c.validateDSNAndMessageSize()
+}
 
-		if c.MaxBytes == 0 {
-			return errors.New("max bytes is required")
-		}
+func (c *KafkaCommand) validateFloodAction() error {
+	if c.Threads == 0 {
+		return errors.New("threads is required")
 	}
 
-	if c.Action == KafkaFloodAction {
-		if c.Host == "" {
-			return errors.New("host is required")
-		}
-
-		if c.Port == 0 {
-			return errors.New("port is required")
-		}
-
-		if c.Threads == 0 {
-			return errors.New("threads is required")
-		}
-
-		if c.RequestPerSecond == 0 {
-			return errors.New("request per second is required")
-		}
-
-		if c.MessageSize == 0 {
-			return errors.New("message size is required")
-		}
+	if c.RequestPerSecond == 0 {
+		return errors.New("request per second is required")
 	}
+	return c.validateDSNAndMessageSize()
+}
 
-	if c.Action == KafkaIOAction {
-		if _, err := os.Stat(c.ConfigFile); errors.Is(err, os.ErrNotExist) {
-			return errors.Errorf("config file %s not exists", c.ConfigFile)
-		}
-		if !c.NonReadable && !c.NonWritable {
-			return errors.New("at least one of non-readable or non-writable is required")
-		}
+func (c *KafkaCommand) validateIOAction() error {
+	if _, err := os.Stat(c.ConfigFile); errors.Is(err, os.ErrNotExist) {
+		return errors.Errorf("config file %s not exists", c.ConfigFile)
+	}
+	if !c.NonReadable && !c.NonWritable {
+		return errors.New("at least one of non-readable or non-writable is required")
 	}
 	return nil
 }
