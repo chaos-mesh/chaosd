@@ -274,6 +274,38 @@ func (s *httpServer) createClockAttack(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
 }
 
+// @Summary Create http attack.
+// @Description Create http attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.HTTPAttackOption true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/http [post]
+func (s *httpServer) createHTTPAttack(c *gin.Context) {
+	attack := core.NewHTTPAttackOption()
+	if err := c.ShouldBindJSON(attack); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	attackConfig, err := attack.PreProcess()
+	if err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
+	uid, err := s.chaos.ExecuteAttack(chaosd.HostAttack, attackConfig, core.ServerMode)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
 // @Summary Create JVM attack.
 // @Description Create JVM attack.
 // @Tags attack
