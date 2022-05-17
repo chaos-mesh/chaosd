@@ -31,12 +31,15 @@ func SetRuntimeEnv() error {
 		return err
 	}
 
-	path := os.Getenv("PATH")
-	bytemanHome := fmt.Sprintf("%s/tools/byteman", wd)
-	err = os.Setenv("BYTEMAN_HOME", bytemanHome)
-	if err != nil {
-		return err
+	bytemanHome := os.Getenv("BYTEMAN_HOME")
+	if len(bytemanHome) == 0 {
+		err = os.Setenv("BYTEMAN_HOME", fmt.Sprintf("%s/tools/byteman", wd))
+		if err != nil {
+			return err
+		}
 	}
+
+	path := os.Getenv("PATH")
 	err = os.Setenv("PATH", fmt.Sprintf("%s/tools:%s/bin:%s", wd, bytemanHome, path))
 	if err != nil {
 		return err

@@ -15,7 +15,11 @@ package utils
 
 import (
 	"math/rand"
+	"os/exec"
 	"time"
+
+	"github.com/pingcap/log"
+	"go.uber.org/zap"
 )
 
 const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
@@ -27,4 +31,19 @@ func RandomStringWithCharset(length int) string {
 		b[i] = charset[seededRand.Intn(len(charset))]
 	}
 	return string(b)
+}
+
+func ExecuteCmd(cmdStr string) (string, error) {
+	log.Info("execute cmd", zap.String("cmd", cmdStr))
+	cmd := exec.Command("bash", "-c", cmdStr)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Error(string(output), zap.Error(err))
+		return "", err
+	}
+	if len(output) > 0 {
+		log.Info("command output: "+string(output), zap.String("command", cmdStr))
+	}
+
+	return string(output), nil
 }

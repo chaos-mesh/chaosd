@@ -34,7 +34,7 @@ type jvmAttack struct{}
 
 var JVMAttack AttackType = jvmAttack{}
 
-const bmInstallCommand = "bminstall.sh -b -Dorg.jboss.byteman.transform.all -Dorg.jboss.byteman.verbose -p %d %d"
+const bmInstallCommand = "bminstall.sh -b -Dorg.jboss.byteman.transform.all -Dorg.jboss.byteman.verbose -Dorg.jboss.byteman.compileToBytecode -p %d %d"
 const bmSubmitCommand = "bmsubmit.sh -p %d -%s %s"
 
 func (j jvmAttack) Attack(options core.AttackConfig, env Environment) (err error) {
@@ -180,7 +180,7 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 		if attack.CPUCount > 0 {
 			bytemanTemplateSpec.Do = fmt.Sprintf("injectCPUStress(\"%s\", %d)", attack.Name, attack.CPUCount)
 		} else {
-			bytemanTemplateSpec.Do = fmt.Sprintf("injectMemStress(\"%s\", %s)", attack.Name, attack.MemoryType)
+			bytemanTemplateSpec.Do = fmt.Sprintf("injectMemStress(\"%s\", \"%s\")", attack.Name, attack.MemoryType)
 		}
 	case core.JVMGCAction:
 		bytemanTemplateSpec.Helper = core.GCHelper
