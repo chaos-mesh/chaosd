@@ -19,6 +19,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/go-logr/logr"
+	"github.com/go-logr/zapr"
+	"go.uber.org/zap"
+
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/tproxyconfig"
 	"github.com/pingcap/errors"
 )
@@ -40,6 +44,8 @@ type HTTPAttackConfig struct {
 	CommonAttackConfig
 	Config   tproxyconfig.Config
 	ProxyPID int
+
+	Logger logr.Logger
 }
 
 func (c HTTPAttackConfig) RecoverData() string {
@@ -78,6 +84,11 @@ func NewHTTPAttackOption() *HTTPAttackOption {
 
 func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 	var c tproxyconfig.Config
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return nil, err
+	}
+	logger := zapr.NewLogger(zapLogger).WithName("HTTP Attack")
 	switch o.CommonAttackConfig.Action {
 	case HTTPAbortAction, HTTPDelayAction:
 		if *o.Rule.Selector.Path == "" {
@@ -138,5 +149,6 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 	return &HTTPAttackConfig{
 		CommonAttackConfig: o.CommonAttackConfig,
 		Config:             c,
+		Logger:             logger,
 	}, nil
 }

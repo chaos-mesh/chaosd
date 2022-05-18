@@ -38,7 +38,7 @@ func (attackHTTP) Attack(options core.AttackConfig, _ Environment) error {
 	var attackConf *core.HTTPAttackConfig
 	var ok bool
 	if attackConf, ok = options.(*core.HTTPAttackConfig); !ok {
-		return fmt.Errorf("AttackConfig -> *HTTPAttackConfig meet error")
+		return errors.Errorf("AttackConfig -> *HTTPAttackConfig meet error")
 	}
 
 	cmd := exec.Command("tproxy", "-i", "-vv")
@@ -106,7 +106,7 @@ func (attackHTTP) Recover(exp core.Experiment, _ Environment) error {
 	}
 	attack, ok := config.(*core.HTTPAttackConfig)
 	if !ok {
-		return fmt.Errorf("AttackConfig -> *HTTPAttackConfig meet error")
+		return errors.Errorf("AttackConfig -> *HTTPAttackConfig meet error")
 	}
 
 	proc, err := process.NewProcess(int32(attack.ProxyPID))
@@ -124,12 +124,12 @@ func (attackHTTP) Recover(exp core.Experiment, _ Environment) error {
 	}
 
 	if !strings.Contains(procName, "tproxy") {
-		fmt.Printf("the process %s:%d is not chaos-tproxy, please check and clear it manually\n", procName, attack.ProxyPID)
+		attack.Logger.Info("the process %s:%d is not chaos-tproxy, please check and clear it manually\n", procName, attack.ProxyPID)
 		return nil
 	}
 
 	if err := proc.Terminate(); err != nil {
-		fmt.Printf("the chaos-tproxy process kill failed with error: %s\n", err.Error())
+		attack.Logger.Info("the chaos-tproxy process kill failed with error: %s\n", err.Error())
 		return nil
 	}
 	return nil
