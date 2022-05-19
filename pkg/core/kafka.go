@@ -27,6 +27,9 @@ const (
 	KafkaFillAction  = "fill"
 	KafkaFloodAction = "flood"
 	KafkaIOAction    = "io"
+
+	// The default flood topic
+	DefaultKafkaFloodTopic = "__flood__"
 )
 
 var _ AttackConfig = &KafkaCommand{}
@@ -35,9 +38,8 @@ type KafkaCommand struct {
 	CommonAttackConfig
 
 	// global options
-	Action    KafkaAttackAction
-	Topic     string
-	Partition int
+	Action KafkaAttackAction
+	Topic  string
 
 	// options for fill and flood attack
 	Host        string
@@ -57,7 +59,7 @@ type KafkaCommand struct {
 	NonWritable bool
 
 	// recover data for io attack
-	PartitionDir string
+	PartitionDirs []string
 }
 
 func (c *KafkaCommand) Validate() error {
@@ -122,7 +124,11 @@ func (c *KafkaCommand) RecoverData() string {
 	return string(data)
 }
 
-func (c *KafkaCommand) CompleteDefaults() {}
+func (c *KafkaCommand) CompleteDefaults() {
+	if c.Topic == "" {
+		c.Topic = DefaultKafkaFloodTopic
+	}
+}
 
 func NewKafkaCommand() *KafkaCommand {
 	return &KafkaCommand{

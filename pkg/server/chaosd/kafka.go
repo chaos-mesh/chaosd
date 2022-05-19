@@ -64,8 +64,8 @@ func (j kafkaAttack) Recover(exp core.Experiment, env Environment) error {
 	return nil
 }
 
-func dial(attack *core.KafkaCommand) (conn *client.Conn, err error) {
-	dialer := &client.Dialer{
+func newDialer(attack *core.KafkaCommand) (dialer *client.Dialer, err error) {
+	dialer = &client.Dialer{
 		Timeout:   10 * time.Second,
 		DualStack: true,
 	}
@@ -75,40 +75,80 @@ func dial(attack *core.KafkaCommand) (conn *client.Conn, err error) {
 			return nil, perr.Wrap(err, "create scram mechanism")
 		}
 	}
-	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
-	conn, err = dialer.DialLeader(context.Background(), "tcp", endpoint, attack.Topic, attack.Partition)
+	return dialer, nil
+}
+
+func getPartitions(attack *core.KafkaCommand) (partitions []int, err error) {
+	dialer, err := newDialer(attack)
 	if err != nil {
-		return nil, perr.Wrapf(err, "dial kafka leader %s", endpoint)
+		return nil, err
 	}
-	return conn, nil
+
+	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
+	conn, err := dialer.Dial("tcp", endpoint)
+	if err != nil {
+		return nil, errors.Wrapf(err, "dial endpoint: %s", endpoint)
+	}
+
+	if attack.Topic == "" {
+		return nil, errors.New("topic is required")
+	}
+	pars, err := conn.ReadPartitions(attack.Topic)
+	if err != nil {
+		return nil, errors.Wrapf(err, "read partitions of topic %s", attack.Topic)
+	}
+	for _, par := range pars {
+		if par.Error != nil {
+			return nil, errors.Wrap(err, "read partition")
+		}
+		partitions = append(partitions, par.ID)
+	}
+	return partitions, nil
+}
+
+func dialWriter(attack *core.KafkaCommand) (writer *client.Writer, err error) {
+	dialer, err := newDialer(attack)
+	if err != nil {
+		return nil, err
+	}
+
+	writer = client.NewWriter(client.WriterConfig{
+		Brokers: []string{fmt.Sprintf("%s:%d", attack.Host, attack.Port)},
+		Dialer:  dialer,
+		Topic:   attack.Topic,
+	})
+
+	if attack.Action == core.KafkaFloodAction {
+		writer.AllowAutoTopicCreation = true
+	}
+
+	return writer, nil
 }
 
 func attackKafkaFill(attack *core.KafkaCommand) (err error) {
 	// TODO: make it configurable
 	const messagePerRequest = 128
-	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
-	conn, err := client.DialLeader(context.Background(), "tcp", endpoint, attack.Topic, attack.Partition)
+	writer, err := dialWriter(attack)
 	if err != nil {
-		return perr.Wrapf(err, "dial kafka leader %s", endpoint)
+		return perr.Wrapf(err, "dial kafka broker: %s", fmt.Sprintf("%s:%d", attack.Host, attack.Port))
 	}
-	defer conn.Close()
+	defer writer.Close()
 	msg := make([]byte, attack.MessageSize)
 	msgList := make([]client.Message, 0, messagePerRequest)
 	for i := 0; i < messagePerRequest; i++ {
 		msgList = append(msgList, client.Message{Value: msg})
 	}
 
-	counter := uint64(0)
 	start := time.Now()
 	written := "0 B"
 
-	for counter < attack.MaxBytes {
-		n, err := conn.WriteMessages(msgList...)
+	for uint64(writer.Stats().Bytes) < attack.MaxBytes {
+		err = writer.WriteMessages(context.TODO(), msgList...)
 		if err != nil {
 			return perr.Wrap(err, "write messages")
 		}
-		counter += uint64(n)
-		newWritten := humanize.Bytes(counter)
+
+		newWritten := humanize.Bytes(uint64(writer.Stats().Bytes))
 		if newWritten != written {
 			written = newWritten
 			log.Info(fmt.Sprintf("write %s in %s", written, time.Now().Sub(start)))
@@ -118,14 +158,13 @@ func attackKafkaFill(attack *core.KafkaCommand) (err error) {
 }
 
 func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error) {
-	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
-	conn, err := client.DialLeader(context.Background(), "tcp", endpoint, attack.Topic, attack.Partition)
+	writer, err := dialWriter(attack)
 	if err != nil {
-		return perr.Wrapf(err, "dial kafka leader %s", endpoint)
+		return perr.Wrapf(err, "dial kafka broker: %s", fmt.Sprintf("%s:%d", attack.Host, attack.Port))
 	}
-	defer conn.Close()
+	defer writer.Close()
 	msg := make([]byte, attack.MessageSize)
-	timeout := time.Second / time.Duration(attack.RequestPerSecond)
+	writer.WriteTimeout = time.Second / time.Duration(attack.RequestPerSecond)
 	wg := new(sync.WaitGroup)
 	for i := 0; i < int(attack.Threads); i++ {
 		logger := log.With(zap.String("thread", fmt.Sprintf("thread-%d", i)))
@@ -143,19 +182,15 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error
 					counter := uint64(0)
 					for time.Now().Sub(start) < time.Second && counter < attack.RequestPerSecond {
 						counter++
-						err := conn.SetWriteDeadline(time.Now().Add(timeout))
-						if err != nil {
-							failed++
-							logger.Debug("set write deadline", zap.Error(err))
-							continue
-						}
-						_, err = conn.Write(msg)
+						err = writer.WriteMessages(context.TODO(), client.Message{Value: msg})
 						if err != nil {
 							failed++
 							logger.Debug("write message", zap.Error(err))
 							continue
 						}
 						succeeded++
+						logger.Debug(fmt.Sprintf("time.Now().Sub(start) < time.Second: %t", time.Now().Sub(start) < time.Second))
+						logger.Debug(fmt.Sprintf("counter < attack.RequestPerSecond: %t", counter < attack.RequestPerSecond))
 					}
 					logger.Info(fmt.Sprintf("succeeded: %d, failed: %d", succeeded, failed))
 					if time.Now().Sub(start) < time.Second {
@@ -175,116 +210,129 @@ func attackKafkaIO(attack *core.KafkaCommand) error {
 	if err != nil {
 		return perr.Wrapf(err, "load config file %s", attack.ConfigFile)
 	}
-	attack.PartitionDir, err = findPartitionDir(attack, strings.Split(p.GetString("log.dirs", "/var/lib/kafka"), ","))
+	attack.PartitionDirs, err = findPartitionDirs(attack, strings.Split(p.GetString("log.dirs", "/var/lib/kafka"), ","))
 	if err != nil {
 		return err
 	}
 
-	dir, err := os.Stat(attack.PartitionDir)
-	if err != nil {
-		return perr.Wrapf(err, "stat partition dir %s", attack.PartitionDir)
-	}
-	mode := dir.Mode()
-	if attack.NonReadable {
-		mode &= ^os.FileMode(0444)
-	}
-	if attack.NonWritable {
-		mode &= ^os.FileMode(0200)
-	}
-	log.Debug(fmt.Sprintf("change permission of %s to %s", attack.PartitionDir, mode))
-	err = os.Chmod(attack.PartitionDir, mode)
-	if err != nil {
-		return perr.Wrapf(err, "change permission of %s", dir.Name())
-	}
-
-	files, err := os.ReadDir(attack.PartitionDir)
-	if err != nil {
-		return perr.Wrapf(err, "read partition dir %s", attack.PartitionDir)
-	}
-	for _, file := range files {
-		if !strings.HasSuffix(file.Name(), ".log") {
-			continue
-		}
-		filePath := path.Join(attack.PartitionDir, file.Name())
-		f, err := os.Stat(filePath)
+	for _, dirPath := range attack.PartitionDirs {
+		dir, err := os.Stat(dirPath)
 		if err != nil {
-			return perr.Wrapf(err, "stat file %s", filePath)
+			return perr.Wrapf(err, "stat partition dir %s", dirPath)
 		}
-
-		mode := f.Mode()
+		mode := dir.Mode()
 		if attack.NonReadable {
 			mode &= ^os.FileMode(0444)
 		}
 		if attack.NonWritable {
 			mode &= ^os.FileMode(0200)
 		}
-		log.Debug(fmt.Sprintf("change permission of %s to %s", filePath, mode))
-		err = os.Chmod(filePath, mode)
+		log.Debug(fmt.Sprintf("change permission of %s to %s", dirPath, mode))
+		err = os.Chmod(dirPath, mode)
 		if err != nil {
-			return perr.Wrapf(err, "change permission of %s", file.Name())
+			return perr.Wrapf(err, "change permission of %s", dirPath)
+		}
+
+		files, err := os.ReadDir(dirPath)
+		if err != nil {
+			return perr.Wrapf(err, "read partition dir %s", dirPath)
+		}
+		for _, file := range files {
+			if !strings.HasSuffix(file.Name(), ".log") {
+				continue
+			}
+			filePath := path.Join(dirPath, file.Name())
+			f, err := os.Stat(filePath)
+			if err != nil {
+				return perr.Wrapf(err, "stat file %s", filePath)
+			}
+
+			mode := f.Mode()
+			if attack.NonReadable {
+				mode &= ^os.FileMode(0444)
+			}
+			if attack.NonWritable {
+				mode &= ^os.FileMode(0200)
+			}
+			log.Debug(fmt.Sprintf("change permission of %s to %s", filePath, mode))
+			err = os.Chmod(filePath, mode)
+			if err != nil {
+				return perr.Wrapf(err, "change permission of %s", file.Name())
+			}
 		}
 	}
+
 	return nil
 }
 
 func recoverKafkaIO(attack *core.KafkaCommand, env Environment) (err error) {
-	dir, err := os.Stat(attack.PartitionDir)
-	if err != nil {
-		return perr.Wrapf(err, "stat partition dir %s", attack.PartitionDir)
-	}
-	mode := dir.Mode()
-	if attack.NonReadable {
-		mode |= os.FileMode(0444)
-	}
-	if attack.NonWritable {
-		mode |= os.FileMode(0200)
-	}
-	log.S().Debugf("change permission of %s to %s", attack.PartitionDir, mode)
-	err = os.Chmod(attack.PartitionDir, mode)
-	if err != nil {
-		return perr.Wrapf(err, "change permission of %s", dir.Name())
-	}
-
-	files, err := os.ReadDir(attack.PartitionDir)
-	if err != nil {
-		return perr.Wrapf(err, "read partition dir %s", attack.PartitionDir)
-	}
-	for _, file := range files {
-		filePath := path.Join(attack.PartitionDir, file.Name())
-		f, err := os.Stat(filePath)
+	for _, dirPath := range attack.PartitionDirs {
+		dir, err := os.Stat(dirPath)
 		if err != nil {
-			return perr.Wrapf(err, "stat file %s", filePath)
+			return perr.Wrapf(err, "stat partition dir %s", dirPath)
 		}
-		mode := f.Mode()
+		mode := dir.Mode()
 		if attack.NonReadable {
 			mode |= os.FileMode(0444)
 		}
 		if attack.NonWritable {
 			mode |= os.FileMode(0200)
 		}
-		log.S().Debugf("change permission of %s to %s", filePath, mode)
-		err = os.Chmod(filePath, mode)
+		log.S().Debugf("change permission of %s to %s", dirPath, mode)
+		err = os.Chmod(dirPath, mode)
 		if err != nil {
-			return perr.Wrapf(err, "change permission of %s", attack.PartitionDir)
+			return perr.Wrapf(err, "change permission of %s", dir.Name())
+		}
+
+		files, err := os.ReadDir(dirPath)
+		if err != nil {
+			return perr.Wrapf(err, "read partition dir %s", dirPath)
+		}
+		for _, file := range files {
+			filePath := path.Join(dirPath, file.Name())
+			f, err := os.Stat(filePath)
+			if err != nil {
+				return perr.Wrapf(err, "stat file %s", filePath)
+			}
+			mode := f.Mode()
+			if attack.NonReadable {
+				mode |= os.FileMode(0444)
+			}
+			if attack.NonWritable {
+				mode |= os.FileMode(0200)
+			}
+			log.S().Debugf("change permission of %s to %s", filePath, mode)
+			err = os.Chmod(filePath, mode)
+			if err != nil {
+				return perr.Wrapf(err, "change permission of %s", dirPath)
+			}
 		}
 	}
 	return nil
 }
 
-func findPartitionDir(attack *core.KafkaCommand, logDirs []string) (string, error) {
-	dirName := fmt.Sprintf("%s-%d", attack.Topic, attack.Partition)
-	for _, dir := range logDirs {
-		entries, err := os.ReadDir(strings.TrimSpace(dir))
-		if err != nil {
-			log.Debug("read dir", zap.Error(err))
-			continue
-		}
-		for _, entry := range entries {
-			if entry.IsDir() && entry.Name() == dirName {
-				return path.Join(strings.TrimSpace(dir), entry.Name()), nil
-			}
-		}
-
+func findPartitionDirs(attack *core.KafkaCommand, logDirs []string) ([]string, error) {
+	partitions, err := getPartitions(attack)
+	if err != nil {
+		return nil, err
 	}
-	return "", perr.Errorf("partition dir %s not found", dirName)
+	dirs := make([]string, 0, len(partitions))
+
+	for _, partition := range partitions {
+		dirName := fmt.Sprintf("%s-%d", attack.Topic, partition)
+		for _, dir := range logDirs {
+			entries, err := os.ReadDir(strings.TrimSpace(dir))
+			if err != nil {
+				log.Debug("read dir", zap.Error(err))
+				continue
+			}
+			for _, entry := range entries {
+				if entry.IsDir() && entry.Name() == dirName {
+					dirs = append(dirs, path.Join(strings.TrimSpace(dir), entry.Name()))
+				}
+			}
+
+		}
+	}
+	return dirs, nil
 }
