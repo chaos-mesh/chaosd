@@ -27,9 +27,6 @@ const (
 	KafkaFillAction  = "fill"
 	KafkaFloodAction = "flood"
 	KafkaIOAction    = "io"
-
-	// The default flood topic
-	DefaultKafkaFloodTopic = "__flood__"
 )
 
 var _ AttackConfig = &KafkaCommand{}
@@ -125,9 +122,7 @@ func (c *KafkaCommand) RecoverData() string {
 }
 
 func (c *KafkaCommand) CompleteDefaults() {
-	if c.Topic == "" {
-		c.Topic = DefaultKafkaFloodTopic
-	}
+	c.CommonAttackConfig.CompleteDefaults()
 }
 
 func NewKafkaCommand() *KafkaCommand {

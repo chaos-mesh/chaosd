@@ -43,7 +43,7 @@ func (j kafkaAttack) Attack(options core.AttackConfig, env Environment) (err err
 	attack := options.(*core.KafkaCommand)
 	switch attack.Action {
 	case core.KafkaFillAction:
-		return attackKafkaFill(attack)
+		return attackKafkaFill(context.TODO(), attack)
 	case core.KafkaFloodAction:
 		return attackKafkaFlood(context.TODO(), attack)
 	case core.KafkaIOAction:
@@ -78,6 +78,32 @@ func newDialer(attack *core.KafkaCommand) (dialer *client.Dialer, err error) {
 	return dialer, nil
 }
 
+func dial(attack *core.KafkaCommand) (conn *client.Conn, err error) {
+	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
+	dialer, err := newDialer(attack)
+	if err != nil {
+		return nil, perr.Wrap(err, "new dialer")
+	}
+	conn, err = dialer.Dial("tcp", endpoint)
+	if err != nil {
+		return nil, perr.Wrapf(err, "dial endpoint: %s", endpoint)
+	}
+	return conn, nil
+}
+
+func dialPartition(ctx context.Context, attack *core.KafkaCommand, partition int) (conn *client.Conn, err error) {
+	endpoint := fmt.Sprintf("%s:%d", attack.Host, attack.Port)
+	dialer, err := newDialer(attack)
+	if err != nil {
+		return nil, perr.Wrap(err, "new dialer")
+	}
+	conn, err = dialer.DialLeader(ctx, "tcp", endpoint, attack.Topic, partition)
+	if err != nil {
+		return nil, perr.Wrapf(err, "dial endpoint: %s", endpoint)
+	}
+	return conn, nil
+}
+
 func getPartitions(attack *core.KafkaCommand) (partitions []int, err error) {
 	dialer, err := newDialer(attack)
 	if err != nil {
@@ -106,65 +132,80 @@ func getPartitions(attack *core.KafkaCommand) (partitions []int, err error) {
 	return partitions, nil
 }
 
-func dialWriter(attack *core.KafkaCommand) (writer *client.Writer, err error) {
-	dialer, err := newDialer(attack)
-	if err != nil {
-		return nil, err
-	}
-
-	writer = client.NewWriter(client.WriterConfig{
-		Brokers: []string{fmt.Sprintf("%s:%d", attack.Host, attack.Port)},
-		Dialer:  dialer,
-		Topic:   attack.Topic,
-	})
-
-	if attack.Action == core.KafkaFloodAction {
-		writer.AllowAutoTopicCreation = true
-	}
-
-	return writer, nil
-}
-
-func attackKafkaFill(attack *core.KafkaCommand) (err error) {
+func attackKafkaFill(ctx context.Context, attack *core.KafkaCommand) (err error) {
 	// TODO: make it configurable
 	const messagePerRequest = 128
-	writer, err := dialWriter(attack)
+	conn, err := dial(attack)
 	if err != nil {
 		return perr.Wrapf(err, "dial kafka broker: %s", fmt.Sprintf("%s:%d", attack.Host, attack.Port))
 	}
-	defer writer.Close()
+	defer conn.Close()
 	msg := make([]byte, attack.MessageSize)
 	msgList := make([]client.Message, 0, messagePerRequest)
 	for i := 0; i < messagePerRequest; i++ {
-		msgList = append(msgList, client.Message{Value: msg})
+		msgList = append(msgList, client.Message{Topic: attack.Topic, Value: msg})
+	}
+
+	partitions, err := getPartitions(attack)
+	if err != nil {
+		return err
+	}
+
+	writeChan := make(chan uint64)
+	errChan := make(chan error)
+	c, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	for _, partition := range partitions {
+		go func() {
+			conn, err := dialPartition(c, attack, partition)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+			for c.Err() == nil {
+				n, err := conn.WriteMessages(msgList...)
+				if err != nil {
+					errChan <- perr.Wrap(err, "write messages")
+					return
+				}
+				writeChan <- uint64(n)
+			}
+		}()
 	}
 
 	start := time.Now()
 	written := "0 B"
+	bytes := uint64(0)
 
-	for uint64(writer.Stats().Bytes) < attack.MaxBytes {
-		err = writer.WriteMessages(context.TODO(), msgList...)
-		if err != nil {
-			return perr.Wrap(err, "write messages")
-		}
-
-		newWritten := humanize.Bytes(uint64(writer.Stats().Bytes))
-		if newWritten != written {
-			written = newWritten
-			log.Info(fmt.Sprintf("write %s in %s", written, time.Now().Sub(start)))
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case err := <-errChan:
+			return err
+		case n := <-writeChan:
+			bytes += uint64(n)
+			newWritten := humanize.Bytes(bytes)
+			if newWritten != written {
+				written = newWritten
+				log.Info(fmt.Sprintf("write %s in %s", written, time.Now().Sub(start)))
+			}
+			if bytes >= attack.MaxBytes {
+				return nil
+			}
 		}
 	}
-	return nil
 }
 
 func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error) {
-	writer, err := dialWriter(attack)
+	conn, err := dialPartition(ctx, attack, 0)
 	if err != nil {
 		return perr.Wrapf(err, "dial kafka broker: %s", fmt.Sprintf("%s:%d", attack.Host, attack.Port))
 	}
-	defer writer.Close()
+	defer conn.Close()
 	msg := make([]byte, attack.MessageSize)
-	writer.WriteTimeout = time.Second / time.Duration(attack.RequestPerSecond)
 	wg := new(sync.WaitGroup)
 	for i := 0; i < int(attack.Threads); i++ {
 		logger := log.With(zap.String("thread", fmt.Sprintf("thread-%d", i)))
@@ -182,7 +223,8 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error
 					counter := uint64(0)
 					for time.Now().Sub(start) < time.Second && counter < attack.RequestPerSecond {
 						counter++
-						err = writer.WriteMessages(context.TODO(), client.Message{Value: msg})
+						conn.SetWriteDeadline(time.Now().Add(time.Second / time.Duration(attack.RequestPerSecond)))
+						_, err = conn.WriteMessages(client.Message{Value: msg})
 						if err != nil {
 							failed++
 							logger.Debug("write message", zap.Error(err))
