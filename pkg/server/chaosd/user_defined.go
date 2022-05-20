@@ -29,6 +29,7 @@ var UserDefinedAttack AttackType = userDefinedAttack{}
 
 func (userDefinedAttack) Attack(options core.AttackConfig, _ Environment) error {
 	option := options.(*core.UserDefinedOption)
+	log.Info("attack command", zap.String("command", option.AttackCmd))
 
 	cmd := exec.Command("bash", "-c", option.AttackCmd)
 	output, err := cmd.CombinedOutput()
@@ -48,9 +49,9 @@ func (userDefinedAttack) Recover(exp core.Experiment, _ Environment) error {
 		return err
 	}
 	option := config.(*core.UserDefinedOption)
+	log.Info("recover command", zap.String("command", option.RecoverCmd))
 
 	cmd := exec.Command("bash", "-c", option.RecoverCmd)
-	log.Info("recover command", zap.String("command", option.RecoverCmd))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return errors.Wrap(err, string(output))

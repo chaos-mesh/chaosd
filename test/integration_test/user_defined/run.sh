@@ -21,20 +21,16 @@ cd $cur
 bin_path=../../../bin
 
 # test user defined attack
-${bin_path}/chaosd attack user-defined --attack-cmd "touch /tmp/chaos" --recover-cmd "rm /tmp/chaos" --uid 1234
+${bin_path}/chaosd attack user-defined --attack-cmd "touch /tmp/chaos" --recover-cmd "rm /tmp/chaos" --uid 1234567890
 
-if [ -e /tmp/chaos ]
-then
-    echo "ok"
-else
+if [ ! -f /tmp/chaos ]; then
     echo "file not exist"
     exit 1
 fi
 
-${bin_path}/chaosd recover 1234
+${bin_path}/chaosd recover 1234567890
 
-if [ -e /tmp/chaos ]
-then
+if [ -e /tmp/chaos ]; then
     echo "file still exist"
     exit 1
 fi
