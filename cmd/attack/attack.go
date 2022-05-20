@@ -38,7 +38,6 @@ func NewAttackCommand() *cobra.Command {
 		NewClockAttackCommand(&uid),
 		NewRedisAttackCommand(&uid),
 		NewFileAttackCommand(&uid),
-		NewVMAttackCommand(&uid),
 		NewUserDefinedCommand(&uid),
 	)
 

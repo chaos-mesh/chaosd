@@ -69,8 +69,6 @@ func (s *Server) RecoverAttack(uid string) error {
 			attackType = RedisAttack
 		case core.FileAttack:
 			attackType = FileAttack
-		case core.VMAttack:
-			attackType = VMAttack
 		case core.UserDefinedAttack:
 			attackType = UserDefinedAttack
 		default:

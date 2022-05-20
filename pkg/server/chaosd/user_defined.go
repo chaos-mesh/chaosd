@@ -49,12 +49,13 @@ func (userDefinedAttack) Recover(exp core.Experiment, _ Environment) error {
 	option := config.(*core.UserDefinedOption)
 
 	cmd := exec.Command("bash", "-c", option.RecoverCmd)
+	log.Info("recover command", zap.String("command", option.RecoverCmd))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return errors.Wrap(err, string(output))
 	}
 	if len(output) > 0 {
-		log.Info("recover command", zap.String("output", string(output)))
+		log.Info("recover command", zap.String("command", option.RecoverCmd), zap.String("output", string(output)))
 	}
 
 	return nil

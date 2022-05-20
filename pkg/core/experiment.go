@@ -115,8 +115,6 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &RedisCommand{}
 	case FileAttack:
 		attackConfig = &FileCommand{}
-	case VMAttack:
-		attackConfig = &VMOption{}
 	case UserDefinedAttack:
 		attackConfig = &UserDefinedOption{}
 	default:
