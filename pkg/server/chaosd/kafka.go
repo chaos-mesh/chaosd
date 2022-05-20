@@ -157,8 +157,9 @@ func attackKafkaFill(ctx context.Context, attack *core.KafkaCommand) (err error)
 	defer cancel()
 
 	for _, partition := range partitions {
+		p := partition
 		go func() {
-			conn, err := dialPartition(c, attack, partition)
+			conn, err := dialPartition(c, attack, p)
 			if err != nil {
 				errChan <- err
 				return
