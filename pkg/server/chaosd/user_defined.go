@@ -16,10 +16,11 @@ package chaosd
 import (
 	"os/exec"
 
-	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/pingcap/log"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+
+	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 type userDefinedAttack struct{}
