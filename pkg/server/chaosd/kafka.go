@@ -135,11 +135,6 @@ func getPartitions(attack *core.KafkaCommand) (partitions []int, err error) {
 func attackKafkaFill(ctx context.Context, attack *core.KafkaCommand) (err error) {
 	// TODO: make it configurable
 	const messagePerRequest = 128
-	conn, err := dial(attack)
-	if err != nil {
-		return perr.Wrapf(err, "dial kafka broker: %s", fmt.Sprintf("%s:%d", attack.Host, attack.Port))
-	}
-	defer conn.Close()
 	msg := make([]byte, attack.MessageSize)
 	msgList := make([]client.Message, 0, messagePerRequest)
 	for i := 0; i < messagePerRequest; i++ {
@@ -201,11 +196,6 @@ func attackKafkaFill(ctx context.Context, attack *core.KafkaCommand) (err error)
 }
 
 func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error) {
-	conn, err := dialPartition(ctx, attack, 0)
-	if err != nil {
-		return perr.Wrapf(err, "dial kafka broker: %s", fmt.Sprintf("%s:%d", attack.Host, attack.Port))
-	}
-	defer conn.Close()
 	msg := make([]byte, attack.MessageSize)
 	wg := new(sync.WaitGroup)
 	for i := 0; i < int(attack.Threads); i++ {
@@ -213,6 +203,12 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			conn, err := dialPartition(ctx, attack, 0)
+			if err != nil {
+				logger.Error(perr.Wrapf(err, "dial kafka broker: %s", fmt.Sprintf("%s:%d", attack.Host, attack.Port)).Error())
+				return
+			}
+			defer conn.Close()
 			for {
 				select {
 				case <-ctx.Done():
