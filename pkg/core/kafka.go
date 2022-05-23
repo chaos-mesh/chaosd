@@ -56,7 +56,7 @@ type KafkaCommand struct {
 	NonWritable bool
 
 	// recover data for io attack
-	PartitionDirs []string
+	OriginModeOfFiles map[string]uint32
 }
 
 func (c *KafkaCommand) Validate() error {
@@ -130,5 +130,6 @@ func NewKafkaCommand() *KafkaCommand {
 		CommonAttackConfig: CommonAttackConfig{
 			Kind: KafkaAttack,
 		},
+		OriginModeOfFiles: make(map[string]uint32),
 	}
 }

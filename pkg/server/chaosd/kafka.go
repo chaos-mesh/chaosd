@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"path"
 	"strings"
@@ -244,34 +245,59 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error
 	return nil
 }
 
+func attackIOPath(
+	attack *core.KafkaCommand,
+	path string,
+	stat func(string) (fs.FileInfo, error),
+	chmod func(string, os.FileMode) error,
+) error {
+	meta, err := stat(path)
+	if err != nil {
+		return perr.Wrapf(err, "stat %s", path)
+	}
+	mode := meta.Mode()
+	attack.OriginModeOfFiles[path] = uint32(meta.Mode())
+	if attack.NonReadable {
+		mode &= ^os.FileMode(0444)
+	}
+	if attack.NonWritable {
+		mode &= ^os.FileMode(0222)
+	}
+	log.Debug(fmt.Sprintf("change permission of %s to %s", path, mode))
+	err = chmod(path, mode)
+	if err != nil {
+		return perr.Wrapf(err, "change permission of %s", path)
+	}
+	return nil
+}
+
+func recoverIOPath(
+	path string,
+	originMode uint32,
+	chmod func(string, os.FileMode) error,
+) error {
+	err := chmod(path, os.FileMode(originMode))
+	if err != nil {
+		return perr.Wrapf(err, "change permission of %s", path)
+	}
+	return nil
+}
+
 func attackKafkaIO(attack *core.KafkaCommand) error {
 	p, err := properties.LoadFile(attack.ConfigFile, properties.UTF8)
 	if err != nil {
 		return perr.Wrapf(err, "load config file %s", attack.ConfigFile)
 	}
-	attack.PartitionDirs, err = findPartitionDirs(attack, strings.Split(p.GetString("log.dirs", "/var/lib/kafka"), ","))
+	partitionDirs, err := findPartitionDirs(attack, strings.Split(p.GetString("log.dirs", "/var/lib/kafka"), ","))
 	if err != nil {
 		return err
 	}
 
-	for _, dirPath := range attack.PartitionDirs {
-		dir, err := os.Stat(dirPath)
+	for _, dirPath := range partitionDirs {
+		err = attackIOPath(attack, dirPath, os.Stat, os.Chmod)
 		if err != nil {
-			return perr.Wrapf(err, "stat partition dir %s", dirPath)
+			return err
 		}
-		mode := dir.Mode()
-		if attack.NonReadable {
-			mode &= ^os.FileMode(0444)
-		}
-		if attack.NonWritable {
-			mode &= ^os.FileMode(0200)
-		}
-		log.Debug(fmt.Sprintf("change permission of %s to %s", dirPath, mode))
-		err = os.Chmod(dirPath, mode)
-		if err != nil {
-			return perr.Wrapf(err, "change permission of %s", dirPath)
-		}
-
 		files, err := os.ReadDir(dirPath)
 		if err != nil {
 			return perr.Wrapf(err, "read partition dir %s", dirPath)
@@ -281,22 +307,9 @@ func attackKafkaIO(attack *core.KafkaCommand) error {
 				continue
 			}
 			filePath := path.Join(dirPath, file.Name())
-			f, err := os.Stat(filePath)
+			err = attackIOPath(attack, filePath, os.Stat, os.Chmod)
 			if err != nil {
-				return perr.Wrapf(err, "stat file %s", filePath)
-			}
-
-			mode := f.Mode()
-			if attack.NonReadable {
-				mode &= ^os.FileMode(0444)
-			}
-			if attack.NonWritable {
-				mode &= ^os.FileMode(0200)
-			}
-			log.Debug(fmt.Sprintf("change permission of %s to %s", filePath, mode))
-			err = os.Chmod(filePath, mode)
-			if err != nil {
-				return perr.Wrapf(err, "change permission of %s", file.Name())
+				return err
 			}
 		}
 	}
@@ -304,47 +317,11 @@ func attackKafkaIO(attack *core.KafkaCommand) error {
 	return nil
 }
 
-func recoverKafkaIO(attack *core.KafkaCommand, env Environment) (err error) {
-	for _, dirPath := range attack.PartitionDirs {
-		dir, err := os.Stat(dirPath)
+func recoverKafkaIO(attack *core.KafkaCommand, env Environment) error {
+	for path, originMode := range attack.OriginModeOfFiles {
+		err := recoverIOPath(path, originMode, os.Chmod)
 		if err != nil {
-			return perr.Wrapf(err, "stat partition dir %s", dirPath)
-		}
-		mode := dir.Mode()
-		if attack.NonReadable {
-			mode |= os.FileMode(0444)
-		}
-		if attack.NonWritable {
-			mode |= os.FileMode(0200)
-		}
-		log.S().Debugf("change permission of %s to %s", dirPath, mode)
-		err = os.Chmod(dirPath, mode)
-		if err != nil {
-			return perr.Wrapf(err, "change permission of %s", dir.Name())
-		}
-
-		files, err := os.ReadDir(dirPath)
-		if err != nil {
-			return perr.Wrapf(err, "read partition dir %s", dirPath)
-		}
-		for _, file := range files {
-			filePath := path.Join(dirPath, file.Name())
-			f, err := os.Stat(filePath)
-			if err != nil {
-				return perr.Wrapf(err, "stat file %s", filePath)
-			}
-			mode := f.Mode()
-			if attack.NonReadable {
-				mode |= os.FileMode(0444)
-			}
-			if attack.NonWritable {
-				mode |= os.FileMode(0200)
-			}
-			log.S().Debugf("change permission of %s to %s", filePath, mode)
-			err = os.Chmod(filePath, mode)
-			if err != nil {
-				return perr.Wrapf(err, "change permission of %s", dirPath)
-			}
+			return err
 		}
 	}
 	return nil
