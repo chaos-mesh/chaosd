@@ -63,8 +63,8 @@ func NewKafkaFillCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka leader")
-	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka leader")
+	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka server")
+	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka server")
 	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "the username of kafka client")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "the password of kafka client")
 	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 4*1024, "the size of each message")
@@ -82,8 +82,8 @@ func NewKafkaFloodCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Comm
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(kafkaCommandFunc)).Run()
 		},
 	}
-	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka leader")
-	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka leader")
+	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka server")
+	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka server")
 	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "the username of kafka client")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "the password of kafka client")
 	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 1024, "the size of each message")
