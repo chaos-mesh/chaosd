@@ -7,15 +7,16 @@ on:
 
 jobs:
   pull:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        arch: [amd64, arm64]
         job:
           - verify
           - build
           - unit-test
           - integration-test
+    runs-on: ${{ fromJson('{"amd64":"ubuntu-latest", "arm64":["self-hosted", "Linux", "ARM64"]}')[matrix.arch] }}
 
     steps:
       - name: Set up Go 1.16
