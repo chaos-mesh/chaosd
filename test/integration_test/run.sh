@@ -40,6 +40,12 @@ fi
 
 if [ "$test_case" == "*" ]; then
     for script in $test_dir/$test_case/run.sh; do
+        # stress are not supported in aarch64
+        # TODO: support stress in aarch64, and remove this check
+        if [[ $script == *"stress"* && "$(uname -m)" == "aarch64" ]]; then
+            continue
+        fi
+
         run $script
     done
 else
