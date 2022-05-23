@@ -362,8 +362,7 @@ func findPartitionDirs(attack *core.KafkaCommand, logDirs []string) ([]string, e
 		for _, dir := range logDirs {
 			entries, err := os.ReadDir(strings.TrimSpace(dir))
 			if err != nil {
-				log.Debug("read dir", zap.Error(err))
-				continue
+				return nil, perr.Wrapf(err, "read dir: %s", dir)
 			}
 			for _, entry := range entries {
 				if entry.IsDir() && entry.Name() == dirName {
