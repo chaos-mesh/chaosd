@@ -116,7 +116,7 @@ func (f fakeFs) nonwritable() fakeFs {
 }
 
 func TestAttackIO(t *testing.T) {
-	newFs := fakeFs{
+	originFs := fakeFs{
 		"/a": &fakeFileInfo{
 			mode: os.FileMode(0777),
 		},
@@ -140,36 +140,36 @@ func TestAttackIO(t *testing.T) {
 		},
 	}
 
-	assert.True(t, newFs.equal(newFs))
-	assert.False(t, newFs.equal(newFs.nonreadable()))
-	bakFs := newFs.clone()
-	assert.True(t, newFs.equal(bakFs))
+	assert.True(t, originFs.equal(originFs))
+	assert.False(t, originFs.equal(originFs.nonreadable()))
+	bakFs := originFs.clone()
+	assert.True(t, originFs.equal(bakFs))
 
 	attack := core.NewKafkaCommand()
 	attack.NonReadable = true
 	// make only "/a" non-readable
 	err := attackIOPath(attack, "/a", bakFs.stat, bakFs.chmod)
 	assert.Nil(t, err)
-	assert.Equal(t, bakFs["/a"].Mode(), newFs.nonreadable()["/a"].Mode())
+	assert.Equal(t, bakFs["/a"].Mode(), originFs.nonreadable()["/a"].Mode())
 
 	// recover
-	err = recoverIOPath("/a", uint32(newFs["/a"].Mode()), bakFs.chmod)
+	err = recoverIOPath("/a", uint32(originFs["/a"].Mode()), bakFs.chmod)
 	assert.Nil(t, err)
-	assert.True(t, bakFs.equal(newFs))
+	assert.True(t, bakFs.equal(originFs))
 
 	// make all path non-readable
 	for p := range bakFs {
 		err := attackIOPath(attack, p, bakFs.stat, bakFs.chmod)
 		assert.Nil(t, err)
 	}
-	assert.True(t, bakFs.equal(newFs.nonreadable()))
+	assert.True(t, bakFs.equal(originFs.nonreadable()))
 
 	// recover
 	for p, mode := range attack.OriginModeOfFiles {
 		err := recoverIOPath(p, mode, bakFs.chmod)
 		assert.Nil(t, err)
 	}
-	assert.True(t, bakFs.equal(newFs))
+	assert.True(t, bakFs.equal(originFs))
 
 	// make all path non-readable and non-writable
 	attack.NonWritable = true
@@ -177,12 +177,12 @@ func TestAttackIO(t *testing.T) {
 		err := attackIOPath(attack, p, bakFs.stat, bakFs.chmod)
 		assert.Nil(t, err)
 	}
-	assert.True(t, bakFs.equal(newFs.nonreadable().nonwritable()))
+	assert.True(t, bakFs.equal(originFs.nonreadable().nonwritable()))
 
 	// recover
 	for p, mode := range attack.OriginModeOfFiles {
 		err := recoverIOPath(p, mode, bakFs.chmod)
 		assert.Nil(t, err)
 	}
-	assert.True(t, bakFs.equal(newFs))
+	assert.True(t, bakFs.equal(originFs))
 }
