@@ -41,6 +41,7 @@ const (
 	KafkaAttack   = "kafka"
 	RedisAttack   = "redis"
 	FileAttack    = "file"
+	VMAttack      = "vm"
 )
 
 const (
@@ -116,6 +117,8 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &RedisCommand{}
 	case FileAttack:
 		attackConfig = &FileCommand{}
+	case VMAttack:
+		attackConfig = &VMOption{}
 	default:
 		return nil
 	}
