@@ -218,10 +218,7 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error
 					start := time.Now()
 					succeeded := 0
 					failed := 0
-					counter := uint64(0)
-					for time.Now().Sub(start) < time.Second && counter < attack.RequestPerSecond {
-						counter++
-						conn.SetWriteDeadline(time.Now().Add(time.Second / time.Duration(attack.RequestPerSecond)))
+					for time.Now().Sub(start) < time.Second {
 						_, err = conn.WriteMessages(client.Message{Value: msg})
 						if err != nil {
 							failed++
@@ -229,13 +226,8 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error
 							continue
 						}
 						succeeded++
-						logger.Debug(fmt.Sprintf("time.Now().Sub(start) < time.Second: %t", time.Now().Sub(start) < time.Second))
-						logger.Debug(fmt.Sprintf("counter < attack.RequestPerSecond: %t", counter < attack.RequestPerSecond))
 					}
 					logger.Info(fmt.Sprintf("succeeded: %d, failed: %d", succeeded, failed))
-					if time.Now().Sub(start) < time.Second {
-						time.Sleep(start.Add(time.Second).Sub(time.Now()))
-					}
 				}
 			}
 
