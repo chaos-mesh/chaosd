@@ -92,6 +92,7 @@ func (s *httpServer) handler(engine *gin.Engine) {
 		attack.POST("/disk", s.createDiskAttack)
 		attack.POST("/clock", s.createClockAttack)
 		attack.POST("/jvm", s.createJVMAttack)
+		attack.POST("/kafka", s.createKafkaAttack)
 		attack.POST("/vm", s.createVMAttack)
 		attack.POST("/redis", s.createRedisAttack)
 
@@ -299,6 +300,38 @@ func (s *httpServer) createJVMAttack(c *gin.Context) {
 	}
 
 	uid, err := s.chaos.ExecuteAttack(chaosd.JVMAttack, options, core.ServerMode)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+// @Summary Create Kafka attack.
+// @Description Create Kafka attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.KafkaCommand true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/kafka [post]
+func (s *httpServer) createKafkaAttack(c *gin.Context) {
+	options := core.NewKafkaCommand()
+	if err := c.ShouldBindJSON(options); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	options.CompleteDefaults()
+	if err := options.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
+	uid, err := s.chaos.ExecuteAttack(chaosd.KafkaAttack, options, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
