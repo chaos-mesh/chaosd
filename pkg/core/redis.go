@@ -54,8 +54,8 @@ func (r *RedisCommand) Validate() error {
 	return nil
 }
 
-func (p RedisCommand) RecoverData() string {
-	data, _ := json.Marshal(p)
+func (r RedisCommand) RecoverData() string {
+	data, _ := json.Marshal(r)
 
 	return string(data)
 }
