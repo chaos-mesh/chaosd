@@ -96,7 +96,7 @@ func setTarget(cmd *cobra.Command, o *core.HTTPAttackOption) {
 func setSelector(cmd *cobra.Command, c *core.HTTPAttackOption) {
 	cmd.Flags().Int32Var(c.Rule.Selector.Port, "port", 0, "port is a rule to select server listening on specific port.")
 	cmd.Flags().StringVar(c.Rule.Selector.Path, "path", "",
-		"Mathc path of Uri with wildcard matches.")
+		"Match path of Uri with wildcard matches.")
 	cmd.Flags().StringVarP(c.Rule.Selector.Method, "method", "m", "", "HTTP method")
 	cmd.Flags().Int32VarP(c.Rule.Selector.Code, "code", "c", 0, "Code is a rule to select target by http status code in response.")
 }
