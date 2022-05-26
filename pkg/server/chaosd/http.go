@@ -91,6 +91,9 @@ func (attackHTTP) Attack(options core.AttackConfig, _ Environment) error {
 	attackConf.Logger.Info(string(by))
 
 	attackConf.ProxyPID = cmd.Process.Pid
+	// In linux, a child process will become orphan process when a parent process dies.
+	// But Golang runtime maintains a finalizer for a child process.
+	// Release() will clear the finalizer for chaos-tproxy here.
 	err = cmd.Process.Release()
 	if err != nil {
 		return errors.Wrapf(err, "Fatal error : release process fail, please clear PID: %d", attackConf.ProxyPID)
