@@ -37,7 +37,7 @@ func (attackHTTP) Attack(options core.AttackConfig, _ Environment) error {
 	var attackConf *core.HTTPAttackConfig
 	var ok bool
 	if attackConf, ok = options.(*core.HTTPAttackConfig); !ok {
-		return errors.Errorf("AttackConfig -> *HTTPAttackConfig meet error")
+		return errors.New("AttackConfig -> *HTTPAttackConfig meet error")
 	}
 
 	cmd := exec.Command("tproxy", "-i", "-vv")
