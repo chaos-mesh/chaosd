@@ -86,7 +86,7 @@ func NewHTTPDelayCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command
 }
 
 func setTarget(cmd *cobra.Command, o *core.HTTPAttackOption) {
-	cmd.Flags().UintSliceVarP(&o.ProxyPorts, "proxy_ports", "p", nil,
+	cmd.Flags().UintSliceVarP(&o.ProxyPorts, "proxy-ports", "p", nil,
 		"composed with one of the port of HTTP connection, "+
 			"we will only attack HTTP connection with port inside proxy_ports")
 	cmd.Flags().StringVarP((*string)(&o.Rule.Target), "target", "t", "",
