@@ -93,7 +93,7 @@ func (attackHTTP) Attack(options core.AttackConfig, _ Environment) error {
 	attackConf.ProxyPID = cmd.Process.Pid
 	err = cmd.Process.Release()
 	if err != nil {
-		return errors.Wrapf(err, "Fatal error : release process fail , please clear PID: %d", attackConf.ProxyPID)
+		return errors.Wrapf(err, "Fatal error : release process fail, please clear PID: %d", attackConf.ProxyPID)
 	}
 	return nil
 }
