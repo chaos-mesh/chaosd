@@ -56,7 +56,7 @@ func (c HTTPAttackConfig) RecoverData() string {
 type HTTPAttackOption struct {
 	CommonAttackConfig
 	ProxyPorts []uint                            `json:"proxy_ports,omitempty"`
-	Rule       tproxyconfig.PodHttpChaosBaseRule `json:"rules"`
+	Rule       tproxyconfig.PodHttpChaosBaseRule `json:"rule"`
 	Path       string                            `json:"path"`
 }
 
