@@ -17,7 +17,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -58,7 +57,7 @@ func (attackHTTP) Attack(options core.AttackConfig, _ Environment) error {
 	}
 
 	config, err := json.Marshal(&attackConf.Config)
-	fmt.Println(string(config))
+	attackConf.Logger.Info(string(config))
 	if err != nil {
 		return errors.Wrap(err, "applying HTTP attack")
 	}
@@ -89,7 +88,7 @@ func (attackHTTP) Attack(options core.AttackConfig, _ Environment) error {
 	if err != nil {
 		return errors.Wrapf(err, "cannot read resp body")
 	}
-	fmt.Println(string(by))
+	attackConf.Logger.Info(string(by))
 
 	attackConf.ProxyPID = cmd.Process.Pid
 	err = cmd.Process.Release()
