@@ -52,6 +52,16 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 
 	case core.RedisSentinelStopAction:
 		return env.Chaos.shutdownSentinelServer(attack, cli)
+
+	case core.RedisCachePenetrationAction:
+		pipe := cli.Pipeline()
+		for i := 0; i < attack.RequestNum; i++ {
+			pipe.Get(cli.Context(), "CHAOS_MESH_nqE3BWm7khHv")
+		}
+		_, err := pipe.Exec(cli.Context())
+		if err != redis.Nil {
+			return errors.WithStack(err)
+		}
 	}
 	return nil
 }
