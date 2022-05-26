@@ -33,9 +33,9 @@ const (
 )
 
 const (
-	HTTPAbortAction = "abort"
-	HTTPDelayAction = "delay"
-	HTTPFileAction  = "file"
+	HTTPAbortAction  = "abort"
+	HTTPDelayAction  = "delay"
+	HTTPConfigAction = "config"
 )
 
 var _ AttackConfig = &HTTPAttackConfig{}
@@ -123,7 +123,7 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 		}
 		c.ProxyPorts = ports
 		c.Rules = []tproxyconfig.PodHttpChaosBaseRule{o.Rule}
-	case HTTPFileAction:
+	case HTTPConfigAction:
 		b, err := os.ReadFile(o.Path)
 		if err != nil {
 			return nil, errors.Wrap(err, "read HTTP attack config file")

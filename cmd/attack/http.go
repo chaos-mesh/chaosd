@@ -43,7 +43,7 @@ func NewHTTPAttackCommand(uid *string) *cobra.Command {
 	cmd.AddCommand(
 		NewHTTPAbortCommand(dep, option),
 		NewHTTPDelayCommand(dep, option),
-		NewHTTPFileCommand(dep, option),
+		NewHTTPConfigCommand(dep, option),
 	)
 
 	return cmd
@@ -101,12 +101,12 @@ func setSelector(cmd *cobra.Command, c *core.HTTPAttackOption) {
 	cmd.Flags().Int32VarP(c.Rule.Selector.Code, "code", "c", 0, "Code is a rule to select target by http status code in response.")
 }
 
-func NewHTTPFileCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
+func NewHTTPConfigCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "file",
+		Use:   "config",
 		Short: "attack with config file",
 		Run: func(*cobra.Command, []string) {
-			o.Action = core.HTTPFileAction
+			o.Action = core.HTTPConfigAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
 		},
 	}
