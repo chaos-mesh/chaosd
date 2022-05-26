@@ -70,7 +70,7 @@ func (s *Server) RecoverAttack(uid string) error {
 		case core.FileAttack:
 			attackType = FileAttack
 		case core.HTTPAttack:
-			attackType = AttackHTTP
+			attackType = HTTPAttack
 		default:
 			return perr.Errorf("chaos experiment kind %s not found", exp.Kind)
 		}

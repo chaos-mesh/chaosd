@@ -31,7 +31,7 @@ import (
 
 type attackHTTP struct{}
 
-var AttackHTTP AttackType = attackHTTP{}
+var HTTPAttack AttackType = attackHTTP{}
 
 func (attackHTTP) Attack(options core.AttackConfig, _ Environment) error {
 	var attackConf *core.HTTPAttackConfig

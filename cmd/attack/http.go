@@ -120,7 +120,7 @@ func processHTTPAttack(o *core.HTTPAttackOption, chaos *chaosd.Server) {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}
 
-	uid, err := chaos.ExecuteAttack(chaosd.AttackHTTP, attackConfig, core.CommandMode)
+	uid, err := chaos.ExecuteAttack(chaosd.HTTPAttack, attackConfig, core.CommandMode)
 	if err != nil {
 		utils.ExitWithError(utils.ExitError, err)
 	}
