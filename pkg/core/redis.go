@@ -20,9 +20,10 @@ import (
 )
 
 const (
-	RedisSentinelRestartAction = "restart"
-	RedisSentinelStopAction    = "stop"
-	RedisCacheLimitAction      = "cacheLimit"
+	RedisSentinelRestartAction  = "restart"
+	RedisSentinelStopAction     = "stop"
+	RedisCachePenetrationAction = "penetration"
+	RedisCacheLimitAction       = "cacheLimit"
 )
 
 var _ AttackConfig = &RedisCommand{}
@@ -35,24 +36,30 @@ type RedisCommand struct {
 	Conf        string `json:"conf,omitempty"`
 	FlushConfig bool   `json:"flushConfig,omitempty"`
 	RedisPath   string `json:"redisPath,omitempty"`
+	RequestNum  int    `json:"requestNum,omitempty"`
 	CacheSize   string `json:"cacheSize,omitempty"`
 
 	OriginCacheSize string `json:"originCacheSize,omitempty"`
 }
 
-func (p *RedisCommand) Validate() error {
-	if err := p.CommonAttackConfig.Validate(); err != nil {
+func (r *RedisCommand) Validate() error {
+	if err := r.CommonAttackConfig.Validate(); err != nil {
 		return err
 	}
-	if len(p.Addr) == 0 {
-		return errors.New("addr not provided")
+	if len(r.Addr) == 0 {
+		return errors.New("addr of redis server is required")
 	}
-
+	switch r.Action {
+	case RedisCachePenetrationAction:
+		if r.RequestNum == 0 {
+			return errors.New("request-num is required")
+		}
+	}
 	return nil
 }
 
-func (p RedisCommand) RecoverData() string {
-	data, _ := json.Marshal(p)
+func (r RedisCommand) RecoverData() string {
+	data, _ := json.Marshal(r)
 
 	return string(data)
 }

@@ -54,6 +54,16 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 	case core.RedisSentinelStopAction:
 		return env.Chaos.shutdownSentinelServer(attack, cli)
 
+	case core.RedisCachePenetrationAction:
+		pipe := cli.Pipeline()
+		for i := 0; i < attack.RequestNum; i++ {
+			pipe.Get(cli.Context(), "CHAOS_MESH_nqE3BWm7khHv")
+		}
+		_, err := pipe.Exec(cli.Context())
+		if err != redis.Nil {
+			return errors.WithStack(err)
+		}
+	
 	case core.RedisCacheLimitAction:
 		// `cacheSize` is an interface listwith content similar to `[maxmemory 1024]`
 		cacheSize, err := cli.ConfigGet(cli.Context(), "maxmemory").Result()
@@ -62,7 +72,6 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 		}
 		// Get the value of maxmemory
 		attack.OriginCacheSize = fmt.Sprint(cacheSize[1])
-
 		result, err := cli.ConfigSet(cli.Context(), "maxmemory", attack.CacheSize).Result()
 		if err != nil {
 			return errors.WithStack(err)
