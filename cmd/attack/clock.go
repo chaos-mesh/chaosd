@@ -39,7 +39,7 @@ func NewClockAttackCommand(uid *string) *cobra.Command {
 		Use:   "clock attack",
 		Short: "clock skew",
 		Run: func(*cobra.Command, []string) {
-			options.Action = "Attack"
+			options.Action = core.ClockAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processClockAttack)).Run()
 		},
 	}
