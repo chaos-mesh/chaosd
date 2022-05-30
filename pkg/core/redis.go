@@ -23,6 +23,7 @@ const (
 	RedisSentinelRestartAction  = "restart"
 	RedisSentinelStopAction     = "stop"
 	RedisCachePenetrationAction = "penetration"
+	RedisCacheExpirationAction  = "expiration"
 )
 
 var _ AttackConfig = &RedisCommand{}
@@ -36,6 +37,9 @@ type RedisCommand struct {
 	FlushConfig bool   `json:"flushConfig,omitempty"`
 	RedisPath   string `json:"redisPath,omitempty"`
 	RequestNum  int    `json:"requestNum,omitempty"`
+	Key         string `json:"key,omitempty"`
+	Expiration  string `json:"expiration,omitempty"`
+	Option      string `json:"option,omitempty"`
 }
 
 func (r *RedisCommand) Validate() error {
@@ -49,6 +53,11 @@ func (r *RedisCommand) Validate() error {
 	case RedisCachePenetrationAction:
 		if r.RequestNum == 0 {
 			return errors.New("request-num is required")
+		}
+
+	case RedisCacheExpirationAction:
+		if r.Option != "" && r.Option != "XX" && r.Option != "NX" && r.Option != "GT" && r.Option != "LT" {
+			return errors.New("option invalid")
 		}
 	}
 	return nil

@@ -15,6 +15,7 @@ package chaosd
 
 import (
 	"os/exec"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/pingcap/errors"
@@ -62,6 +63,9 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 		if err != redis.Nil {
 			return errors.WithStack(err)
 		}
+
+	case core.RedisCacheExpirationAction:
+		return env.Chaos.expireAllKeys(attack, cli)
 	}
 	return nil
 }
@@ -118,6 +122,72 @@ func (s *Server) recoverSentinelStop(attack *core.RedisCommand) error {
 	_, err := recoverCmd.CombinedOutput()
 	if err != nil {
 		return errors.WithStack(err)
+	}
+	return nil
+}
+
+func (s *Server) expireAllKeys(attack *core.RedisCommand, cli *redis.Client) error {
+	// Get all keys from the server
+	allKeys, err := cli.Keys(cli.Context(), "*").Result()
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	expiration, err := time.ParseDuration(attack.Expiration)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	if attack.Option == "NX" {
+		for _, key := range allKeys {
+			result, err := cli.ExpireNX(cli.Context(), key, expiration).Result()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			if !result {
+				return errors.WithStack(errors.Errorf("expire failed"))
+			}
+		}
+	} else if attack.Option == "XX" {
+		for _, key := range allKeys {
+			result, err := cli.ExpireXX(cli.Context(), key, expiration).Result()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			if !result {
+				return errors.WithStack(errors.Errorf("expire failed"))
+			}
+		}
+	} else if attack.Option == "GT" {
+		for _, key := range allKeys {
+			result, err := cli.ExpireGT(cli.Context(), key, expiration).Result()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			if !result {
+				return errors.WithStack(errors.Errorf("expire failed"))
+			}
+		}
+	} else if attack.Option == "LT" {
+		for _, key := range allKeys {
+			result, err := cli.ExpireLT(cli.Context(), key, expiration).Result()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			if !result {
+				return errors.WithStack(errors.Errorf("expire failed"))
+			}
+		}
+	} else {
+		for _, key := range allKeys {
+			result, err := cli.Expire(cli.Context(), key, expiration).Result()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			if !result {
+				return errors.WithStack(errors.Errorf("expire failed"))
+			}
+		}
 	}
 	return nil
 }
