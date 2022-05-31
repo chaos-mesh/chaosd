@@ -65,7 +65,7 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 		}
 
 	case core.RedisCacheExpirationAction:
-		return env.Chaos.expireAllKeys(attack, cli)
+		return env.Chaos.expireKeys(attack, cli)
 	}
 	return nil
 }
@@ -126,51 +126,21 @@ func (s *Server) recoverSentinelStop(attack *core.RedisCommand) error {
 	return nil
 }
 
-func (s *Server) expireAllKeys(attack *core.RedisCommand, cli *redis.Client) error {
-	// Get all keys from the server
-	allKeys, err := cli.Keys(cli.Context(), "*").Result()
-	if err != nil {
-		return errors.WithStack(err)
-	}
+func (s *Server) expireKeys(attack *core.RedisCommand, cli *redis.Client) error {
 
 	expiration, err := time.ParseDuration(attack.Expiration)
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	if attack.Key == "$1" {
+		// Get all keys from the server
+		allKeys, err := cli.Keys(cli.Context(), "*").Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
 
-	if attack.Option == "NX" {
 		for _, key := range allKeys {
-			result, err := cli.ExpireNX(cli.Context(), key, expiration).Result()
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			if !result {
-				return errors.WithStack(errors.Errorf("expire failed"))
-			}
-		}
-	} else if attack.Option == "XX" {
-		for _, key := range allKeys {
-			result, err := cli.ExpireXX(cli.Context(), key, expiration).Result()
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			if !result {
-				return errors.WithStack(errors.Errorf("expire failed"))
-			}
-		}
-	} else if attack.Option == "GT" {
-		for _, key := range allKeys {
-			result, err := cli.ExpireGT(cli.Context(), key, expiration).Result()
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			if !result {
-				return errors.WithStack(errors.Errorf("expire failed"))
-			}
-		}
-	} else if attack.Option == "LT" {
-		for _, key := range allKeys {
-			result, err := cli.ExpireLT(cli.Context(), key, expiration).Result()
+			result, err := ExpireFunc(cli, key, expiration, attack.Option).Result()
 			if err != nil {
 				return errors.WithStack(err)
 			}
@@ -179,15 +149,28 @@ func (s *Server) expireAllKeys(attack *core.RedisCommand, cli *redis.Client) err
 			}
 		}
 	} else {
-		for _, key := range allKeys {
-			result, err := cli.Expire(cli.Context(), key, expiration).Result()
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			if !result {
-				return errors.WithStack(errors.Errorf("expire failed"))
-			}
+		result, err := ExpireFunc(cli, attack.Key, expiration, attack.Option).Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if !result {
+			return errors.WithStack(errors.Errorf("expire failed"))
 		}
 	}
+
 	return nil
+}
+
+func ExpireFunc(cli *redis.Client, key string, expiration time.Duration, option string) *redis.BoolCmd {
+	if option == "NX" {
+		return cli.ExpireNX(cli.Context(), key, expiration)
+	} else if option == "XX" {
+		return cli.ExpireXX(cli.Context(), key, expiration)
+	} else if option == "GT" {
+		return cli.ExpireGT(cli.Context(), key, expiration)
+	} else if option == "LT" {
+		return cli.ExpireLT(cli.Context(), key, expiration)
+	} else {
+		return cli.Expire(cli.Context(), key, expiration)
+	}
 }

@@ -60,7 +60,7 @@ func NewRedisSentinelRestartCommand(dep fx.Option, options *core.RedisCommand) *
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config of Redis server")
 	cmd.Flags().BoolVarP(&options.FlushConfig, "flush-config", "", true, " Force Sentinel to rewrite its configuration on disk")
@@ -79,7 +79,7 @@ func NewRedisSentinelStopCommand(dep fx.Option, options *core.RedisCommand) *cob
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config path of Redis server")
 	cmd.Flags().BoolVarP(&options.FlushConfig, "flush-config", "", true, "Force Sentinel to rewrite its configuration on disk")
@@ -97,7 +97,7 @@ func NewRedisCachePenetrationCommand(dep fx.Option, options *core.RedisCommand) 
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().IntVarP(&options.RequestNum, "request-num", "", 0, "The number of requests")
 
@@ -114,9 +114,9 @@ func NewRedisCacheExpirationCommand(dep fx.Option, options *core.RedisCommand) *
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
-	cmd.Flags().StringVarP(&options.Key, "key", "k", "$1", "")
+	cmd.Flags().StringVarP(&options.Key, "key", "k", "$1", "The key to be set a expiration")
 	cmd.Flags().StringVarP(&options.Expiration, "expiration", "", "0", "The expiration of the key")
 	cmd.Flags().StringVarP(&options.Option, "option", "", "", "The additional options of expiration, only NX, XX, GT, LT supported")
 
