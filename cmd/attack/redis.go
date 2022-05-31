@@ -117,6 +117,7 @@ func NewRedisCacheLimitCommand(dep fx.Option, options *core.RedisCommand) *cobra
 	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().StringVarP(&options.CacheSize, "size", "s", "0", "The size of cache")
+	cmd.Flags().StringVarP(&options.Percent, "percent", "", "", "The percentage of maxmemory")
 
 	return cmd
 }

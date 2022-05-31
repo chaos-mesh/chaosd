@@ -15,7 +15,9 @@ package chaosd
 
 import (
 	"fmt"
+	"math"
 	"os/exec"
+	"strconv"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/pingcap/errors"
@@ -63,16 +65,32 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 		if err != redis.Nil {
 			return errors.WithStack(err)
 		}
-	
+
 	case core.RedisCacheLimitAction:
-		// `cacheSize` is an interface listwith content similar to `[maxmemory 1024]`
-		cacheSize, err := cli.ConfigGet(cli.Context(), "maxmemory").Result()
+		// `maxmemory` is an interface listwith content similar to `[maxmemory 1024]`
+		maxmemory, err := cli.ConfigGet(cli.Context(), "maxmemory").Result()
 		if err != nil {
 			return errors.WithStack(err)
 		}
 		// Get the value of maxmemory
-		attack.OriginCacheSize = fmt.Sprint(cacheSize[1])
-		result, err := cli.ConfigSet(cli.Context(), "maxmemory", attack.CacheSize).Result()
+		attack.OriginCacheSize = fmt.Sprint(maxmemory[1])
+
+		var cacheSize string
+		if attack.Percent != "" {
+			percentage, err := strconv.ParseFloat(attack.Percent[0:len(attack.Percent)-1], 64)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			originCacheSize, err := strconv.ParseFloat(attack.OriginCacheSize, 64)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			cacheSize = fmt.Sprint(int(math.Floor(originCacheSize / 100.0 * percentage)))
+		} else {
+			cacheSize = attack.CacheSize
+		}
+
+		result, err := cli.ConfigSet(cli.Context(), "maxmemory", cacheSize).Result()
 		if err != nil {
 			return errors.WithStack(err)
 		}
