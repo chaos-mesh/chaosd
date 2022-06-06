@@ -108,16 +108,17 @@ func (redisAttack) Recover(exp core.Experiment, env Environment) error {
 	}
 	attack := config.(*core.RedisCommand)
 
-	cli := redis.NewClient(&redis.Options{
-		Addr:     attack.Addr,
-		Password: attack.Password,
-	})
 
 	switch attack.Action {
 	case core.RedisSentinelStopAction:
 		return env.Chaos.recoverSentinelStop(attack)
 
 	case core.RedisCacheLimitAction:
+		cli := redis.NewClient(&redis.Options{
+			Addr:     attack.Addr,
+			Password: attack.Password,
+		})
+		
 		result, err := cli.ConfigSet(cli.Context(), "maxmemory", attack.OriginCacheSize).Result()
 		if err != nil {
 			return errors.WithStack(err)
