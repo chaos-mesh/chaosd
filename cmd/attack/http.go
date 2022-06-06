@@ -52,7 +52,7 @@ func NewHTTPAttackCommand(uid *string) *cobra.Command {
 func NewHTTPAbortCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "abort",
-		Short: "abort selected HTTP Package",
+		Short: "abort selected HTTP connection",
 		Run: func(*cobra.Command, []string) {
 			o.Action = core.HTTPAbortAction
 			abort := true
