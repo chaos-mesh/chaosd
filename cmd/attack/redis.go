@@ -44,6 +44,7 @@ func NewRedisAttackCommand(uid *string) *cobra.Command {
 		NewRedisSentinelRestartCommand(dep, options),
 		NewRedisSentinelStopCommand(dep, options),
 		NewRedisCachePenetrationCommand(dep, options),
+		NewRedisCacheLimitCommand(dep, options),
 	)
 
 	return cmd
@@ -101,6 +102,24 @@ func NewRedisCachePenetrationCommand(dep fx.Option, options *core.RedisCommand) 
 	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().IntVarP(&options.RequestNum, "request-num", "", 0, "The number of requests")
+
+	return cmd
+}
+
+func NewRedisCacheLimitCommand(dep fx.Option, options *core.RedisCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cache-limit",
+		Short: "set maxmemory of Redis",
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.RedisCacheLimitAction
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(redisAttackF)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
+	cmd.Flags().StringVarP(&options.CacheSize, "size", "s", "0", "The size of cache")
+	cmd.Flags().StringVarP(&options.Percent, "percent", "", "", "The percentage of maxmemory")
 
 	return cmd
 }

@@ -23,6 +23,7 @@ const (
 	RedisSentinelRestartAction  = "restart"
 	RedisSentinelStopAction     = "stop"
 	RedisCachePenetrationAction = "penetration"
+	RedisCacheLimitAction       = "cacheLimit"
 )
 
 var _ AttackConfig = &RedisCommand{}
@@ -36,6 +37,10 @@ type RedisCommand struct {
 	FlushConfig bool   `json:"flushConfig,omitempty"`
 	RedisPath   string `json:"redisPath,omitempty"`
 	RequestNum  int    `json:"requestNum,omitempty"`
+	CacheSize   string `json:"cacheSize,omitempty"`
+	Percent     string `json:"percent,omitempty"`
+
+	OriginCacheSize string `json:"originCacheSize,omitempty"`
 }
 
 func (r *RedisCommand) Validate() error {
@@ -49,6 +54,11 @@ func (r *RedisCommand) Validate() error {
 	case RedisCachePenetrationAction:
 		if r.RequestNum == 0 {
 			return errors.New("request-num is required")
+		}
+
+	case RedisCacheLimitAction:
+		if r.CacheSize != "0" && r.Percent != "" {
+			return errors.New("only one of cachesize and percent can be set")
 		}
 	}
 	return nil
