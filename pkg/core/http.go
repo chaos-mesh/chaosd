@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -55,29 +56,23 @@ func (c HTTPAttackConfig) RecoverData() string {
 
 type HTTPAttackOption struct {
 	CommonAttackConfig
-	ProxyPorts []uint                            `json:"proxy_ports,omitempty"`
-	Rule       tproxyconfig.PodHttpChaosBaseRule `json:"rule"`
-	Path       string                            `json:"path"`
+
+	ProxyPorts []uint `json:"proxy_ports"`
+	Target     string `json:"target"`
+	Port       int32  `json:"port,omitempty"`
+	Path       string `json:"path,omitempty"`
+	Method     string `json:"method,omitempty"`
+	Code       string `json:"code,omitempty"`
+	Abort      bool   `json:"abort"`
+	Delay      string `json:"delay"`
+
+	FilePath string `json:"file_path,omitempty"`
 }
 
 func NewHTTPAttackOption() *HTTPAttackOption {
-	port := int32(0)
-	path := ""
-	method := ""
-	code := int32(0)
 	return &HTTPAttackOption{
 		CommonAttackConfig: CommonAttackConfig{
 			Kind: HTTPAttack,
-		},
-		ProxyPorts: nil,
-		Rule: tproxyconfig.PodHttpChaosBaseRule{
-			Target: "",
-			Selector: tproxyconfig.PodHttpChaosSelector{
-				Port:   &port,
-				Path:   &path,
-				Method: &method,
-				Code:   &code,
-			},
 		},
 	}
 }
@@ -91,38 +86,48 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 	logger := zapr.NewLogger(zapLogger).WithName("HTTP Attack")
 	switch o.CommonAttackConfig.Action {
 	case HTTPAbortAction, HTTPDelayAction:
-		if *o.Rule.Selector.Path == "" {
-			o.Rule.Selector.Path = nil
-		}
-		if *o.Rule.Selector.Method == "" {
-			o.Rule.Selector.Method = nil
-		}
-		if *o.Rule.Selector.Code == 0 {
-			o.Rule.Selector.Code = nil
-		}
-		if *o.Rule.Selector.Port == 0 {
-			o.Rule.Selector.Port = nil
-		}
-		switch o.Rule.Target {
-		case TargetRequest, TargetResponse:
+		switch o.Target {
+		case string(TargetRequest), string(TargetResponse):
 		default:
 			return nil, errors.New("HTTP Attack Target must be Request or Response")
 		}
+		rule := tproxyconfig.PodHttpChaosBaseRule{
+			Target:   tproxyconfig.PodHttpChaosTarget(o.Target),
+			Selector: tproxyconfig.PodHttpChaosSelector{},
+			Actions:  tproxyconfig.PodHttpChaosActions{},
+		}
+		if o.Path != "" {
+			rule.Selector.Path = &o.Path
+		}
+		if o.Method != "" {
+			rule.Selector.Method = &o.Method
+		}
+		if o.Code != "" {
+			code, err := strconv.Atoi(o.Code)
+			if err != nil {
+				return nil, errors.Wrapf(err, "parsing %v", o)
+			}
+			codeI32 := int32(code)
+			rule.Selector.Code = &codeI32
+		}
+		if o.Port != 0 {
+			rule.Selector.Port = &o.Port
+		}
+		rule.Actions.Abort = &o.Abort
 		if o.CommonAttackConfig.Action == HTTPDelayAction {
-			o.Rule.Actions.Abort = nil
-			_, err := time.ParseDuration(*o.Rule.Actions.Delay)
+			rule.Actions.Abort = nil
+			_, err := time.ParseDuration(o.Delay)
 			if err != nil {
 				return nil, errors.Wrapf(err, "HTTP Delay")
 			}
-		} else {
-			o.Rule.Actions.Delay = nil
+			rule.Actions.Delay = &o.Delay
 		}
 		ports := make([]uint32, len(o.ProxyPorts))
 		for i, port := range o.ProxyPorts {
 			ports[i] = uint32(port)
 		}
 		c.ProxyPorts = ports
-		c.Rules = []tproxyconfig.PodHttpChaosBaseRule{o.Rule}
+		c.Rules = []tproxyconfig.PodHttpChaosBaseRule{rule}
 	case HTTPConfigAction:
 		b, err := os.ReadFile(o.Path)
 		if err != nil {

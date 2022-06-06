@@ -55,8 +55,7 @@ func NewHTTPAbortCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command
 		Short: "abort selected HTTP connection",
 		Run: func(*cobra.Command, []string) {
 			o.Action = core.HTTPAbortAction
-			abort := true
-			o.Rule.Actions.Abort = &abort
+			o.Abort = true
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
 		},
 	}
@@ -79,9 +78,7 @@ func NewHTTPDelayCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command
 	setTarget(cmd, o)
 	setSelector(cmd, o)
 
-	delay := ""
-	o.Rule.Actions.Delay = &delay
-	cmd.Flags().StringVarP(o.Rule.Actions.Delay, "delay time", "d", "", "Delay represents the delay of the target request/response.")
+	cmd.Flags().StringVarP(&o.Delay, "delay time", "d", "", "Delay represents the delay of the target request/response.")
 	return cmd
 }
 
@@ -89,16 +86,16 @@ func setTarget(cmd *cobra.Command, o *core.HTTPAttackOption) {
 	cmd.Flags().UintSliceVarP(&o.ProxyPorts, "proxy-ports", "p", nil,
 		"composed with one of the port of HTTP connection, "+
 			"we will only attack HTTP connection with port inside proxy_ports")
-	cmd.Flags().StringVarP((*string)(&o.Rule.Target), "target", "t", "",
+	cmd.Flags().StringVarP(&o.Target, "target", "t", "",
 		"HTTP target: Request or Response")
 }
 
 func setSelector(cmd *cobra.Command, c *core.HTTPAttackOption) {
-	cmd.Flags().Int32Var(c.Rule.Selector.Port, "port", 0, "The TCP port that the target service listens on.")
-	cmd.Flags().StringVar(c.Rule.Selector.Path, "path", "",
+	cmd.Flags().Int32Var(&c.Port, "port", 0, "The TCP port that the target service listens on.")
+	cmd.Flags().StringVar(&c.Path, "path", "",
 		"Match path of Uri with wildcard matches.")
-	cmd.Flags().StringVarP(c.Rule.Selector.Method, "method", "m", "", "HTTP method")
-	cmd.Flags().Int32VarP(c.Rule.Selector.Code, "code", "c", 0, "Code is a rule to select target by http status code in response.")
+	cmd.Flags().StringVarP(&c.Method, "method", "m", "", "HTTP method")
+	cmd.Flags().StringVarP(&c.Code, "code", "c", "", "Code is a rule to select target by http status code in response.")
 }
 
 func NewHTTPConfigCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
@@ -110,7 +107,7 @@ func NewHTTPConfigCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Comman
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
 		},
 	}
-	cmd.Flags().StringVarP(&o.Path, "file path", "p", "", "Config file path.")
+	cmd.Flags().StringVarP(&o.FilePath, "file path", "p", "", "Config file path.")
 	return cmd
 }
 
