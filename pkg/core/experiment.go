@@ -40,6 +40,7 @@ const (
 	JVMAttack     = "jvm"
 	RedisAttack   = "redis"
 	FileAttack    = "file"
+	HTTPAttack    = "http"
 )
 
 const (
@@ -113,6 +114,8 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &RedisCommand{}
 	case FileAttack:
 		attackConfig = &FileCommand{}
+	case HTTPAttack:
+		attackConfig = &HTTPAttackConfig{}
 	default:
 		return nil
 	}
