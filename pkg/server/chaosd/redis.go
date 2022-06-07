@@ -14,7 +14,10 @@
 package chaosd
 
 import (
+	"fmt"
+	"math"
 	"os/exec"
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -64,6 +67,38 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 			return errors.WithStack(err)
 		}
 
+	case core.RedisCacheLimitAction:
+		// `maxmemory` is an interface listwith content similar to `[maxmemory 1024]`
+		maxmemory, err := cli.ConfigGet(cli.Context(), "maxmemory").Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		// Get the value of maxmemory
+		attack.OriginCacheSize = fmt.Sprint(maxmemory[1])
+
+		var cacheSize string
+		if attack.Percent != "" {
+			percentage, err := strconv.ParseFloat(attack.Percent[0:len(attack.Percent)-1], 64)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			originCacheSize, err := strconv.ParseFloat(attack.OriginCacheSize, 64)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			cacheSize = fmt.Sprint(int(math.Floor(originCacheSize / 100.0 * percentage)))
+		} else {
+			cacheSize = attack.CacheSize
+		}
+
+		result, err := cli.ConfigSet(cli.Context(), "maxmemory", cacheSize).Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if result != STATUSOK {
+			return errors.WithStack(errors.Errorf("redis command status is %s", result))
+		}
+
 	case core.RedisCacheExpirationAction:
 		return env.Chaos.expireKeys(attack, cli)
 	}
@@ -80,6 +115,20 @@ func (redisAttack) Recover(exp core.Experiment, env Environment) error {
 	switch attack.Action {
 	case core.RedisSentinelStopAction:
 		return env.Chaos.recoverSentinelStop(attack)
+
+	case core.RedisCacheLimitAction:
+		cli := redis.NewClient(&redis.Options{
+			Addr:     attack.Addr,
+			Password: attack.Password,
+		})
+
+		result, err := cli.ConfigSet(cli.Context(), "maxmemory", attack.OriginCacheSize).Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if result != STATUSOK {
+			return errors.WithStack(errors.Errorf("redis command status is %s", result))
+		}
 	}
 	return nil
 }
