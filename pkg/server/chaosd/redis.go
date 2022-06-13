@@ -181,7 +181,7 @@ func (s *Server) expireKeys(attack *core.RedisCommand, cli *redis.Client) error 
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	if attack.Key == "$1" {
+	if attack.Key == "" {
 		// Get all keys from the server
 		allKeys, err := cli.Keys(cli.Context(), "*").Result()
 		if err != nil {

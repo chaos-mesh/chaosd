@@ -128,7 +128,7 @@ func NewRedisCacheLimitCommand(dep fx.Option, options *core.RedisCommand) *cobra
 func NewRedisCacheExpirationCommand(dep fx.Option, options *core.RedisCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cache-expiration",
-		Short: "expire keys in cache",
+		Short: "expire keys in Redis",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.RedisCacheExpirationAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(redisAttackF)).Run()
@@ -137,7 +137,7 @@ func NewRedisCacheExpirationCommand(dep fx.Option, options *core.RedisCommand) *
 
 	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
-	cmd.Flags().StringVarP(&options.Key, "key", "k", "$1", "The key to be set a expiration")
+	cmd.Flags().StringVarP(&options.Key, "key", "k", "", "The key to be set a expiration, default expire all keys")
 	cmd.Flags().StringVarP(&options.Expiration, "expiration", "", "0", "The expiration of the key")
 	cmd.Flags().StringVarP(&options.Option, "option", "", "", "The additional options of expiration, only NX, XX, GT, LT supported")
 
