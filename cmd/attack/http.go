@@ -115,7 +115,7 @@ func NewHTTPConfigCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Comman
 func NewHTTPRequestCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "request",
-		Short: "request specific URL",
+		Short: "request specific URL, only support GET",
 		Run: func(*cobra.Command, []string) {
 			o.Action = core.HTTPRequestAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
