@@ -34,9 +34,10 @@ const (
 )
 
 const (
-	HTTPAbortAction  = "abort"
-	HTTPDelayAction  = "delay"
-	HTTPConfigAction = "config"
+	HTTPAbortAction   = "abort"
+	HTTPDelayAction   = "delay"
+	HTTPConfigAction  = "config"
+	HTTPRequestAction = "request"
 )
 
 var _ AttackConfig = &HTTPAttackConfig{}
@@ -47,6 +48,8 @@ type HTTPAttackConfig struct {
 	ProxyPID int
 
 	Logger logr.Logger
+
+	HTTPRequestConfig
 }
 
 func (c HTTPAttackConfig) RecoverData() string {
@@ -67,6 +70,15 @@ type HTTPAttackOption struct {
 	Delay      string `json:"delay"`
 
 	FilePath string `json:"file_path,omitempty"`
+
+	HTTPRequestConfig `json:",inline"`
+}
+
+type HTTPRequestConfig struct {
+	// used for HTTP request, now only support GET
+	URL            string `json:"url,omitempty"`
+	EnableConnPool bool   `json:"enable-conn-pool,omitempty"`
+	Count          int    `json:"count,omitempty"`
 }
 
 func NewHTTPAttackOption() *HTTPAttackOption {
@@ -144,10 +156,14 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 		default:
 			return nil, errors.Errorf("ext: %s, is not support", ext)
 		}
+	case HTTPRequestAction:
+		if o.URL == "" {
+			return nil, errors.New("URL is required")
+		}
 	default:
 		return nil, errors.Errorf("unsupported action: %s", o.CommonAttackConfig.Action)
 	}
-	if len(c.ProxyPorts) == 0 {
+	if len(c.ProxyPorts) == 0 && o.CommonAttackConfig.Action != HTTPRequestAction {
 		return nil, errors.New("proxy_ports is not an option, you must offer it")
 	}
 
@@ -155,5 +171,6 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 		CommonAttackConfig: o.CommonAttackConfig,
 		Config:             c,
 		Logger:             logger,
+		HTTPRequestConfig:  o.HTTPRequestConfig,
 	}, nil
 }
