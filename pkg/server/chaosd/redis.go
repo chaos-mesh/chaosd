@@ -32,6 +32,10 @@ var RedisAttack AttackType = redisAttack{}
 
 const (
 	STATUSOK = "OK"
+	OPTIONNX = "NX"
+	OPTIONXX = "XX"
+	OPTIONGT = "GT"
+	OPTIONLT = "LT"
 )
 
 func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
@@ -211,15 +215,16 @@ func (s *Server) expireKeys(attack *core.RedisCommand, cli *redis.Client) error 
 }
 
 func ExpireFunc(cli *redis.Client, key string, expiration time.Duration, option string) *redis.BoolCmd {
-	if option == "NX" {
+	switch option {
+	case OPTIONNX:
 		return cli.ExpireNX(cli.Context(), key, expiration)
-	} else if option == "XX" {
+	case OPTIONXX:
 		return cli.ExpireXX(cli.Context(), key, expiration)
-	} else if option == "GT" {
+	case OPTIONGT:
 		return cli.ExpireGT(cli.Context(), key, expiration)
-	} else if option == "LT" {
+	case OPTIONLT:
 		return cli.ExpireLT(cli.Context(), key, expiration)
-	} else {
+	default:
 		return cli.Expire(cli.Context(), key, expiration)
 	}
 }

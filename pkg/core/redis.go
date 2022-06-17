@@ -27,7 +27,10 @@ const (
 	RedisCacheExpirationAction  = "expiration"
 )
 
-var _ AttackConfig = &RedisCommand{}
+var (
+	_            AttackConfig = &RedisCommand{}
+	ValidOptions              = map[string]bool{"XX": true, "NX": true, "GT": true, "LT": true}
+)
 
 type RedisCommand struct {
 	CommonAttackConfig
@@ -65,7 +68,7 @@ func (r *RedisCommand) Validate() error {
 			return errors.New("only one of cachesize and percent can be set")
 		}
 	case RedisCacheExpirationAction:
-		if r.Option != "" && r.Option != "XX" && r.Option != "NX" && r.Option != "GT" && r.Option != "LT" {
+		if _, ok := ValidOptions[r.Option]; ok {
 			return errors.New("option invalid")
 		}
 	}

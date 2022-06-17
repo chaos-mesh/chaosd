@@ -138,7 +138,7 @@ func NewRedisCacheExpirationCommand(dep fx.Option, options *core.RedisCommand) *
 	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().StringVarP(&options.Key, "key", "k", "", "The key to be set a expiration, default expire all keys")
-	cmd.Flags().StringVarP(&options.Expiration, "expiration", "", "0", "The expiration of the key")
+	cmd.Flags().StringVarP(&options.Expiration, "expiration", "", "0", `The expiration of the key. A expiration string should be able to be converted to a time duration, such as "5s" or "30m"`)
 	cmd.Flags().StringVarP(&options.Option, "option", "", "", "The additional options of expiration, only NX, XX, GT, LT supported")
 
 	return cmd
