@@ -45,6 +45,7 @@ func NewRedisAttackCommand(uid *string) *cobra.Command {
 		NewRedisSentinelStopCommand(dep, options),
 		NewRedisCachePenetrationCommand(dep, options),
 		NewRedisCacheLimitCommand(dep, options),
+		NewRedisCacheExpirationCommand(dep, options),
 	)
 
 	return cmd
@@ -60,7 +61,7 @@ func NewRedisSentinelRestartCommand(dep fx.Option, options *core.RedisCommand) *
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config of Redis server")
 	cmd.Flags().BoolVarP(&options.FlushConfig, "flush-config", "", true, " Force Sentinel to rewrite its configuration on disk")
@@ -80,7 +81,7 @@ func NewRedisSentinelStopCommand(dep fx.Option, options *core.RedisCommand) *cob
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().StringVarP(&options.Conf, "conf", "c", "", "The config path of Redis server")
 	cmd.Flags().BoolVarP(&options.FlushConfig, "flush-config", "", true, "Force Sentinel to rewrite its configuration on disk")
@@ -99,7 +100,7 @@ func NewRedisCachePenetrationCommand(dep fx.Option, options *core.RedisCommand) 
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().IntVarP(&options.RequestNum, "request-num", "", 0, "The number of requests")
 
@@ -116,10 +117,29 @@ func NewRedisCacheLimitCommand(dep fx.Option, options *core.RedisCommand) *cobra
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "")
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
 	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
 	cmd.Flags().StringVarP(&options.CacheSize, "size", "s", "0", "The size of cache")
 	cmd.Flags().StringVarP(&options.Percent, "percent", "", "", "The percentage of maxmemory")
+
+	return cmd
+}
+
+func NewRedisCacheExpirationCommand(dep fx.Option, options *core.RedisCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cache-expiration",
+		Short: "expire keys in Redis",
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.RedisCacheExpirationAction
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(redisAttackF)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Addr, "addr", "a", "", "The address of redis server")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "The password of server")
+	cmd.Flags().StringVarP(&options.Key, "key", "k", "", "The key to be set a expiration, default expire all keys")
+	cmd.Flags().StringVarP(&options.Expiration, "expiration", "", "0", `The expiration of the key. A expiration string should be able to be converted to a time duration, such as "5s" or "30m"`)
+	cmd.Flags().StringVarP(&options.Option, "option", "", "", "The additional options of expiration, only NX, XX, GT, LT supported")
 
 	return cmd
 }

@@ -18,6 +18,7 @@ import (
 	"math"
 	"os/exec"
 	"strconv"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/pingcap/errors"
@@ -31,6 +32,10 @@ var RedisAttack AttackType = redisAttack{}
 
 const (
 	STATUSOK = "OK"
+	OPTIONNX = "NX"
+	OPTIONXX = "XX"
+	OPTIONGT = "GT"
+	OPTIONLT = "LT"
 )
 
 func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
@@ -97,6 +102,9 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 		if result != STATUSOK {
 			return errors.WithStack(errors.Errorf("redis command status is %s", result))
 		}
+
+	case core.RedisCacheExpirationAction:
+		return env.Chaos.expireKeys(attack, cli)
 	}
 	return nil
 }
@@ -169,4 +177,54 @@ func (s *Server) recoverSentinelStop(attack *core.RedisCommand) error {
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+func (s *Server) expireKeys(attack *core.RedisCommand, cli *redis.Client) error {
+
+	expiration, err := time.ParseDuration(attack.Expiration)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	if attack.Key == "" {
+		// Get all keys from the server
+		allKeys, err := cli.Keys(cli.Context(), "*").Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		for _, key := range allKeys {
+			result, err := ExpireFunc(cli, key, expiration, attack.Option).Result()
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			if !result {
+				return errors.WithStack(errors.Errorf("expire failed"))
+			}
+		}
+	} else {
+		result, err := ExpireFunc(cli, attack.Key, expiration, attack.Option).Result()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		if !result {
+			return errors.WithStack(errors.Errorf("expire failed"))
+		}
+	}
+
+	return nil
+}
+
+func ExpireFunc(cli *redis.Client, key string, expiration time.Duration, option string) *redis.BoolCmd {
+	switch option {
+	case OPTIONNX:
+		return cli.ExpireNX(cli.Context(), key, expiration)
+	case OPTIONXX:
+		return cli.ExpireXX(cli.Context(), key, expiration)
+	case OPTIONGT:
+		return cli.ExpireGT(cli.Context(), key, expiration)
+	case OPTIONLT:
+		return cli.ExpireLT(cli.Context(), key, expiration)
+	default:
+		return cli.Expire(cli.Context(), key, expiration)
+	}
 }
