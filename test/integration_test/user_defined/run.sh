@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2020 Chaos Mesh Authors.
+# Copyright 2022 Chaos Mesh Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ bin_path=../../../bin
 # test user defined attack
 ${bin_path}/chaosd attack user-defined --attack-cmd "touch /tmp/chaos" --recover-cmd "rm /tmp/chaos" --uid 1234567890
 
-if [ ! -f /tmp/chaos ]; then
+if [ ! -e /tmp/chaos ]; then
     echo "file not exist"
     exit 1
 fi
