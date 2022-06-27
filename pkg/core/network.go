@@ -230,6 +230,10 @@ func (n *NetworkCommand) validNetworkNICDown() error {
 }
 
 func (n *NetworkCommand) validNetworkFlood() error {
+	if len(n.IPAddress) == 0 {
+		return errors.New("IP is required")
+	}
+
 	if !utils.CheckIPs(n.IPAddress) {
 		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
 	}

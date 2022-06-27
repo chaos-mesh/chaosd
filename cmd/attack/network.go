@@ -274,7 +274,7 @@ func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) 
 func NewNetworkFloodCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "flood",
-		Short: "generate a mount of network traffic by using iperf",
+		Short: "generate a mount of network traffic by using iperf client",
 
 		Run: func(cmd *cobra.Command, args []string) {
 			options.Action = core.NetworkFloodAction
