@@ -19,7 +19,9 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -59,10 +61,14 @@ func (j kafkaAttack) Recover(exp core.Experiment, env Environment) error {
 	if err := json.Unmarshal([]byte(exp.RecoverCommand), attack); err != nil {
 		return perr.Wrap(err, "unmarshal kafka command")
 	}
-	if attack.Action == core.KafkaIOAction {
+	switch attack.Action {
+	case core.KafkaFillAction:
+		return recoverKafkaFill(attack)
+	case core.KafkaIOAction:
 		return recoverKafkaIO(attack, env)
+	default:
+		return nil
 	}
-	return nil
 }
 
 func newDialer(attack *core.KafkaCommand) (dialer *client.Dialer, err error) {
@@ -176,24 +182,71 @@ func attackKafkaFill(ctx context.Context, attack *core.KafkaCommand) (err error)
 	written := "0 B"
 	bytes := uint64(0)
 
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case err := <-errChan:
-			return err
-		case n := <-writeChan:
-			bytes += uint64(n)
-			newWritten := humanize.Bytes(bytes)
-			if newWritten != written {
-				written = newWritten
-				log.Info(fmt.Sprintf("write %s in %s", written, time.Now().Sub(start)))
-			}
-			if bytes >= attack.MaxBytes {
+	err = func() error {
+		for {
+			select {
+			case <-ctx.Done():
 				return nil
+			case err := <-errChan:
+				return err
+			case n := <-writeChan:
+				bytes += uint64(n)
+				newWritten := humanize.Bytes(bytes)
+				if newWritten != written {
+					written = newWritten
+					log.Info(fmt.Sprintf("write %s in %s", written, time.Now().Sub(start)))
+				}
+				if bytes >= attack.MaxBytes {
+					return nil
+				}
 			}
 		}
+	}()
+
+	if err != nil {
+		return err
 	}
+
+	attack.OriginRetentionBytes, err = setRetentionBytes(attack, attack.MaxBytes)
+	return err
+}
+
+func recoverKafkaFill(attack *core.KafkaCommand) error {
+	if attack.OriginRetentionBytes == 0 {
+		return nil
+	}
+	_, err := setRetentionBytes(attack, attack.OriginRetentionBytes)
+	return err
+}
+
+func setRetentionBytes(attack *core.KafkaCommand, bytes uint64) (origin uint64, err error) {
+	p, err := properties.LoadFile(attack.ConfigFile, properties.UTF8)
+	if err != nil {
+		return 0, perr.Wrapf(err, "load config file %s", attack.ConfigFile)
+	}
+	originBytes, exist, err := p.Set("log.retention.bytes", strconv.FormatUint(bytes, 10))
+	if exist {
+		origin, err = strconv.ParseUint(originBytes, 10, 64)
+		if err != nil {
+			return 0, perr.Wrapf(err, "parse log.retention.bytes")
+		}
+	}
+	file, err := os.Open(attack.ConfigFile)
+	if err != nil {
+		return 0, perr.Wrapf(err, "open config file %s", attack.ConfigFile)
+	}
+	defer file.Close()
+	if _, err := p.Write(file, properties.UTF8); err != nil {
+		return 0, perr.Wrapf(err, "write config file %s", attack.ConfigFile)
+	}
+	rcmd := exec.Command("bash", "-c", attack.ReloadCommand)
+	if err := rcmd.Start(); err != nil {
+		return 0, perr.Wrapf(err, "reload command %s", attack.ReloadCommand)
+	}
+	if err := rcmd.Wait(); err != nil {
+		return 0, perr.Wrapf(err, "wait reload command %s", attack.ReloadCommand)
+	}
+	return 0, nil
 }
 
 func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error) {

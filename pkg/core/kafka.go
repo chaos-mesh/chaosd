@@ -46,16 +46,22 @@ type KafkaCommand struct {
 	MessageSize uint
 	MaxBytes    uint64
 
+	// options for fill attack
+	ReloadCommand string
+
 	// options for flood attack
 	Threads uint
 
+	// options for fill and io attack
+	ConfigFile string
+
 	// options for io attack
-	ConfigFile  string
 	NonReadable bool
 	NonWritable bool
 
 	// recover data for io attack
-	OriginModeOfFiles map[string]uint32
+	OriginModeOfFiles    map[string]uint32
+	OriginRetentionBytes uint64
 }
 
 func (c *KafkaCommand) Validate() error {
@@ -91,6 +97,12 @@ func (c *KafkaCommand) validateDSNAndMessageSize() error {
 func (c *KafkaCommand) validateFillAction() error {
 	if c.MaxBytes == 0 {
 		return errors.New("max bytes is required")
+	}
+	if c.ReloadCommand == "" {
+		return errors.New("reload command is required")
+	}
+	if _, err := os.Stat(c.ConfigFile); errors.Is(err, os.ErrNotExist) {
+		return errors.Errorf("config file %s not exists", c.ConfigFile)
 	}
 	return c.validateDSNAndMessageSize()
 }
