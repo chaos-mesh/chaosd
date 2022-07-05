@@ -231,14 +231,21 @@ func setRetentionBytes(attack *core.KafkaCommand, bytes uint64) (origin uint64, 
 			return 0, perr.Wrapf(err, "parse log.retention.bytes")
 		}
 	}
-	file, err := os.Open(attack.ConfigFile)
+
+	newConfigFile := attack.ConfigFile + ".new"
+	file, err := os.Create(newConfigFile)
 	if err != nil {
-		return 0, perr.Wrapf(err, "open config file %s", attack.ConfigFile)
+		return 0, perr.Wrapf(err, "open config file %s", newConfigFile)
 	}
 	defer file.Close()
 	if _, err := p.Write(file, properties.UTF8); err != nil {
-		return 0, perr.Wrapf(err, "write config file %s", attack.ConfigFile)
+		return 0, perr.Wrapf(err, "write config file %s", newConfigFile)
 	}
+	err = os.Rename(newConfigFile, attack.ConfigFile)
+	if err != nil {
+		return 0, perr.Wrapf(err, "rename config file %s to %s", newConfigFile, attack.ConfigFile)
+	}
+
 	rcmd := exec.Command("bash", "-c", attack.ReloadCommand)
 	if err := rcmd.Start(); err != nil {
 		return 0, perr.Wrapf(err, "reload command %s", attack.ReloadCommand)
