@@ -60,8 +60,8 @@ type KafkaCommand struct {
 	NonWritable bool
 
 	// recover data for io attack
-	OriginModeOfFiles    map[string]uint32
-	OriginRetentionBytes uint64
+	OriginModeOfFiles map[string]uint32
+	OriginConfig      string
 }
 
 func (c *KafkaCommand) Validate() error {
