@@ -52,8 +52,9 @@ func (j jvmAttack) Attack(options core.AttackConfig, env Environment) (err error
 		// TODO: Investigate the cause of these two error
 		errMsg2 := "Provider sun.tools.attach.LinuxAttachProvider not found"
 		errMsg3 := "install java.io.IOException: Non-numeric value found"
+		errMsg4 := "com.sun.tools.attach.AgentLoadException"
 		if !strings.Contains(string(output), errMsg1) && !strings.Contains(string(output), errMsg2) &&
-			!strings.Contains(string(output), errMsg3) {
+			!strings.Contains(string(output), errMsg3) && !strings.Contains(string(output), errMsg4){
 			log.Error(string(output), zap.Error(err))
 			return err
 		}
