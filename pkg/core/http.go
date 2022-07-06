@@ -129,14 +129,14 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 		c.ProxyPorts = ports
 		c.Rules = []tproxyconfig.PodHttpChaosBaseRule{rule}
 	case HTTPConfigAction:
-		b, err := os.ReadFile(o.Path)
+		b, err := os.ReadFile(o.FilePath)
 		if err != nil {
 			return nil, errors.Wrap(err, "read HTTP attack config file")
 		}
 
-		ext := filepath.Ext(o.Path)
+		ext := filepath.Ext(o.FilePath)
 		switch ext {
-		case "json":
+		case ".json":
 			err := json.Unmarshal(b, &c)
 			if err != nil {
 				return nil, errors.Wrap(err, "json unmarshal HTTP attack config file")
