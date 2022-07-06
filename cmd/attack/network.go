@@ -50,6 +50,7 @@ func NewNetworkAttackCommand(uid *string) *cobra.Command {
 		NewNetworkPortOccupiedCommand(dep, options),
 		NewNetworkBandwidthCommand(dep, options),
 		NewNICDownCommand(dep, options),
+		NewNetworkFloodCommand(dep, options),
 	)
 
 	return cmd
@@ -267,6 +268,27 @@ func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) 
 	}
 
 	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "this specified port is to occupied")
+	return cmd
+}
+
+func NewNetworkFloodCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "flood",
+		Short: "generate a mount of network traffic by using iperf client",
+
+		Run: func(cmd *cobra.Command, args []string) {
+			options.Action = core.NetworkFloodAction
+			options.CompleteDefaults()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Rate, "rate", "r", "", "the speed of network traffic, allows bps, kbps, mbps, gbps, tbps unit. bps means bytes per second")
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "generate traffic to this IP address")
+	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "generate traffic to this port on the IP address")
+	cmd.Flags().Int32VarP(&options.Parallel, "parallel", "", 1, "number of iperf parallel client threads to run")
+	cmd.Flags().StringVarP(&options.Duration, "duration", "", "99999999", "number of seconds to run the iperf test")
+
 	return cmd
 }
 
