@@ -62,10 +62,17 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 		return errors.New(errs.ToAggregate().Error())
 	}
 
-	stressorsStr, _, err := stressors.Normalize()
+	stressorsStr := ""
+	if attack.Action == core.StressCPUAction {
+		stressorsStr, _, err = stressors.Normalize()
+	} else if attack.Action == core.StressMemAction {
+		_, stressorsStr, err = stressors.Normalize()
+		
+	}
 	if err != nil {
 		return
 	}
+
 	log.Info("stressors normalize", zap.String("arguments", stressorsStr))
 
 	cmd := bpm.DefaultProcessBuilder("stress-ng", strings.Fields(stressorsStr)...).
