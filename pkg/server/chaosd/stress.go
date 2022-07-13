@@ -100,7 +100,8 @@ func (stressAttack) Recover(exp core.Experiment, _ Environment) error {
 	attack := config.(*core.StressCommand)
 	proc, err := process.NewProcess(attack.StressngPid)
 	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
+		log.Warn("Failed to get stress-ng process", zap.Error(err))
+		if errors.Is(err, process.ErrorProcessNotRunning) || errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
 
