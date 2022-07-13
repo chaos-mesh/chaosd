@@ -19,9 +19,12 @@ import (
 	"encoding/json"
 	"io"
 	"io/fs"
+	"io/ioutil"
+	"net"
 	"net/http"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/process"
@@ -38,6 +41,10 @@ func (attackHTTP) Attack(options core.AttackConfig, _ Environment) error {
 	var ok bool
 	if attackConf, ok = options.(*core.HTTPAttackConfig); !ok {
 		return errors.New("AttackConfig -> *HTTPAttackConfig meet error")
+	}
+
+	if attackConf.Action == core.HTTPRequestAction {
+		return attackHTTPRequest(attackConf)
 	}
 
 	cmd := exec.Command("tproxy", "-i", "-vv")
@@ -134,5 +141,55 @@ func (attackHTTP) Recover(exp core.Experiment, _ Environment) error {
 		attack.Logger.Info("the chaos-tproxy process kill failed with error: %s\n", err.Error())
 		return nil
 	}
+	return nil
+}
+
+func attackHTTPRequest(attackConf *core.HTTPAttackConfig) error {
+	if attackConf.EnableConnPool {
+		var HTTPTransport = &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 60 * time.Second,
+			}).DialContext,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       60 * time.Second,
+			ExpectContinueTimeout: 30 * time.Second,
+			MaxIdleConnsPerHost:   100,
+		}
+
+		client := &http.Client{
+			Transport: HTTPTransport,
+		}
+		for i := 0; i < attackConf.Count; i++ {
+			req, err := http.NewRequest(http.MethodGet, attackConf.URL, nil)
+			if err != nil {
+				return errors.Wrap(err, "create HTTP request")
+			}
+			resp, err := client.Do(req)
+			if err != nil {
+				return errors.Wrap(err, "HTTP request")
+			}
+			defer resp.Body.Close()
+			data, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return errors.Wrap(err, "read response body")
+			}
+			attackConf.Logger.Info("response body: " + string(data))
+		}
+	} else {
+		for i := 0; i < attackConf.Count; i++ {
+			resp, err := http.Get(attackConf.URL)
+			if err != nil {
+				return errors.Wrap(err, "HTTP request")
+			}
+			defer resp.Body.Close()
+			data, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return errors.Wrap(err, "read response body")
+			}
+			attackConf.Logger.Info("response body: " + string(data))
+		}
+	}
+
 	return nil
 }

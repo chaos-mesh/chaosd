@@ -44,6 +44,7 @@ func NewHTTPAttackCommand(uid *string) *cobra.Command {
 		NewHTTPAbortCommand(dep, option),
 		NewHTTPDelayCommand(dep, option),
 		NewHTTPConfigCommand(dep, option),
+		NewHTTPRequestCommand(dep, option),
 	)
 
 	return cmd
@@ -108,6 +109,22 @@ func NewHTTPConfigCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Comman
 		},
 	}
 	cmd.Flags().StringVarP(&o.FilePath, "file path", "p", "", "Config file path.")
+	return cmd
+}
+
+func NewHTTPRequestCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "request",
+		Short: "request specific URL, only support GET",
+		Run: func(*cobra.Command, []string) {
+			o.Action = core.HTTPRequestAction
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&o.HTTPRequestConfig.URL, "url", "", "", "Request to send")
+	cmd.Flags().IntVarP(&o.HTTPRequestConfig.Count, "count", "c", 1, "Number of requests to send")
+	cmd.Flags().BoolVarP(&o.HTTPRequestConfig.EnableConnPool, "enable-conn-pool", "p", false, "Enable connection pool")
 	return cmd
 }
 
