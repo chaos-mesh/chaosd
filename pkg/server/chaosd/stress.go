@@ -16,6 +16,7 @@ package chaosd
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"strings"
 	"syscall"
@@ -36,10 +37,18 @@ type stressAttack struct{}
 
 var StressAttack AttackType = stressAttack{}
 
+const (
+	CPUSTRESSORTOOL    = "stress-ng"
+	MEMORYSTRESSORTOOL = "memStress"
+)
+
 func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error) {
 	attack := options.(*core.StressCommand)
 	stressors := &v1alpha1.Stressors{}
+	var stressorTool string
+
 	if attack.Action == core.StressCPUAction {
+		stressorTool = CPUSTRESSORTOOL
 		stressors.CPUStressor = &v1alpha1.CPUStressor{
 			Stressor: v1alpha1.Stressor{
 				Workers: attack.Workers,
@@ -48,6 +57,7 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 			Options: attack.Options,
 		}
 	} else if attack.Action == core.StressMemAction {
+		stressorTool = MEMORYSTRESSORTOOL
 		stressors.MemoryStressor = &v1alpha1.MemoryStressor{
 			Stressor: v1alpha1.Stressor{
 				Workers: attack.Workers,
@@ -57,25 +67,27 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 		}
 	}
 
+	var stressorsStr string
+	if attack.Action == core.StressCPUAction {
+		stressorsStr, _, err = stressors.Normalize()
+		if err != nil {
+			return
+		}
+	} else if attack.Action == core.StressMemAction {
+		_, stressorsStr, err = stressors.Normalize()
+		if err != nil {
+			return
+		}
+	}
+
 	errs := stressors.Validate(nil, field.NewPath("stressors"))
 	if len(errs) > 0 {
 		return errors.New(errs.ToAggregate().Error())
 	}
 
-	stressorsStr := ""
-	if attack.Action == core.StressCPUAction {
-		stressorsStr, _, err = stressors.Normalize()
-	} else if attack.Action == core.StressMemAction {
-		_, stressorsStr, err = stressors.Normalize()
-		
-	}
-	if err != nil {
-		return
-	}
-
 	log.Info("stressors normalize", zap.String("arguments", stressorsStr))
 
-	cmd := bpm.DefaultProcessBuilder("stress-ng", strings.Fields(stressorsStr)...).
+	cmd := bpm.DefaultProcessBuilder(stressorTool, strings.Fields(stressorsStr)...).
 		Build(context.Background())
 
 	// Build will set SysProcAttr.Pdeathsig = syscall.SIGTERM, and so stress-ng will exit while chaosd exit
@@ -94,7 +106,7 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 	}
 
 	attack.StressngPid = int32(cmd.Process.Pid)
-	log.Info("Start stress-ng process successfully", zap.String("command", cmd.String()), zap.Int32("Pid", attack.StressngPid))
+	log.Info(fmt.Sprintf("Start %s process successfully", stressorTool), zap.String("command", cmd.String()), zap.Int32("Pid", attack.StressngPid))
 
 	return nil
 }
@@ -107,7 +119,7 @@ func (stressAttack) Recover(exp core.Experiment, _ Environment) error {
 	attack := config.(*core.StressCommand)
 	proc, err := process.NewProcess(attack.StressngPid)
 	if err != nil {
-		log.Warn("Failed to get stress-ng process", zap.Error(err))
+		log.Warn("Failed to get process", zap.Error(err))
 		if errors.Is(err, process.ErrorProcessNotRunning) || errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
@@ -120,13 +132,13 @@ func (stressAttack) Recover(exp core.Experiment, _ Environment) error {
 		return err
 	}
 
-	if !strings.Contains(procName, "stress-ng") {
-		log.Warn("the process is not stress-ng, maybe it is killed by manual")
+	if !strings.Contains(procName, CPUSTRESSORTOOL) && !strings.Contains(procName, MEMORYSTRESSORTOOL) {
+		log.Warn("the process is not stress-ng or memStress, maybe it is killed by manual")
 		return nil
 	}
 
 	if err := proc.Kill(); err != nil {
-		log.Error("the stress-ng process kill failed", zap.Error(err))
+		log.Error("the process kill failed", zap.Error(err))
 		return err
 	}
 
