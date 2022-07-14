@@ -184,7 +184,7 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 
 	tcs = append(tcs, newTC)
 
-	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: attack.Device, EnterNS: false}); err != nil {
+	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, EnterNS: false}); err != nil {
 		return perrors.WithStack(err)
 	}
 
@@ -439,7 +439,7 @@ func (s *Server) recoverTC(uid string, device string) error {
 		return perrors.WithStack(err)
 	}
 
-	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: device, EnterNS: false}); err != nil {
+	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, EnterNS: false}); err != nil {
 		return perrors.WithStack(err)
 	}
 

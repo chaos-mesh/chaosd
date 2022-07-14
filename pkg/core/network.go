@@ -424,6 +424,7 @@ func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 			Type:  pb.Tc_BANDWIDTH,
 			Tbf:   tbf,
 			Ipset: ipset,
+			Device: n.Device,
 		}, nil
 	}
 
