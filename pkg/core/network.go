@@ -49,7 +49,7 @@ type NetworkCommand struct {
 	DNSIp         string `json:"dns-ip,omitempty"`
 	DNSDomainName string `json:"dns-domain-name,omitempty"`
 
-	// used for port occupied
+	// used for port occupied or flood
 	Port    string `json:"port,omitempty"`
 	PortPid int32  `json:"port-pid,omitempty"`
 
@@ -57,6 +57,14 @@ type NetworkCommand struct {
 	// only the packet which match the tcp flag can be accepted, others will be dropped.
 	// only set when the IPProtocol is tcp, used for partition.
 	AcceptTCPFlags string `json:"accept-tcp-flags,omitempty"`
+
+	// used for flood
+	// number of iperf parallel client threads to run
+	Parallel int32 `json:"parallel,omitempty"`
+
+	// used for flood
+	// the pid of iperf
+	IperfPid int32 `json:"iperf-pid,omitempty"`
 }
 
 var _ AttackConfig = &NetworkCommand{}
@@ -71,6 +79,7 @@ const (
 	NetworkBandwidthAction    = "bandwidth"
 	NetworkPortOccupiedAction = "occupied"
 	NetworkNICDownAction      = "down"
+	NetworkFloodAction        = "flood"
 )
 
 func (n *NetworkCommand) Validate() error {
@@ -92,6 +101,8 @@ func (n *NetworkCommand) Validate() error {
 		return n.validNetworkBandwidth()
 	case NetworkNICDownAction:
 		return n.validNetworkNICDown()
+	case NetworkFloodAction:
+		return n.validNetworkFlood()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -213,6 +224,30 @@ func (n *NetworkCommand) validNetworkNICDown() error {
 
 	if len(n.Device) == 0 {
 		return errors.New("device is required")
+	}
+
+	return nil
+}
+
+func (n *NetworkCommand) validNetworkFlood() error {
+	if len(n.IPAddress) == 0 {
+		return errors.New("IP is required")
+	}
+
+	if !utils.CheckIPs(n.IPAddress) {
+		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
+	}
+
+	if len(n.Port) == 0 {
+		return errors.New("port is required")
+	}
+
+	if len(n.Rate) == 0 {
+		return errors.New("rate is required")
+	}
+
+	if len(n.Duration) == 0 {
+		return errors.New("duration is required")
 	}
 
 	return nil
