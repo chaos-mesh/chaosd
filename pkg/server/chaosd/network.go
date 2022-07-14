@@ -336,14 +336,19 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 
 func (s *Server) applyFlood(attack *core.NetworkCommand) error {
 	cmd := bpm.DefaultProcessBuilder("bash", "-c", fmt.Sprintf("iperf -u -c %s -t %s -p %s -P %d -b %s", attack.IPAddress, attack.Duration, attack.Port, attack.Parallel, attack.Rate)).
-		Build()
+		Build(context.Background())
 
 	// Build will set SysProcAttr.Pdeathsig = syscall.SIGTERM, and so iperf will exit while chaosd exit
 	// so reset it here
 	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
 
-	backgroundProcessManager := bpm.NewBackgroundProcessManager()
-	err := backgroundProcessManager.StartProcess(cmd)
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
+	logger := zapr.NewLogger(zapLogger)
+	backgroundProcessManager := bpm.StartBackgroundProcessManager(nil, logger)
+	_, err = backgroundProcessManager.StartProcess(context.Background(), cmd)
 	if err != nil {
 		return err
 	}
