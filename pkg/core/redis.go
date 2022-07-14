@@ -23,9 +23,14 @@ const (
 	RedisSentinelRestartAction  = "restart"
 	RedisSentinelStopAction     = "stop"
 	RedisCachePenetrationAction = "penetration"
+	RedisCacheLimitAction       = "cacheLimit"
+	RedisCacheExpirationAction  = "expiration"
 )
 
-var _ AttackConfig = &RedisCommand{}
+var (
+	_            AttackConfig = &RedisCommand{}
+	ValidOptions              = map[string]bool{"XX": true, "NX": true, "GT": true, "LT": true}
+)
 
 type RedisCommand struct {
 	CommonAttackConfig
@@ -36,6 +41,13 @@ type RedisCommand struct {
 	FlushConfig bool   `json:"flushConfig,omitempty"`
 	RedisPath   string `json:"redisPath,omitempty"`
 	RequestNum  int    `json:"requestNum,omitempty"`
+	CacheSize   string `json:"cacheSize,omitempty"`
+	Percent     string `json:"percent,omitempty"`
+	Key         string `json:"key,omitempty"`
+	Expiration  string `json:"expiration,omitempty"`
+	Option      string `json:"option,omitempty"`
+
+	OriginCacheSize string `json:"originCacheSize,omitempty"`
 }
 
 func (r *RedisCommand) Validate() error {
@@ -49,6 +61,15 @@ func (r *RedisCommand) Validate() error {
 	case RedisCachePenetrationAction:
 		if r.RequestNum == 0 {
 			return errors.New("request-num is required")
+		}
+
+	case RedisCacheLimitAction:
+		if r.CacheSize != "0" && r.Percent != "" {
+			return errors.New("only one of cachesize and percent can be set")
+		}
+	case RedisCacheExpirationAction:
+		if _, ok := ValidOptions[r.Option]; ok {
+			return errors.New("option invalid")
 		}
 	}
 	return nil

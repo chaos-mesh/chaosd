@@ -95,6 +95,7 @@ func (s *httpServer) handler(engine *gin.Engine) {
 		attack.POST("/kafka", s.createKafkaAttack)
 		attack.POST("/vm", s.createVMAttack)
 		attack.POST("/redis", s.createRedisAttack)
+		attack.POST("/user_defined", s.createUserDefinedAttack)
 
 		attack.DELETE("/:uid", s.recoverAttack)
 	}
@@ -396,6 +397,38 @@ func (s *httpServer) createRedisAttack(c *gin.Context) {
 	}
 
 	uid, err := s.chaos.ExecuteAttack(chaosd.RedisAttack, attack, core.ServerMode)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+// @Summary Create user defined attack.
+// @Description Create user defined attack.
+// @Tags attack
+// @Produce json
+// @Param request body core.RedisCommand true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/user_defined [post]
+func (s *httpServer) createUserDefinedAttack(c *gin.Context) {
+	attack := core.NewUserDefinedOption()
+	if err := c.ShouldBindJSON(attack); err != nil {
+		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	attack.CompleteDefaults()
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
+	uid, err := s.chaos.ExecuteAttack(chaosd.UserDefinedAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
