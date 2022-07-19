@@ -80,7 +80,7 @@ ifeq (,$(wildcard bin/tools/memStress))
 	tar zxvf memStress_v0.3-x86_64-linux-gnu.tar.gz
 	mv memStress ./bin/tools/memStress
 endif
-curl -L https://github.com/chaos-mesh/memStress/releases/download/v0.3/memStress_v0.3-$NSEXEC_ARCH-linux-gnu.tar.gz
+
 swagger_spec:
 ifeq ($(SWAGGER),1)
 	hack/generate_swagger_spec.sh
