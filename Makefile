@@ -31,10 +31,10 @@ PACKAGE_LIST := go list ./... | grep -vE "chaos-daemon/test|pkg/ptrace|zz_genera
 PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/chaos-mesh/chaosd/||'
 
 $(GOBIN)/revive:
-	$(GO) get github.com/mgechev/revive@v1.0.2-0.20200225072153-6219ca02fffb
+	$(GO) install github.com/mgechev/revive@v1.0.2-0.20200225072153-6219ca02fffb
 
 $(GOBIN)/goimports:
-	$(GO) get golang.org/x/tools/cmd/goimports@v0.1.1
+	$(GO) install golang.org/x/tools/cmd/goimports@v0.1.1
 
 build: binary
 
@@ -74,6 +74,11 @@ ifeq (,$(wildcard bin/tools/byteman))
 	curl -fsSL -o ${BYTEMAN_DIR}.tar.gz https://mirrors.chaos-mesh.org/${BYTEMAN_DIR}.tar.gz
 	tar zxvf ${BYTEMAN_DIR}.tar.gz
 	mv ${BYTEMAN_DIR} ./bin/tools/byteman
+endif
+ifeq (,$(wildcard bin/tools/memStress))
+	curl -fsSL -o memStress_v0.3-x86_64-linux-gnu.tar.gz https://github.com/chaos-mesh/memStress/releases/download/v0.3/memStress_v0.3-x86_64-linux-gnu.tar.gz
+	tar zxvf memStress_v0.3-x86_64-linux-gnu.tar.gz
+	mv memStress ./bin/tools/memStress
 endif
 
 swagger_spec:

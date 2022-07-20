@@ -39,6 +39,7 @@ func NewAttackCommand() *cobra.Command {
 		NewKafkaAttackCommand(&uid),
 		NewRedisAttackCommand(&uid),
 		NewFileAttackCommand(&uid),
+		NewHTTPAttackCommand(&uid),
 		NewVMAttackCommand(&uid),
 		NewUserDefinedCommand(&uid),
 	)

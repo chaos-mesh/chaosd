@@ -27,6 +27,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/go-logr/zapr"
+
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 	perrors "github.com/pingcap/errors"
@@ -181,7 +183,8 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	}
 
 	tcs = append(tcs, newTC)
-	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: attack.Device, EnterNS: false}); err != nil {
+
+	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, EnterNS: false}); err != nil {
 		return perrors.WithStack(err)
 	}
 
@@ -333,14 +336,19 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 
 func (s *Server) applyFlood(attack *core.NetworkCommand) error {
 	cmd := bpm.DefaultProcessBuilder("bash", "-c", fmt.Sprintf("iperf -u -c %s -t %s -p %s -P %d -b %s", attack.IPAddress, attack.Duration, attack.Port, attack.Parallel, attack.Rate)).
-		Build()
+		Build(context.Background())
 
 	// Build will set SysProcAttr.Pdeathsig = syscall.SIGTERM, and so iperf will exit while chaosd exit
 	// so reset it here
 	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
 
-	backgroundProcessManager := bpm.NewBackgroundProcessManager()
-	err := backgroundProcessManager.StartProcess(cmd)
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
+	logger := zapr.NewLogger(zapLogger)
+	backgroundProcessManager := bpm.StartBackgroundProcessManager(nil, logger)
+	_, err = backgroundProcessManager.StartProcess(context.Background(), cmd)
 	if err != nil {
 		return err
 	}
@@ -436,7 +444,7 @@ func (s *Server) recoverTC(uid string, device string) error {
 		return perrors.WithStack(err)
 	}
 
-	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, Device: device, EnterNS: false}); err != nil {
+	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, EnterNS: false}); err != nil {
 		return perrors.WithStack(err)
 	}
 
@@ -485,12 +493,16 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 	}
 
 	args := fmt.Sprintf("-p=%s", attack.Port)
-	cmd := bpm.DefaultProcessBuilder("PortOccupyTool", args).Build()
+	cmd := bpm.DefaultProcessBuilder("PortOccupyTool", args).Build(context.Background())
 
 	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
-
-	backgroundProcessManager := bpm.NewBackgroundProcessManager()
-	err = backgroundProcessManager.StartProcess(cmd)
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
+	logger := zapr.NewLogger(zapLogger)
+	backgroundProcessManager := bpm.StartBackgroundProcessManager(nil, logger)
+	_, err = backgroundProcessManager.StartProcess(context.Background(), cmd)
 	if err != nil {
 		return perrors.WithStack(err)
 	}

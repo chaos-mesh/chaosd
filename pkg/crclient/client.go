@@ -29,6 +29,14 @@ type NodeCRClient struct {
 	Pid uint32
 }
 
+func (n *NodeCRClient) ListContainerIDs(_ context.Context) ([]string, error) {
+	return nil, nil
+}
+
+func (n *NodeCRClient) GetLabelsFromContainerID(_ context.Context, _ string) (map[string]string, error) {
+	return nil, nil
+}
+
 func (n *NodeCRClient) GetPidFromContainerID(_ context.Context, _ string) (uint32, error) {
 	return n.Pid, nil
 }
