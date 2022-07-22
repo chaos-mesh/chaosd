@@ -56,7 +56,7 @@ type KafkaCommand struct {
 	ConfigFile string `json:"configFile,omitempty"`
 
 	// options for io attack
-	NonReadable bool `json:"nonReadble,omitempty"`
+	NonReadable bool `json:"nonReadable,omitempty"`
 	NonWritable bool `json:"nonWritable,omitempty"`
 
 	// recover data for io attack
