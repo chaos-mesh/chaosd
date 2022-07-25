@@ -36,32 +36,32 @@ type KafkaCommand struct {
 
 	// global options
 	Action KafkaAttackAction
-	Topic  string
+	Topic  string `json:"topic,omitempty"`
 
 	// options for fill and flood attack
-	Host        string
-	Port        uint16
-	Username    string
-	Password    string
-	MessageSize uint
-	MaxBytes    uint64
+	Host        string `json:"host,omitempty"`
+	Port        uint16 `json:"port,omitempty"`
+	Username    string `json:"username,omitempty"`
+	Password    string `json:"password,omitempty"`
+	MessageSize uint   `json:"messageSize,omitempty"`
+	MaxBytes    uint64 `json:"maxBytes,omitempty"`
 
 	// options for fill attack
-	ReloadCommand string
+	ReloadCommand string `json:"reloadCommand,omitempty"`
 
 	// options for flood attack
-	Threads uint
+	Threads uint `json:"threads,omitempty"`
 
 	// options for fill and io attack
-	ConfigFile string
+	ConfigFile string `json:"configFile,omitempty"`
 
 	// options for io attack
-	NonReadable bool
-	NonWritable bool
+	NonReadable bool `json:"nonReadable,omitempty"`
+	NonWritable bool `json:"nonWritable,omitempty"`
 
 	// recover data for io attack
-	OriginModeOfFiles map[string]uint32
-	OriginConfig      string
+	OriginModeOfFiles map[string]uint32 `json:"-"`
+	OriginConfig      string            `json:"-"`
 }
 
 func (c *KafkaCommand) Validate() error {
