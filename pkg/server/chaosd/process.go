@@ -44,7 +44,10 @@ func (processAttack) Attack(options core.AttackConfig, _ Environment) error {
 	for _, p := range processes {
 		pid := int(p.Pid)
 		name, err := p.Name()
-		fmt.Println(pid, name)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		
 		if attack.Process == strconv.Itoa(pid) || attack.Process == name {
 			notFound = false
 
