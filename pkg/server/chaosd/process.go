@@ -47,7 +47,7 @@ func (processAttack) Attack(options core.AttackConfig, _ Environment) error {
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		
+
 		if attack.Process == strconv.Itoa(pid) || attack.Process == name {
 			notFound = false
 
