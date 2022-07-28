@@ -16,7 +16,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/joomcode/errorx v1.0.1
 	github.com/magiconair/properties v1.8.5
-	github.com/mitchellh/go-ps v0.0.0-20170309133038-4fdf99ab2936
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/gomega v1.18.1
 	github.com/pingcap/errors v0.11.5-0.20190809092503-95897b64e011
