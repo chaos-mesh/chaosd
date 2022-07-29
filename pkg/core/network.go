@@ -434,6 +434,7 @@ func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 		Protocol:   n.IPProtocol,
 		SourcePort: n.SourcePort,
 		EgressPort: n.EgressPort,
+		Device:     n.Device,
 	}
 
 	var (
