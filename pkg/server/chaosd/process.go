@@ -19,8 +19,8 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/mitchellh/go-ps"
 	"github.com/pingcap/errors"
+	"github.com/shirou/gopsutil/process"
 	"go.uber.org/zap"
 
 	"github.com/pingcap/log"
@@ -35,22 +35,28 @@ var ProcessAttack AttackType = processAttack{}
 func (processAttack) Attack(options core.AttackConfig, _ Environment) error {
 	attack := options.(*core.ProcessCommand)
 
-	processes, err := ps.Processes()
+	processes, err := process.Processes()
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	notFound := true
 	for _, p := range processes {
-		if attack.Process == strconv.Itoa(p.Pid()) || attack.Process == p.Executable() {
+		pid := int(p.Pid)
+		name, err := p.Name()
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		if attack.Process == strconv.Itoa(pid) || attack.Process == name {
 			notFound = false
 
-			err = syscall.Kill(p.Pid(), syscall.Signal(attack.Signal))
+			err = syscall.Kill(pid, syscall.Signal(attack.Signal))
 			if err != nil {
 				err = errors.Annotate(err, fmt.Sprintf("kill process with signal %d", attack.Signal))
 				return errors.WithStack(err)
 			}
-			attack.PIDs = append(attack.PIDs, p.Pid())
+			attack.PIDs = append(attack.PIDs, pid)
 		}
 	}
 
