@@ -135,6 +135,10 @@ func (n *NetworkCommand) validNetworkDelay() error {
 		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
 	}
 
+	if len(n.AcceptTCPFlags) > 0 && n.IPProtocol != "tcp" {
+		return errors.Errorf("protocol should be 'tcp' when set accept-tcp-flags")
+	}
+
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
 }
 
@@ -517,7 +521,7 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 }
 
 func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
-	if n.Action != NetworkPartitionAction {
+	if n.Action != NetworkPartitionAction && !(n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0){
 		return nil, nil
 	}
 
