@@ -80,6 +80,8 @@ const (
 	NetworkPortOccupiedAction = "occupied"
 	NetworkNICDownAction      = "down"
 	NetworkFloodAction        = "flood"
+
+	NetIPSet = "hash:net"
 )
 
 func (n *NetworkCommand) Validate() error {
@@ -492,6 +494,7 @@ func (n *NetworkCommand) ToIPSet(name string) (*pb.IPSet, error) {
 	return &pb.IPSet{
 		Name:  name,
 		Cidrs: cidrs,
+		Type:  NetIPSet,
 	}, nil
 }
 
