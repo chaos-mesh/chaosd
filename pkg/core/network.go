@@ -520,8 +520,8 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 	}
 }
 
-func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
-	if n.Action != NetworkPartitionAction && !(n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0){
+func (n *NetworkCommand) AdditionalChain(ipset string) ([]*pb.Chain, error) {
+	if n.Action != NetworkPartitionAction && !(n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0) {
 		return nil, nil
 	}
 
@@ -530,14 +530,14 @@ func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
 	var err error
 
 	if n.Direction == "to" || n.Direction == "both" {
-		toChains, err = n.getPartitionChain(ipset, "to")
+		toChains, err = n.getAdditionalChain(ipset, "to")
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if n.Direction == "from" || n.Direction == "both" {
-		fromChains, err = n.getPartitionChain(ipset, "from")
+		fromChains, err = n.getAdditionalChain(ipset, "from")
 		if err != nil {
 			return nil, err
 		}
@@ -549,7 +549,7 @@ func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
 	return chains, nil
 }
 
-func (n *NetworkCommand) getPartitionChain(ipset, direction string) ([]*pb.Chain, error) {
+func (n *NetworkCommand) getAdditionalChain(ipset, direction string) ([]*pb.Chain, error) {
 	var directionStr string
 	var directionChain pb.Chain_Direction
 	if direction == "to" {
@@ -574,14 +574,15 @@ func (n *NetworkCommand) getPartitionChain(ipset, direction string) ([]*pb.Chain
 		})
 	}
 
-	chains = append(chains, &pb.Chain{
-		Name:      fmt.Sprintf("%s/1", directionStr),
-		Ipsets:    []string{ipset},
-		Direction: directionChain,
-		Protocol:  n.IPProtocol,
-		Target:    "DROP",
-	})
-
+	if n.Action == NetworkPartitionAction {
+		chains = append(chains, &pb.Chain{
+			Name:      fmt.Sprintf("%s/1", directionStr),
+			Ipsets:    []string{ipset},
+			Direction: directionChain,
+			Protocol:  n.IPProtocol,
+			Target:    "DROP",
+		})
+	}
 	return chains, nil
 }
 
