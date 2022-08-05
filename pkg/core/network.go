@@ -524,10 +524,6 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 }
 
 func (n *NetworkCommand) AdditionalChain(ipset string) ([]*pb.Chain, error) {
-	if n.Action != NetworkPartitionAction && !(n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0) {
-		return nil, nil
-	}
-
 	chains := make([]*pb.Chain, 0, 2)
 	var toChains, fromChains []*pb.Chain
 	var err error
