@@ -140,11 +140,14 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, ipset, uid string) e
 		return perrors.WithStack(err)
 	}
 	chains := core.IptablesRuleList(iptables).ToChains()
-	newChains, err := attack.AdditionalChain(ipset)
-	if err != nil {
-		return perrors.WithStack(err)
+	// Presently, only partition and delay with `accept-tcp-flags` need to add additional chains
+	if attack.NeedAdditionalChains() {
+		newChains, err := attack.AdditionalChain(ipset)
+		if err != nil {
+			return perrors.WithStack(err)
+		}
+		chains = append(chains, newChains...)
 	}
-	chains = append(chains, newChains...)
 
 	if _, err := s.svr.SetIptablesChains(context.Background(), &pb.IptablesChainsRequest{
 		Chains:  chains,

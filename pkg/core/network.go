@@ -601,6 +601,13 @@ func (n *NetworkCommand) NeedApplyDNSServer() bool {
 	return len(n.DNSServer) > 0
 }
 
+func (n *NetworkCommand) NeedAdditionalChains() bool {
+	if n.Action != NetworkPartitionAction || (n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0) {
+		return true
+	}
+	return false
+}
+
 func NewNetworkCommand() *NetworkCommand {
 	return &NetworkCommand{
 		CommonAttackConfig: CommonAttackConfig{
