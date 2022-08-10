@@ -32,20 +32,16 @@ PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/chaos-mesh/chaosd/||'
 
 UNAME_M := $(shell uname -m)
 ifeq ($(UNAME_M),x86_64)
-    ARCH_STRESS_NG = amd64
-	ARCH_MEM_STRESS = x86_64
+	ARCH = x86_64
 endif
 ifeq ($(UNAME_M),amd64)
-    ARCH_STRESS_NG = amd64
-	ARCH_MEM_STRESS = x86_64
+	ARCH = x86_64
 endif
 ifeq ($(UNAME_M),aarch64)
-    ARCH_STRESS_NG = arm64
-	ARCH_MEM_STRESS = aarch64
+	ARCH = aarch64
 endif
 ifeq ($(UNAME_M),arm64)
-    ARCH_STRESS_NG = arm64
-	ARCH_MEM_STRESS = aarch64
+	ARCH = aarch64
 endif
 
 $(GOBIN)/revive:
@@ -85,7 +81,7 @@ chaos-tools:
 	$(CGOENV) go build -o bin/tools/PortOccupyTool tools/PortOccupyTool.go
 	$(CGOENV) go build -o bin/tools/FileTool tools/file/*.go
 ifeq (,$(wildcard bin/tools/stress-ng))
-	curl -fsSL -o ./bin/tools/stress-ng https://github.com/chaos-mesh/stress-ng/releases/download/v0.14.02/stress-ng-${ARCH_STRESS_NG}
+	curl -fsSL -o ./bin/tools/stress-ng https://github.com/chaos-mesh/stress-ng/releases/download/v0.14.02/stress-ng-${ARCH}
 	chmod +x ./bin/tools/stress-ng
 endif
 ifeq (,$(wildcard bin/tools/byteman))
@@ -94,7 +90,7 @@ ifeq (,$(wildcard bin/tools/byteman))
 	mv ${BYTEMAN_DIR} ./bin/tools/byteman
 endif
 ifeq (,$(wildcard bin/tools/memStress))
-	curl -fsSL -o memStress_v0.3-x86_64-linux-gnu.tar.gz https://github.com/chaos-mesh/memStress/releases/download/v0.3/memStress_v0.3-${ARCH_MEM_STRESS}-linux-gnu.tar.gz
+	curl -fsSL -o memStress_v0.3-x86_64-linux-gnu.tar.gz https://github.com/chaos-mesh/memStress/releases/download/v0.3/memStress_v0.3-${ARCH}-linux-gnu.tar.gz
 	tar zxvf memStress_v0.3-x86_64-linux-gnu.tar.gz
 	mv memStress ./bin/tools/memStress
 endif
