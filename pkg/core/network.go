@@ -80,6 +80,8 @@ const (
 	NetworkPortOccupiedAction = "occupied"
 	NetworkNICDownAction      = "down"
 	NetworkFloodAction        = "flood"
+
+	NetIPSet = "hash:net"
 )
 
 func (n *NetworkCommand) Validate() error {
@@ -133,6 +135,10 @@ func (n *NetworkCommand) validNetworkDelay() error {
 
 	if !utils.CheckIPs(n.IPAddress) {
 		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
+	}
+
+	if len(n.AcceptTCPFlags) > 0 && n.IPProtocol != "tcp" {
+		return errors.Errorf("protocol should be 'tcp' when set accept-tcp-flags")
 	}
 
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
@@ -492,6 +498,7 @@ func (n *NetworkCommand) ToIPSet(name string) (*pb.IPSet, error) {
 	return &pb.IPSet{
 		Name:  name,
 		Cidrs: cidrs,
+		Type:  NetIPSet,
 	}, nil
 }
 
@@ -516,24 +523,20 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 	}
 }
 
-func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
-	if n.Action != NetworkPartitionAction {
-		return nil, nil
-	}
-
+func (n *NetworkCommand) AdditionalChain(ipset string) ([]*pb.Chain, error) {
 	chains := make([]*pb.Chain, 0, 2)
 	var toChains, fromChains []*pb.Chain
 	var err error
 
 	if n.Direction == "to" || n.Direction == "both" {
-		toChains, err = n.getPartitionChain(ipset, "to")
+		toChains, err = n.getAdditionalChain(ipset, "to")
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if n.Direction == "from" || n.Direction == "both" {
-		fromChains, err = n.getPartitionChain(ipset, "from")
+		fromChains, err = n.getAdditionalChain(ipset, "from")
 		if err != nil {
 			return nil, err
 		}
@@ -545,7 +548,7 @@ func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
 	return chains, nil
 }
 
-func (n *NetworkCommand) getPartitionChain(ipset, direction string) ([]*pb.Chain, error) {
+func (n *NetworkCommand) getAdditionalChain(ipset, direction string) ([]*pb.Chain, error) {
 	var directionStr string
 	var directionChain pb.Chain_Direction
 	if direction == "to" {
@@ -570,14 +573,15 @@ func (n *NetworkCommand) getPartitionChain(ipset, direction string) ([]*pb.Chain
 		})
 	}
 
-	chains = append(chains, &pb.Chain{
-		Name:      fmt.Sprintf("%s/1", directionStr),
-		Ipsets:    []string{ipset},
-		Direction: directionChain,
-		Protocol:  n.IPProtocol,
-		Target:    "DROP",
-	})
-
+	if n.Action == NetworkPartitionAction {
+		chains = append(chains, &pb.Chain{
+			Name:      fmt.Sprintf("%s/1", directionStr),
+			Ipsets:    []string{ipset},
+			Direction: directionChain,
+			Protocol:  n.IPProtocol,
+			Target:    "DROP",
+		})
+	}
 	return chains, nil
 }
 
@@ -591,6 +595,13 @@ func (n *NetworkCommand) NeedApplyEtcHosts() bool {
 
 func (n *NetworkCommand) NeedApplyDNSServer() bool {
 	return len(n.DNSServer) > 0
+}
+
+func (n *NetworkCommand) NeedAdditionalChains() bool {
+	if n.Action != NetworkPartitionAction || (n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0) {
+		return true
+	}
+	return false
 }
 
 func NewNetworkCommand() *NetworkCommand {

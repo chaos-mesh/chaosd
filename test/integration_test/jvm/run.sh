@@ -26,7 +26,7 @@ if [[ ! (-e byteman-example) ]]; then
 fi
 
 echo "download byteman && set environment variable"
-byteman_dir="byteman-chaos-mesh-download-v4.0.18-0.9"
+byteman_dir="byteman-chaos-mesh-download-v4.0.18-0.10"
 if [[ ! (-e ${byteman_dir}.tar.gz) ]]; then
     curl -fsSL -o ${byteman_dir}.tar.gz https://mirrors.chaos-mesh.org/${byteman_dir}.tar.gz
     tar zxvf ${byteman_dir}.tar.gz
