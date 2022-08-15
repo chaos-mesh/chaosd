@@ -10,7 +10,7 @@ GO     := $(GOENV) go
 CGO    := $(CGOENV) go
 GOTEST := TEST_USE_EXISTING_CLUSTER=false NO_PROXY="${NO_PROXY},testhost" go test
 SHELL    := /usr/bin/env bash
-BYTEMAN_DIR := byteman-chaos-mesh-download-v4.0.18-0.9
+BYTEMAN_DIR := byteman-chaos-mesh-download-v4.0.18-0.10
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
