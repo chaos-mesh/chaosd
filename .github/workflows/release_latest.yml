@@ -7,9 +7,13 @@ on:
 jobs:
   run:
     name: Upload
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    runs-on: ${{ fromJson('{"amd64":"ubuntu-latest", "arm64":["self-hosted", "Linux", "ARM64"]}')[matrix.arch] }}
     # glibc version 2.17
-    container: docker.io/centos:7.2.1511
+    container: ${{ fromJson('{"amd64":"docker.io/centos:7.2.1511", "arm64":"docker.io/centos:centos7"}')[matrix.arch] }}
     steps:
       - name: Set up Go 1.18
         uses: actions/setup-go@v1
@@ -44,8 +48,9 @@ jobs:
       - name: Build binary and related tools
         run: make build
 
+      # TODO: release on github package / release
       - name: Upload files
         run: |
-          mv bin chaosd-latest-linux-amd64
-          tar czvf chaosd-latest-linux-amd64.tar.gz chaosd-latest-linux-amd64
-          aws s3 cp chaosd-latest-linux-amd64.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-latest-linux-amd64.tar.gz
+          mv bin chaosd-latest-linux-${{ matrix.arch }}
+          tar czvf chaosd-latest-linux-${{ matrix.arch }}.tar.gz chaosd-latest-linux-${{ matrix.arch }}
+          aws s3 cp chaosd-latest-linux-${{ matrix.arch }}.tar.gz ${{ secrets.AWS_BUCKET_NAME }}/chaosd-latest-linux-${{ matrix.arch }}.tar.gz
