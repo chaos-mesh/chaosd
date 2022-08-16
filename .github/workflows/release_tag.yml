@@ -27,8 +27,7 @@ jobs:
 
       - uses: actions/checkout@master
         with:
-          # Must use at least depth 2!
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Setup python3
         run: |

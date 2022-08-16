@@ -24,7 +24,9 @@ jobs:
       - name: Prepare build environment
         run: |
           # actions/checkout require git v2.X
-          yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
+          if [ "${{ matrix.arch }}" == "amd64" ]; then
+            yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
+          fi
           yum install -y gcc
           yum install -y make
           yum install -y binutils
@@ -32,8 +34,7 @@ jobs:
 
       - uses: actions/checkout@master
         with:
-          # Must use at least depth 2!
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Setup python3
         run: |
