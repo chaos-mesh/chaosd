@@ -50,6 +50,7 @@ func NewNetworkAttackCommand(uid *string) *cobra.Command {
 		NewNetworkPortOccupiedCommand(dep, options),
 		NewNetworkBandwidthCommand(dep, options),
 		NewNICDownCommand(dep, options),
+		NewNetworkFloodCommand(dep, options),
 	)
 
 	return cmd
@@ -83,6 +84,7 @@ func NewNetworkDelayCommand(dep fx.Option, options *core.NetworkCommand) *cobra.
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+	cmd.Flags().StringVarP(&options.AcceptTCPFlags, "accept-tcp-flags", "", "", "only the packet which match the tcp flag can be accepted, others will be dropped. only set when the protocol is tcp.")
 
 	return cmd
 }
@@ -188,7 +190,7 @@ func NetworkPartitionCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 
 	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
-	cmd.Flags().StringVarP(&options.Direction, "direction", "", "", "specifies the partition direction, values can be 'from', 'to'. 'from' means packets coming from the 'IPAddress' or 'Hostname' and going to your server, 'to' means packets originating from your server and going to the 'IPAddress' or 'Hostname'.")
+	cmd.Flags().StringVarP(&options.Direction, "direction", "", "both", "specifies the partition direction, values can be 'to', 'from' or 'both'. 'from' means packets coming from the 'IPAddress' or 'Hostname' and going to your server, 'to' means packets originating from your server and going to the 'IPAddress' or 'Hostname'.")
 	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
@@ -267,6 +269,27 @@ func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) 
 	}
 
 	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "this specified port is to occupied")
+	return cmd
+}
+
+func NewNetworkFloodCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "flood",
+		Short: "generate a mount of network traffic by using iperf client",
+
+		Run: func(cmd *cobra.Command, args []string) {
+			options.Action = core.NetworkFloodAction
+			options.CompleteDefaults()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+		},
+	}
+
+	cmd.Flags().StringVarP(&options.Rate, "rate", "r", "", "the speed of network traffic, allows bps, kbps, mbps, gbps, tbps unit. bps means bytes per second")
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "generate traffic to this IP address")
+	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "generate traffic to this port on the IP address")
+	cmd.Flags().Int32VarP(&options.Parallel, "parallel", "", 1, "number of iperf parallel client threads to run")
+	cmd.Flags().StringVarP(&options.Duration, "duration", "", "99999999", "number of seconds to run the iperf test")
+
 	return cmd
 }
 

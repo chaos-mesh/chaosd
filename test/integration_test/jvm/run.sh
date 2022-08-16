@@ -26,7 +26,7 @@ if [[ ! (-e byteman-example) ]]; then
 fi
 
 echo "download byteman && set environment variable"
-byteman_dir="byteman-chaos-mesh-download-v4.0.18-0.9"
+byteman_dir="byteman-chaos-mesh-download-v4.0.18-0.10"
 if [[ ! (-e ${byteman_dir}.tar.gz) ]]; then
     curl -fsSL -o ${byteman_dir}.tar.gz https://mirrors.chaos-mesh.org/${byteman_dir}.tar.gz
     tar zxvf ${byteman_dir}.tar.gz
@@ -61,7 +61,12 @@ kill $pid
 # TODO: add test for latency, stress and gc
 
 echo "download && run tidb"
-tidb_dir="tidb-v5.3.0-linux-amd64"
+case $( uname -m ) in
+aarch64) ARCH=arm64;;
+arm64) ARCH=arm64;;
+*)     ARCH=amd64;;
+esac
+tidb_dir="tidb-v5.3.0-linux-$ARCH"
 if [[ ! (-e ${tidb_dir}.tar.gz) ]]; then
     curl -fsSL -o ${tidb_dir}.tar.gz https://download.pingcap.org/${tidb_dir}.tar.gz
     tar zxvf ${tidb_dir}.tar.gz

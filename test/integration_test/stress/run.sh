@@ -20,6 +20,12 @@ cd $cur
 
 bin_path=../../../bin
 
+echo "download memStress && set environment variable"
+if [[ ! (-e memStress_v0.3-x86_64-linux-gnu.tar.gz) ]]; then
+    curl -fsSL -o memStress_v0.3-x86_64-linux-gnu.tar.gz https://github.com/chaos-mesh/memStress/releases/download/v0.3/memStress_v0.3-x86_64-linux-gnu.tar.gz
+	tar zxvf memStress_v0.3-x86_64-linux-gnu.tar.gz
+fi
+
 # test cpu stress
 ${bin_path}/chaosd attack stress cpu -l 10 -w 1 > cpu.out
 
@@ -42,21 +48,21 @@ ps aux | grep stress-ng
 # test mem stress
 ${bin_path}/chaosd attack stress mem --size 10M > mem.out
 
-PID=`cat mem.out | grep "stress-ng" | sed 's/.*Pid=\([0-9]*\).*/\1/g'`
+PID=`cat mem.out | grep "memStress" | sed 's/.*Pid=\([0-9]*\).*/\1/g'`
 
-stress_ng_num=`ps aux > test.temp && grep "stress-ng" test.temp | wc -l && rm test.temp`
-if [ ${stress_ng_num} -lt 1 ]; then
-    echo "stress-ng is not run when executing stress mem attack"
+memStress_num=`ps aux > test.temp && grep "memStress" test.temp | wc -l && rm test.temp`
+if [ ${memStress_num} -lt 1 ]; then
+    echo "memStress is not run when executing stress mem attack"
     exit 1
 fi
 
 uid=`cat mem.out | grep "Attack stress mem successfully" | awk -F: '{print $2}'`
 ${bin_path}/chaosd recover ${uid}
 
-echo "wait stress-ng $PID exit after recovering stress mem attack"
+echo "wait memStress $PID exit after recovering stress mem attack"
 timeout 5s tail --pid=$PID -f /dev/null
 
-ps aux | grep stress-ng
+ps aux | grep memStress
 
 rm cpu.out
 rm mem.out

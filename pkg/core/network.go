@@ -49,7 +49,7 @@ type NetworkCommand struct {
 	DNSIp         string `json:"dns-ip,omitempty"`
 	DNSDomainName string `json:"dns-domain-name,omitempty"`
 
-	// used for port occupied
+	// used for port occupied or flood
 	Port    string `json:"port,omitempty"`
 	PortPid int32  `json:"port-pid,omitempty"`
 
@@ -57,6 +57,14 @@ type NetworkCommand struct {
 	// only the packet which match the tcp flag can be accepted, others will be dropped.
 	// only set when the IPProtocol is tcp, used for partition.
 	AcceptTCPFlags string `json:"accept-tcp-flags,omitempty"`
+
+	// used for flood
+	// number of iperf parallel client threads to run
+	Parallel int32 `json:"parallel,omitempty"`
+
+	// used for flood
+	// the pid of iperf
+	IperfPid int32 `json:"iperf-pid,omitempty"`
 }
 
 var _ AttackConfig = &NetworkCommand{}
@@ -71,6 +79,9 @@ const (
 	NetworkBandwidthAction    = "bandwidth"
 	NetworkPortOccupiedAction = "occupied"
 	NetworkNICDownAction      = "down"
+	NetworkFloodAction        = "flood"
+
+	NetIPSet = "hash:net"
 )
 
 func (n *NetworkCommand) Validate() error {
@@ -92,6 +103,8 @@ func (n *NetworkCommand) Validate() error {
 		return n.validNetworkBandwidth()
 	case NetworkNICDownAction:
 		return n.validNetworkNICDown()
+	case NetworkFloodAction:
+		return n.validNetworkFlood()
 	default:
 		return errors.Errorf("network action %s not supported", n.Action)
 	}
@@ -122,6 +135,10 @@ func (n *NetworkCommand) validNetworkDelay() error {
 
 	if !utils.CheckIPs(n.IPAddress) {
 		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
+	}
+
+	if len(n.AcceptTCPFlags) > 0 && n.IPProtocol != "tcp" {
+		return errors.Errorf("protocol should be 'tcp' when set accept-tcp-flags")
 	}
 
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
@@ -168,8 +185,8 @@ func (n *NetworkCommand) validNetworkPartition() error {
 		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
 	}
 
-	if n.Direction != "to" && n.Direction != "from" {
-		return errors.Errorf("direction should be one of 'to' and 'from'")
+	if n.Direction != "to" && n.Direction != "from" && n.Direction != "both" {
+		return errors.Errorf("direction should be one of to, from or both, but got %s", n.Direction)
 	}
 
 	if len(n.AcceptTCPFlags) > 0 && n.IPProtocol != "tcp" {
@@ -213,6 +230,30 @@ func (n *NetworkCommand) validNetworkNICDown() error {
 
 	if len(n.Device) == 0 {
 		return errors.New("device is required")
+	}
+
+	return nil
+}
+
+func (n *NetworkCommand) validNetworkFlood() error {
+	if len(n.IPAddress) == 0 {
+		return errors.New("IP is required")
+	}
+
+	if !utils.CheckIPs(n.IPAddress) {
+		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
+	}
+
+	if len(n.Port) == 0 {
+		return errors.New("port is required")
+	}
+
+	if len(n.Rate) == 0 {
+		return errors.New("rate is required")
+	}
+
+	if len(n.Duration) == 0 {
+		return errors.New("duration is required")
 	}
 
 	return nil
@@ -386,9 +427,10 @@ func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 		}
 
 		return &pb.Tc{
-			Type:  pb.Tc_BANDWIDTH,
-			Tbf:   tbf,
-			Ipset: ipset,
+			Type:   pb.Tc_BANDWIDTH,
+			Tbf:    tbf,
+			Ipset:  ipset,
+			Device: n.Device,
 		}, nil
 	}
 
@@ -398,6 +440,7 @@ func (n *NetworkCommand) ToTC(ipset string) (*pb.Tc, error) {
 		Protocol:   n.IPProtocol,
 		SourcePort: n.SourcePort,
 		EgressPort: n.EgressPort,
+		Device:     n.Device,
 	}
 
 	var (
@@ -455,6 +498,7 @@ func (n *NetworkCommand) ToIPSet(name string) (*pb.IPSet, error) {
 	return &pb.IPSet{
 		Name:  name,
 		Cidrs: cidrs,
+		Type:  NetIPSet,
 	}, nil
 }
 
@@ -479,17 +523,38 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 	}
 }
 
-func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
-	if n.Action != NetworkPartitionAction {
-		return nil, nil
+func (n *NetworkCommand) AdditionalChain(ipset string) ([]*pb.Chain, error) {
+	chains := make([]*pb.Chain, 0, 2)
+	var toChains, fromChains []*pb.Chain
+	var err error
+
+	if n.Direction == "to" || n.Direction == "both" {
+		toChains, err = n.getAdditionalChain(ipset, "to")
+		if err != nil {
+			return nil, err
+		}
 	}
 
+	if n.Direction == "from" || n.Direction == "both" {
+		fromChains, err = n.getAdditionalChain(ipset, "from")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	chains = append(chains, toChains...)
+	chains = append(chains, fromChains...)
+
+	return chains, nil
+}
+
+func (n *NetworkCommand) getAdditionalChain(ipset, direction string) ([]*pb.Chain, error) {
 	var directionStr string
 	var directionChain pb.Chain_Direction
-	if n.Direction == "to" {
+	if direction == "to" {
 		directionStr = "OUTPUT"
 		directionChain = pb.Chain_OUTPUT
-	} else if n.Direction == "from" {
+	} else if direction == "from" {
 		directionStr = "INPUT"
 		directionChain = pb.Chain_INPUT
 	} else {
@@ -508,13 +573,15 @@ func (n *NetworkCommand) PartitionChain(ipset string) ([]*pb.Chain, error) {
 		})
 	}
 
-	chains = append(chains, &pb.Chain{
-		Name:      fmt.Sprintf("%s/1", directionStr),
-		Ipsets:    []string{ipset},
-		Direction: directionChain,
-		Target:    "DROP",
-	})
-
+	if n.Action == NetworkPartitionAction {
+		chains = append(chains, &pb.Chain{
+			Name:      fmt.Sprintf("%s/1", directionStr),
+			Ipsets:    []string{ipset},
+			Direction: directionChain,
+			Protocol:  n.IPProtocol,
+			Target:    "DROP",
+		})
+	}
 	return chains, nil
 }
 
@@ -528,6 +595,13 @@ func (n *NetworkCommand) NeedApplyEtcHosts() bool {
 
 func (n *NetworkCommand) NeedApplyDNSServer() bool {
 	return len(n.DNSServer) > 0
+}
+
+func (n *NetworkCommand) NeedAdditionalChains() bool {
+	if n.Action != NetworkPartitionAction || (n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0) {
+		return true
+	}
+	return false
 }
 
 func NewNetworkCommand() *NetworkCommand {

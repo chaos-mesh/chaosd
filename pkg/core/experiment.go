@@ -31,13 +31,19 @@ const (
 )
 
 const (
-	ProcessAttack = "process"
-	NetworkAttack = "network"
-	StressAttack  = "stress"
-	DiskAttack    = "disk"
-	ClockAttack   = "clock"
-	HostAttack    = "host"
-	JVMAttack     = "jvm"
+	ProcessAttack     = "process"
+	NetworkAttack     = "network"
+	StressAttack      = "stress"
+	DiskAttack        = "disk"
+	ClockAttack       = "clock"
+	HostAttack        = "host"
+	JVMAttack         = "jvm"
+	KafkaAttack       = "kafka"
+	RedisAttack       = "redis"
+	FileAttack        = "file"
+	HTTPAttack        = "http"
+	VMAttack          = "vm"
+	UserDefinedAttack = "userDefined"
 )
 
 const (
@@ -107,6 +113,18 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &JVMCommand{}
 	case ClockAttack:
 		attackConfig = &ClockOption{}
+	case KafkaAttack:
+		attackConfig = &KafkaCommand{}
+	case RedisAttack:
+		attackConfig = &RedisCommand{}
+	case FileAttack:
+		attackConfig = &FileCommand{}
+	case HTTPAttack:
+		attackConfig = &HTTPAttackConfig{}
+	case VMAttack:
+		attackConfig = &VMOption{}
+	case UserDefinedAttack:
+		attackConfig = &UserDefinedOption{}
 	default:
 		return nil
 	}

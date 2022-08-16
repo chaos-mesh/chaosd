@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/go-logr/zapr"
+
 	"github.com/chaos-mesh/chaos-mesh/pkg/mapreader"
 	"github.com/chaos-mesh/chaos-mesh/pkg/ptrace"
 	"github.com/pingcap/log"
@@ -82,12 +84,17 @@ func (c clockAttack) Attack(options core.AttackConfig, env Environment) error {
 	if opt, ok = options.(*core.ClockOption); !ok {
 		return fmt.Errorf("AttackConfig -> *ClockOption meet error")
 	}
-
 	runtime.LockOSThread()
 	defer func() {
 		runtime.UnlockOSThread()
 	}()
-	program, err := ptrace.Trace(opt.Pid)
+
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
+	logger := zapr.NewLogger(zapLogger)
+	program, err := ptrace.Trace(opt.Pid, logger)
 	if err != nil {
 		return err
 	}
@@ -220,7 +227,14 @@ func (c clockAttack) Recover(exp core.Experiment, env Environment) error {
 	defer func() {
 		runtime.UnlockOSThread()
 	}()
-	program, err := ptrace.Trace(opt.Pid)
+
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		return err
+	}
+	logger := zapr.NewLogger(zapLogger)
+
+	program, err := ptrace.Trace(opt.Pid, logger)
 	if err != nil {
 		return err
 	}
@@ -236,7 +250,7 @@ func (c clockAttack) Recover(exp core.Experiment, env Environment) error {
 }
 
 // FindSymbolInEntry finds symbol in entry through parsing elf
-func FindSymbolInEntry(p ptrace.TracedProgram, symbolName string, entry *mapreader.Entry) (uint64, uint64, error) {
+func FindSymbolInEntry(p ptrace.TracedProgram, symbolName string, entry *mapreader.Entry) (addr uint64, size uint64, err error) {
 	libBuffer, err := p.GetLibBuffer(entry)
 	if err != nil {
 		return 0, 0, err
