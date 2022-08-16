@@ -3,7 +3,7 @@ module github.com/chaos-mesh/chaosd
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a
-	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20220717162241-8644a0680800
+	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20220812140450-4bc7ef589c13
 	github.com/chaos-mesh/chaos-mesh/api v0.0.0
 	github.com/containerd/containerd v1.5.10
 	github.com/docker/docker v20.10.7+incompatible
