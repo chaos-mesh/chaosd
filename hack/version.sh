@@ -17,16 +17,14 @@ set -euo pipefail
 
 function chaosd::version::get_version_vars() {
   if [[ -n ${GIT_COMMIT-} ]] || GIT_COMMIT=$(git rev-parse "HEAD^{commit}" 2>/dev/null); then
-
     # Use git describe to find the version based on tags.
-    if [[ -n ${GIT_VERSION-} ]] || GIT_VERSION=$(git describe --tags --abbrev=14 "${GIT_COMMIT}^{commit}" 2>/dev/null); then
-      DASHES_IN_VERSION=$(echo "${GIT_VERSION}" | sed "s/[^-]//g")
-      if [[ "${DASHES_IN_VERSION}" == "---" ]] ; then
-        # We have distance to subversion (v1.1.0-subversion-1-gCommitHash)
-        GIT_VERSION=$(echo "${GIT_VERSION}" | sed "s/-\([0-9]\{1,\}\)-g\([0-9a-f]\{14\}\)$/.\1\+\2/")
-      elif [[ "${DASHES_IN_VERSION}" == "--" ]] ; then
-        # We have distance to base tag (v1.1.0-1-gCommitHash)
-        GIT_VERSION=$(echo "${GIT_VERSION}" | sed "s/-g\([0-9a-f]\{14\}\)$/+\1/")
+    # --always would show the unique abbr commit as fallback.
+    if [[ -n ${GIT_VERSION-} ]] || GIT_VERSION=$(git describe --always --tags --abbrev=14 "${GIT_COMMIT}^{commit}" 2>/dev/null); then
+      # if current commit is not on a certain tag
+      if ! git describe --tags --exact-match >/dev/null 2>&1 ; then
+        # GIT_VERSION=gitBranch-gitCommitHash
+        IFS='-' read -ra GIT_ARRAY <<< "$GIT_VERSION"
+        GIT_VERSION=$(git rev-parse --abbrev-ref HEAD)-${GIT_ARRAY[${#GIT_ARRAY[@]}-1]}
       fi
     fi
   fi
