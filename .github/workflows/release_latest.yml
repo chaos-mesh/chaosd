@@ -23,6 +23,7 @@ jobs:
 
       - name: Prepare build environment
         run: |
+          # actions/checkout require git v2.X
           yum install -y gcc make binutils centos-release-scl
           yum install -y rh-git227-git
           echo /opt/rh/rh-git227/root/usr/bin >> $GITHUB_PATH
