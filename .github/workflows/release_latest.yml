@@ -24,13 +24,10 @@ jobs:
       - name: Prepare build environment
         run: |
           # actions/checkout require git v2.X
-          if [ "${{ matrix.arch }}" == "amd64" ]; then
-            yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
-          fi
-          yum install -y gcc
-          yum install -y make
-          yum install -y binutils
-          yum install -y git
+          yum install -y gcc make binutils centos-release-scl
+          yum install -y rh-git227-git
+          echo /opt/rh/rh-git227/root/usr/bin >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=/opt/rh/httpd24/root/usr/lib64:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
       - uses: actions/checkout@master
         with:
