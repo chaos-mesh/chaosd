@@ -598,7 +598,7 @@ func (n *NetworkCommand) NeedApplyDNSServer() bool {
 }
 
 func (n *NetworkCommand) NeedAdditionalChains() bool {
-	if n.Action != NetworkPartitionAction || (n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0) {
+	if n.Action == NetworkPartitionAction || (n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0) {
 		return true
 	}
 	return false
