@@ -184,7 +184,7 @@ func NetworkPartitionCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkPartitionAction
 			options.CompleteDefaults()
-			fx.New(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
 		},
 	}
 
