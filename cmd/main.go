@@ -71,6 +71,7 @@ func setLog() {
 
 	// only in debug mode print log of go.uber.org/fx
 	if strings.ToLower(logLevel) == "debug" {
+		ctrl.SetLogger(ctrlzap.New(ctrlzap.UseDevMode(true)))
 		utils.PrintFxLog = true
 	}
 }
