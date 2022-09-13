@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
+	"github.com/chaos-mesh/chaos-mesh/controllers/podnetworkchaos/netutils"
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 	"github.com/chaos-mesh/chaos-mesh/pkg/netem"
 	"github.com/pingcap/errors"
@@ -523,20 +524,20 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 	}
 }
 
-func (n *NetworkCommand) AdditionalChain(ipset string) ([]*pb.Chain, error) {
+func (n *NetworkCommand) AdditionalChain(ipset string, uid string) ([]*pb.Chain, error) {
 	chains := make([]*pb.Chain, 0, 2)
 	var toChains, fromChains []*pb.Chain
 	var err error
 
 	if n.Direction == "to" || n.Direction == "both" {
-		toChains, err = n.getAdditionalChain(ipset, "to")
+		toChains, err = n.getAdditionalChain(ipset, "to", uid)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if n.Direction == "from" || n.Direction == "both" {
-		fromChains, err = n.getAdditionalChain(ipset, "from")
+		fromChains, err = n.getAdditionalChain(ipset, "from", uid)
 		if err != nil {
 			return nil, err
 		}
@@ -548,7 +549,7 @@ func (n *NetworkCommand) AdditionalChain(ipset string) ([]*pb.Chain, error) {
 	return chains, nil
 }
 
-func (n *NetworkCommand) getAdditionalChain(ipset, direction string) ([]*pb.Chain, error) {
+func (n *NetworkCommand) getAdditionalChain(ipset, direction string, uid string) ([]*pb.Chain, error) {
 	var directionStr string
 	var directionChain pb.Chain_Direction
 	if direction == "to" {
@@ -562,9 +563,11 @@ func (n *NetworkCommand) getAdditionalChain(ipset, direction string) ([]*pb.Chai
 	}
 
 	chains := make([]*pb.Chain, 0, 2)
+	// The `targetLength`s in `netutils.CompressName()` are different because of
+	// the need to distinguish between the different chains.
 	if len(n.AcceptTCPFlags) > 0 {
 		chains = append(chains, &pb.Chain{
-			Name:      fmt.Sprintf("%s/0", directionStr),
+			Name:      fmt.Sprintf("%s/%s", directionStr, netutils.CompressName(uid, 19, "")),
 			Ipsets:    []string{ipset},
 			Direction: directionChain,
 			Protocol:  n.IPProtocol,
@@ -575,7 +578,7 @@ func (n *NetworkCommand) getAdditionalChain(ipset, direction string) ([]*pb.Chai
 
 	if n.Action == NetworkPartitionAction {
 		chains = append(chains, &pb.Chain{
-			Name:      fmt.Sprintf("%s/1", directionStr),
+			Name:      fmt.Sprintf("%s/%s", directionStr, netutils.CompressName(uid, 20, "")),
 			Ipsets:    []string{ipset},
 			Direction: directionChain,
 			Protocol:  n.IPProtocol,
@@ -598,7 +601,7 @@ func (n *NetworkCommand) NeedApplyDNSServer() bool {
 }
 
 func (n *NetworkCommand) NeedAdditionalChains() bool {
-	if n.Action != NetworkPartitionAction || (n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0) {
+	if n.Action == NetworkPartitionAction || (n.Action == NetworkDelayAction && len(n.AcceptTCPFlags) != 0) {
 		return true
 	}
 	return false
