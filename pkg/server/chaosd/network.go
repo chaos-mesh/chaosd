@@ -190,7 +190,7 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	}
 
 	tcs = append(tcs, newTC)
-	
+
 	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, EnterNS: false}); err != nil {
 		return perrors.WithStack(err)
 	}
