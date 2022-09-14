@@ -74,11 +74,10 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 			}
 		}
 
-		if attack.NeedApplyIptables() {
-			if err = env.Chaos.applyIptables(attack, ipsetName, env.AttackUid); err != nil {
-				return perrors.WithStack(err)
-			}
+		if err = env.Chaos.applyIptables(attack, ipsetName, env.AttackUid); err != nil {
+			return perrors.WithStack(err)
 		}
+
 		// Because some tcs add filter iptables which will not be stored in the DB, we must re-apply these tcs to add the iptables.
 		if err = env.Chaos.applyTC(attack, ipsetName, env.AttackUid); err != nil {
 			return perrors.WithStack(err)
@@ -389,10 +388,6 @@ func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 	case core.NetworkPortOccupiedAction:
 		return env.Chaos.recoverPortOccupied(attack, env.AttackUid)
 	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkPartitionAction, core.NetworkBandwidthAction:
-		// `chaosdaemon.DeamonServer.SetTcs()` may build new iptables which will not be recorded in DB,
-		// and network partition is not suppose to build iptables directly, `recoverIptables()` will not
-		// be called when recovering a partition experiment. To avoid other cross-build situations, all these
-		// three functions will be called.
 		if err := env.Chaos.recoverIPSet(env.AttackUid); err != nil {
 			return perrors.WithStack(err)
 		}

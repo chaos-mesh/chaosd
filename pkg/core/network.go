@@ -511,10 +511,6 @@ func (n *NetworkCommand) NeedApplyIPSet() bool {
 	return false
 }
 
-func (n *NetworkCommand) NeedApplyIptables() bool {
-	return true
-}
-
 func (n *NetworkCommand) NeedApplyTC() bool {
 	switch n.Action {
 	case NetworkDelayAction, NetworkLossAction, NetworkCorruptAction, NetworkDuplicateAction, NetworkBandwidthAction:
