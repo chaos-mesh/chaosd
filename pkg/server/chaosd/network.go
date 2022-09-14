@@ -79,11 +79,9 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 				return perrors.WithStack(err)
 			}
 		}
-
-		if attack.NeedApplyTC() {
-			if err = env.Chaos.applyTC(attack, ipsetName, env.AttackUid); err != nil {
-				return perrors.WithStack(err)
-			}
+		// Because some tcs add filter iptables which will not be stored in the DB, we must re-apply these tcs to add the iptables.
+		if err = env.Chaos.applyTC(attack, ipsetName, env.AttackUid); err != nil {
+			return perrors.WithStack(err)
 		}
 
 	case core.NetworkNICDownAction:
@@ -184,15 +182,22 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 		return perrors.WithStack(err)
 	}
 
-	newTC, err := attack.ToTC(ipset)
-	if err != nil {
-		return perrors.WithStack(err)
-	}
+	var newTC *pb.Tc
+	if attack.NeedApplyTC() {
+		newTC, err = attack.ToTC(ipset)
+		if err != nil {
+			return perrors.WithStack(err)
+		}
 
-	tcs = append(tcs, newTC)
+		tcs = append(tcs, newTC)
+	}
 
 	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, EnterNS: false}); err != nil {
 		return perrors.WithStack(err)
+	}
+
+	if !attack.NeedApplyTC() {
+		return nil
 	}
 
 	tc := &core.TcParameter{
