@@ -77,7 +77,7 @@ type DiskOption struct {
 	Percent           string `json:"percent,omitempty"`
 	PayloadProcessNum uint8  `json:"payload-process-num,omitempty"`
 
-	FillByFAllocate bool `json:"fill-by-fallocate,omitempty"`
+	FillByFallocate bool `json:"fallocate,omitempty"`
 }
 
 func NewDiskOption() *DiskOption {
@@ -86,7 +86,7 @@ func NewDiskOption() *DiskOption {
 			Kind: DiskAttack,
 		},
 		PayloadProcessNum: 1,
-		FillByFAllocate:   true,
+		FillByFallocate:   true,
 	}
 }
 
@@ -105,7 +105,7 @@ func (opt *DiskOption) PreProcess() (*DiskAttackConfig, error) {
 		return nil, err
 	}
 
-	if opt.Action == DiskFillAction && opt.FillByFAllocate && byteSize != 0 {
+	if opt.Action == DiskFillAction && opt.FillByFallocate && byteSize != 0 {
 		return &DiskAttackConfig{
 			CommonAttackConfig: opt.CommonAttackConfig,
 			DdOptions:          nil,
