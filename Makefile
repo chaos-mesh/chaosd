@@ -95,7 +95,7 @@ ifeq (,$(wildcard bin/tools/memStress))
 	mv memStress ./bin/tools/memStress
 endif
 ifeq (,$(wildcard bin/tools/tproxy))
-	curl -fsSL -o tproxy-${ARCH}.tar.gz tproxy_https://github.com/chaos-mesh/chaos-tproxy/releases/download/v0.5.4/tproxy-${ARCH}.tar.gz
+	curl -fsSL -o tproxy-${ARCH}.tar.gz https://github.com/chaos-mesh/chaos-tproxy/releases/download/v0.5.4/tproxy-${ARCH}.tar.gz
 	tar zxvf tproxy-${ARCH}.tar.gz
 	mv tproxy ./bin/tools/tproxy
 endif
