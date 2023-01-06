@@ -90,9 +90,14 @@ ifeq (,$(wildcard bin/tools/byteman))
 	mv ${BYTEMAN_DIR} ./bin/tools/byteman
 endif
 ifeq (,$(wildcard bin/tools/memStress))
-	curl -fsSL -o memStress_v0.3-x86_64-linux-gnu.tar.gz https://github.com/chaos-mesh/memStress/releases/download/v0.3/memStress_v0.3-${ARCH}-linux-gnu.tar.gz
-	tar zxvf memStress_v0.3-x86_64-linux-gnu.tar.gz
+	curl -fsSL -o memStress_v0.3-${ARCH}-linux-gnu.tar.gz https://github.com/chaos-mesh/memStress/releases/download/v0.3/memStress_v0.3-${ARCH}-linux-gnu.tar.gz
+	tar zxvf memStress_v0.3-${ARCH}-linux-gnu.tar.gz
 	mv memStress ./bin/tools/memStress
+endif
+ifeq (,$(wildcard bin/tools/tproxy))
+	curl -fsSL -o tproxy-${ARCH}.tar.gz https://github.com/chaos-mesh/chaos-tproxy/releases/download/v0.5.4/tproxy-${ARCH}.tar.gz
+	tar zxvf tproxy-${ARCH}.tar.gz
+	mv tproxy ./bin/tools/tproxy
 endif
 
 swagger_spec:
