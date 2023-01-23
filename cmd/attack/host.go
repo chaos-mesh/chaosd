@@ -41,6 +41,7 @@ func NewHostAttackCommand(uid *string) *cobra.Command {
 	}
 
 	cmd.AddCommand(NewHostShutdownCommand(dep, options))
+	cmd.AddCommand(NewHostRebootCommand(dep, options))
 
 	return cmd
 }
@@ -51,6 +52,21 @@ func NewHostShutdownCommand(dep fx.Option, options *core.HostCommand) *cobra.Com
 		Short: "shutdowns system, this action will trigger shutdown of the host machine",
 
 		Run: func(*cobra.Command, []string) {
+			options.Action = core.HostShutdownAction
+			utils.FxNewAppWithoutLog(dep, fx.Invoke(hostAttackF)).Run()
+		},
+	}
+
+	return cmd
+}
+
+func NewHostRebootCommand(dep fx.Option, options *core.HostCommand) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "reboot",
+		Short: "reboot system, this action will trigger reboot of the host machine",
+
+		Run: func(*cobra.Command, []string) {
+			options.Action = core.HostRebootAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(hostAttackF)).Run()
 		},
 	}

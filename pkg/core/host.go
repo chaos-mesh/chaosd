@@ -19,6 +19,7 @@ import (
 
 const (
 	HostShutdownAction = "shutdown"
+	HostRebootAction   = "reboot"
 )
 
 type HostCommand struct {
@@ -40,8 +41,7 @@ func (h HostCommand) RecoverData() string {
 func NewHostCommand() *HostCommand {
 	return &HostCommand{
 		CommonAttackConfig: CommonAttackConfig{
-			Kind:   HostAttack,
-			Action: HostShutdownAction,
+			Kind: HostAttack,
 		},
 	}
 }
