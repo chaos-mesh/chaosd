@@ -103,6 +103,10 @@ func NewKafkaIOCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Command
 		},
 	}
 
+	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka server")
+	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka server")
+	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "the username of kafka client")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "the password of kafka client")
 	cmd.Flags().StringVarP(&options.ConfigFile, "config", "c", "/etc/kafka/server.properties", "the path of server config")
 	cmd.Flags().BoolVarP(&options.NonReadable, "non-readable", "r", false, "make kafka cluster non-readable")
 	cmd.Flags().BoolVarP(&options.NonWritable, "non-writable", "w", false, "make kafka cluster non-writable")
