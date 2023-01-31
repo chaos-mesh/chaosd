@@ -32,6 +32,7 @@ import (
 	"github.com/pingcap/log"
 	perr "github.com/pkg/errors"
 	client "github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/sasl/plain"
 	"github.com/segmentio/kafka-go/sasl/scram"
 	"go.uber.org/zap"
 
@@ -77,7 +78,19 @@ func newDialer(attack *core.KafkaCommand) (dialer *client.Dialer, err error) {
 		DualStack: true,
 	}
 	if attack.Username != "" {
-		dialer.SASLMechanism, err = scram.Mechanism(scram.SHA512, attack.Username, attack.Password)
+		switch core.KafkaAuthMechanism(attack.AuthMechanism) {
+		case core.SaslPlain:
+			dialer.SASLMechanism = plain.Mechanism{
+				Username: attack.Username,
+				Password: attack.Password,
+			}
+		case core.SaslScream256:
+			dialer.SASLMechanism, err = scram.Mechanism(scram.SHA256, attack.Username, attack.Password)
+		case core.SaslScram512:
+			dialer.SASLMechanism, err = scram.Mechanism(scram.SHA512, attack.Username, attack.Password)
+		default:
+			return nil, errors.Errorf("invalid auth mechanism: %s", attack.AuthMechanism)
+		}
 		if err != nil {
 			return nil, perr.Wrap(err, "create scram mechanism")
 		}
