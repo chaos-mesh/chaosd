@@ -74,16 +74,13 @@ func (networkAttack) Attack(options core.AttackConfig, env Environment) (err err
 			}
 		}
 
-		if attack.NeedApplyIptables() {
-			if err = env.Chaos.applyIptables(attack, ipsetName, env.AttackUid); err != nil {
-				return perrors.WithStack(err)
-			}
+		if err = env.Chaos.applyIptables(attack, ipsetName, env.AttackUid); err != nil {
+			return perrors.WithStack(err)
 		}
 
-		if attack.NeedApplyTC() {
-			if err = env.Chaos.applyTC(attack, ipsetName, env.AttackUid); err != nil {
-				return perrors.WithStack(err)
-			}
+		// Because some tcs add filter iptables which will not be stored in the DB, we must re-apply these tcs to add the iptables.
+		if err = env.Chaos.applyTC(attack, ipsetName, env.AttackUid); err != nil {
+			return perrors.WithStack(err)
 		}
 
 	case core.NetworkNICDownAction:
@@ -140,9 +137,11 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, ipset, uid string) e
 		return perrors.WithStack(err)
 	}
 	chains := core.IptablesRuleList(iptables).ToChains()
+
+	var newChains []*pb.Chain
 	// Presently, only partition and delay with `accept-tcp-flags` need to add additional chains
 	if attack.NeedAdditionalChains() {
-		newChains, err := attack.AdditionalChain(ipset)
+		newChains, err = attack.AdditionalChain(ipset, uid)
 		if err != nil {
 			return perrors.WithStack(err)
 		}
@@ -156,15 +155,17 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, ipset, uid string) e
 		return perrors.WithStack(err)
 	}
 
-	// TODO: cwen0
-	//if err := s.iptablesRule.Set(context.Background(), &core.IptablesRule{
-	//	Name:       newChain.Name,
-	//	IPSets:     strings.Join(newChain.Ipsets, ","),
-	//	Direction:  pb.Chain_Direction_name[int32(newChain.Direction)],
-	//	Experiment: uid,
-	//}); err != nil {
-	//	return perrors.WithStack(err)
-	//}
+	for _, newChain := range newChains {
+		if err := s.iptablesRule.Set(context.Background(), &core.IptablesRule{
+			Name:       newChain.Name,
+			IPSets:     strings.Join(newChain.Ipsets, ","),
+			Direction:  pb.Chain_Direction_name[int32(newChain.Direction)],
+			Protocol:   newChain.Protocol,
+			Experiment: uid,
+		}); err != nil {
+			return perrors.WithStack(err)
+		}
+	}
 
 	return nil
 }
@@ -180,15 +181,22 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 		return perrors.WithStack(err)
 	}
 
-	newTC, err := attack.ToTC(ipset)
-	if err != nil {
-		return perrors.WithStack(err)
-	}
+	var newTC *pb.Tc
+	if attack.NeedApplyTC() {
+		newTC, err = attack.ToTC(ipset)
+		if err != nil {
+			return perrors.WithStack(err)
+		}
 
-	tcs = append(tcs, newTC)
+		tcs = append(tcs, newTC)
+	}
 
 	if _, err := s.svr.SetTcs(context.Background(), &pb.TcsRequest{Tcs: tcs, EnterNS: false}); err != nil {
 		return perrors.WithStack(err)
+	}
+
+	if !attack.NeedApplyTC() {
+		return nil
 	}
 
 	tc := &core.TcParameter{
@@ -380,22 +388,16 @@ func (networkAttack) Recover(exp core.Experiment, env Environment) error {
 	case core.NetworkPortOccupiedAction:
 		return env.Chaos.recoverPortOccupied(attack, env.AttackUid)
 	case core.NetworkDelayAction, core.NetworkLossAction, core.NetworkCorruptAction, core.NetworkDuplicateAction, core.NetworkPartitionAction, core.NetworkBandwidthAction:
-		if attack.NeedApplyIPSet() {
-			if err := env.Chaos.recoverIPSet(env.AttackUid); err != nil {
-				return perrors.WithStack(err)
-			}
+		if err := env.Chaos.recoverIPSet(env.AttackUid); err != nil {
+			return perrors.WithStack(err)
 		}
 
-		if attack.NeedApplyIptables() {
-			if err := env.Chaos.recoverIptables(env.AttackUid); err != nil {
-				return perrors.WithStack(err)
-			}
+		if err := env.Chaos.recoverIptables(env.AttackUid); err != nil {
+			return perrors.WithStack(err)
 		}
 
-		if attack.NeedApplyTC() {
-			if err := env.Chaos.recoverTC(env.AttackUid, attack.Device); err != nil {
-				return perrors.WithStack(err)
-			}
+		if err := env.Chaos.recoverTC(env.AttackUid, attack.Device); err != nil {
+			return perrors.WithStack(err)
 		}
 	case core.NetworkNICDownAction:
 		return env.Chaos.recoverNICDown(attack)

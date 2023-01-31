@@ -22,11 +22,11 @@ bin_path=../../../bin
 
 echo "download byteman example"
 if [[ ! (-e byteman-example) ]]; then
-    git clone https://github.com/WangXiangUSTC/byteman-example.git
+    git clone https://github.com/chaos-mesh/byteman-example.git
 fi
 
 echo "download byteman && set environment variable"
-byteman_dir="byteman-chaos-mesh-download-v4.0.18-0.12"
+byteman_dir="byteman-chaos-mesh-download-v4.0.20-0.12"
 if [[ ! (-e ${byteman_dir}.tar.gz) ]]; then
     curl -fsSL -o ${byteman_dir}.tar.gz https://mirrors.chaos-mesh.org/${byteman_dir}.tar.gz
     tar zxvf ${byteman_dir}.tar.gz
