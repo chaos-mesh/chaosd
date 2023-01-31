@@ -60,8 +60,8 @@ type KafkaCommand struct {
 	NonWritable bool `json:"nonWritable,omitempty"`
 
 	// recover data for io attack
-	OriginModeOfFiles map[string]uint32 `json:"-"`
-	OriginConfig      string            `json:"-"`
+	OriginModeOfFiles map[string]uint32 `json:"originModeOfFiles,omitempty"`
+	OriginConfig      string            `json:"originConfig,omitempty"`
 }
 
 func (c *KafkaCommand) Validate() error {
