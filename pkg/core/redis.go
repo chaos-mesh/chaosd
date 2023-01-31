@@ -47,7 +47,7 @@ type RedisCommand struct {
 	Expiration  string `json:"expiration,omitempty"`
 	Option      string `json:"option,omitempty"`
 
-	OriginCacheSize string `json:"-"`
+	OriginCacheSize string `json:"originCacheSize,omitempty"`
 }
 
 func (r *RedisCommand) Validate() error {
