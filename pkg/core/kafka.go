@@ -24,9 +24,18 @@ type KafkaAttackAction string
 
 const (
 	// Kafka actions
-	KafkaFillAction  = "fill"
-	KafkaFloodAction = "flood"
-	KafkaIOAction    = "io"
+	KafkaFillAction  KafkaAttackAction = "fill"
+	KafkaFloodAction                   = "flood"
+	KafkaIOAction                      = "io"
+)
+
+type KafkaAuthMechanism string
+
+const (
+	SaslPlain          KafkaAuthMechanism = "sasl/plain"
+	SaslScream256                         = "sasl/scram-sha-256"
+	SaslScram512                          = "sasl/scram-sha-512"
+	AuthMechanismEmpty                    = ""
 )
 
 var _ AttackConfig = &KafkaCommand{}
@@ -39,12 +48,13 @@ type KafkaCommand struct {
 	Topic  string `json:"topic,omitempty"`
 
 	// options for fill and flood attack
-	Host        string `json:"host,omitempty"`
-	Port        uint16 `json:"port,omitempty"`
-	Username    string `json:"username,omitempty"`
-	Password    string `json:"password,omitempty"`
-	MessageSize uint   `json:"messageSize,omitempty"`
-	MaxBytes    uint64 `json:"maxBytes,omitempty"`
+	Host          string `json:"host,omitempty"`
+	Port          uint16 `json:"port,omitempty"`
+	Username      string `json:"username,omitempty"`
+	Password      string `json:"password,omitempty"`
+	AuthMechanism string `json:"authMechanism,omitempty"`
+	MessageSize   uint   `json:"messageSize,omitempty"`
+	MaxBytes      uint64 `json:"maxBytes,omitempty"`
 
 	// options for fill attack
 	ReloadCommand string `json:"reloadCommand,omitempty"`
@@ -69,6 +79,10 @@ func (c *KafkaCommand) Validate() error {
 		return errors.New("topic is required")
 	}
 
+	if err := c.validateAuthMechanism(); err != nil {
+		return err
+	}
+
 	switch c.Action {
 	case KafkaFillAction:
 		return c.validateFillAction()
@@ -78,6 +92,25 @@ func (c *KafkaCommand) Validate() error {
 		return c.validateIOAction()
 	default:
 		return errors.Errorf("invalid action: %s", c.Action)
+	}
+}
+
+func (c *KafkaCommand) validateAuthMechanism() error {
+	if c.Username != "" && c.AuthMechanism == "" {
+		return errors.New("auth mechanism is required")
+	}
+
+	switch KafkaAuthMechanism(c.AuthMechanism) {
+	case SaslPlain:
+		fallthrough
+	case SaslScram512:
+		fallthrough
+	case SaslScream256:
+		fallthrough
+	case AuthMechanismEmpty:
+		return nil
+	default:
+		return errors.Errorf("invalid auth mechanism: %s", c.AuthMechanism)
 	}
 }
 

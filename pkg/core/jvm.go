@@ -139,7 +139,8 @@ type JVMStressSpec struct {
 
 // JVMMySQLSpec is the specification of MySQL fault injection in JVM
 // only when SQL match the Database, Table and SQLType, chaosd will inject fault
-// for examle:
+// for example:
+//
 //   SQL is "select * from test.t1",
 //   only when ((Database == "test" || Database == "") && (Table == "t1" || Table == "") && (SQLType == "select" || SQLType == "")) is true, chaosd will inject fault
 type JVMMySQLSpec struct {
