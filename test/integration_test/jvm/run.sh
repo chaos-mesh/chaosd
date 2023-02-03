@@ -84,7 +84,7 @@ export MYSQL_USER=root
 export MYSQL_CONNECTOR_VERSION=8
 mvn exec:java -Dexec.mainClass="com.mysqldemo.App" > mysqldemo.log 2>&1 &
 # make sure it works
-for (( i=0; i<=20; i++ ))
+for (( i=0; i<=30; i++ ))
 do
     tail_log=`tail -1 mysqldemo.log`
     if [ "$tail_log" == "Server start!" ]; then
