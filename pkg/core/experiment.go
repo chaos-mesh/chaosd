@@ -129,6 +129,8 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &VMOption{}
 	case UserDefinedAttack:
 		attackConfig = &UserDefinedOption{}
+	case PatroniAttack:
+		attackConfig = &PatroniCommand{}
 	default:
 		return nil
 	}

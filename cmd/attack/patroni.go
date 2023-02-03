@@ -48,6 +48,9 @@ func NewPatroniAttackCommand(uid *string) *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(&options.User, "user", "u", "patroni", "patroni cluster user")
 	cmd.PersistentFlags().StringVar(&options.Password, "password", "p", "patroni cluster password")
+	cmd.PersistentFlags().StringVarP(&options.Address, "address", "a", "", "patroni cluster address, any of available hosts")
+	cmd.PersistentFlags().BoolVarP(&options.LocalMode, "local-mode", "l", false, "execute patronictl on host with chaosd. User with privileges required.")
+	cmd.PersistentFlags().BoolVarP(&options.RemoteMode, "remote-mode", "r", false, "execute patroni command by REST API")
 
 	return cmd
 }
@@ -55,15 +58,15 @@ func NewPatroniAttackCommand(uid *string) *cobra.Command {
 func NewPatroniSwitchoverCommand(dep fx.Option, options *core.PatroniCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "switchover",
-		Short: "exec switchover, default without another attack. Warning! Command is not recover!",
+		Short: "exec switchover command. Warning! Command is not recover!",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.SwitchoverAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(PatroniAttackF)).Run()
 		},
 	}
-	cmd.Flags().StringVarP(&options.Address, "address", "a", "", "patroni cluster address, any of available hosts")
 	cmd.Flags().StringVarP(&options.Candidate, "candidate", "c", "", "switchover candidate, default random unit for replicas")
-	cmd.Flags().StringVarP(&options.Scheduled_at, "scheduled_at", "d", fmt.Sprintln(time.Now().Add(time.Second*60).Format(time.RFC3339)), "scheduled switchover, default now()+1 minute")
+	cmd.Flags().StringVarP(&options.Scheduled_at, "scheduled_at", "d", fmt.Sprint(time.Now().Add(time.Second*60).Format(time.RFC3339)), `scheduled switchover, 
+	default now()+1 minute by remote mode`)
 
 	return cmd
 }
@@ -71,14 +74,13 @@ func NewPatroniSwitchoverCommand(dep fx.Option, options *core.PatroniCommand) *c
 func NewPatroniFailoverCommand(dep fx.Option, options *core.PatroniCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "failover",
-		Short: "exec failover, default without another attack",
+		Short: "Exec failover command. Warning! Command is not recover!",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.FailoverAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(PatroniAttackF)).Run()
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Address, "address", "a", "", "patroni cluster address, any of available hosts")
 	cmd.Flags().StringVarP(&options.Candidate, "leader", "c", "", "failover new leader, default random unit for replicas")
 	return cmd
 }

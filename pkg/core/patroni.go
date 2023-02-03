@@ -35,6 +35,8 @@ type PatroniCommand struct {
 	User         string `json:"user,omitempty"`
 	Password     string `json:"password,omitempty"`
 	Scheduled_at string `json:"scheduled_at,omitempty"`
+	LocalMode    bool   `json:"local_mode,omitempty"`
+	RemoteMode   bool   `json:"remote_mode,omitempty"`
 	RecoverCmd   string `json:"recoverCmd,omitempty"`
 }
 
@@ -42,16 +44,24 @@ func (p *PatroniCommand) Validate() error {
 	if err := p.CommonAttackConfig.Validate(); err != nil {
 		return err
 	}
-	if len(p.Address) == 0 {
-		return errors.New("address not provided")
+
+	if !p.RemoteMode && !p.LocalMode {
+		return errors.New("local or remote mode required")
 	}
 
-	if len(p.User) == 0 {
-		return errors.New("patroni user not provided")
-	}
+	if p.RemoteMode {
 
-	if len(p.Password) == 0 {
-		return errors.New("patroni password not provided")
+		if len(p.Address) == 0 {
+			return errors.New("address not provided")
+		}
+
+		if len(p.User) == 0 {
+			return errors.New("patroni user not provided")
+		}
+
+		if len(p.Password) == 0 {
+			return errors.New("patroni password not provided")
+		}
 	}
 
 	return nil

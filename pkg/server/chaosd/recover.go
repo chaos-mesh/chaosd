@@ -79,6 +79,8 @@ func (s *Server) RecoverAttack(uid string) error {
 			attackType = VMAttack
 		case core.UserDefinedAttack:
 			attackType = UserDefinedAttack
+		case core.PatroniAttack:
+			attackType = PatroniAttack
 		default:
 			return perr.Errorf("chaos experiment kind %s not found", exp.Kind)
 		}
