@@ -29,12 +29,23 @@ var Host HostManager = UnixHost{}
 
 const CmdShutdown = "shutdown"
 
+const CmdReboot = "reboot"
+
 func (h UnixHost) Name() string {
 	return "unix"
 }
 
 func (h UnixHost) Shutdown() error {
 	cmd := exec.Command(CmdShutdown)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Error(string(output), zap.Error(err))
+	}
+	return err
+}
+
+func (h UnixHost) Reboot() error {
+	cmd := exec.Command(CmdReboot)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Error(string(output), zap.Error(err))

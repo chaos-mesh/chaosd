@@ -14,6 +14,7 @@
 package chaosd
 
 import (
+	"github.com/pingcap/errors"
 	perr "github.com/pkg/errors"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
@@ -22,6 +23,7 @@ import (
 type HostManager interface {
 	Name() string
 	Shutdown() error
+	Reboot() error
 }
 
 type hostAttack struct{}
@@ -29,9 +31,23 @@ type hostAttack struct{}
 var HostAttack AttackType = hostAttack{}
 
 func (hostAttack) Attack(options core.AttackConfig, _ Environment) error {
-	if err := Host.Shutdown(); err != nil {
-		return perr.WithStack(err)
+	hostOption, ok := options.(*core.HostCommand)
+	if !ok {
+		return errors.New("the type is not HostOption")
 	}
+
+	if hostOption.Action == core.HostShutdownAction {
+		if err := Host.Shutdown(); err != nil {
+			return perr.WithStack(err)
+		}
+	}
+
+	if hostOption.Action == core.HostRebootAction {
+		if err := Host.Reboot(); err != nil {
+			return perr.WithStack(err)
+		}
+	}
+
 	return nil
 }
 
