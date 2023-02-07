@@ -139,24 +139,25 @@ type JVMStressSpec struct {
 
 // JVMMySQLSpec is the specification of MySQL fault injection in JVM
 // only when SQL match the Database, Table and SQLType, chaosd will inject fault
-// for examle:
+// for example:
+//
 //   SQL is "select * from test.t1",
 //   only when ((Database == "test" || Database == "") && (Table == "t1" || Table == "") && (SQLType == "select" || SQLType == "")) is true, chaosd will inject fault
 type JVMMySQLSpec struct {
 	// the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8) now
-	MySQLConnectorVersion string
+	MySQLConnectorVersion string `json:"mysql-connector-version,omitempty"`
 
 	// the match database
 	// default value is "", means match all database
-	Database string
+	Database string `json:"database,omitempty"`
 
 	// the match table
 	// default value is "", means match all table
-	Table string
+	Table string `json:"table,omitempty"`
 
 	// the match sql type
 	// default value is "", means match all SQL type
-	SQLType string
+	SQLType string `json:"sql-type,omitempty"`
 }
 
 type BytemanTemplateSpec struct {

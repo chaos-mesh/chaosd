@@ -18,30 +18,29 @@ import (
 )
 
 const (
-	HostShutdownAction = "shutdown"
-	HostRebootAction   = "reboot"
+	VMAction = "vm"
 )
 
-type HostCommand struct {
+type VMOption struct {
 	CommonAttackConfig
+
+	VMName string `json:"vm-name,omitempty"`
 }
 
-var _ AttackConfig = &HostCommand{}
-
-func (h *HostCommand) Validate() error {
-	return h.CommonAttackConfig.Validate()
-}
-
-func (h HostCommand) RecoverData() string {
-	data, _ := json.Marshal(h)
-
-	return string(data)
-}
-
-func NewHostCommand() *HostCommand {
-	return &HostCommand{
+func NewVMOption() *VMOption {
+	return &VMOption{
 		CommonAttackConfig: CommonAttackConfig{
-			Kind: HostAttack,
+			Kind: VMAction,
 		},
 	}
+}
+
+func (opt *VMOption) CompleteDefaults() {
+	return
+}
+
+func (opt VMOption) RecoverData() string {
+	data, _ := json.Marshal(opt)
+
+	return string(data)
 }

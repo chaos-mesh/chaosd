@@ -16,6 +16,11 @@ package server
 import (
 	"os"
 
+	"github.com/go-logr/logr"
+	"github.com/go-logr/zapr"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
+
 	"go.uber.org/fx"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon"
@@ -28,6 +33,7 @@ import (
 
 var Module = fx.Options(
 	fx.Provide(
+		provideNIl,
 		chaosd.NewServer,
 		httpserver.NewServer,
 		crclient.NewNodeCRClient,
@@ -36,3 +42,12 @@ var Module = fx.Options(
 		scheduler.NewScheduler,
 	),
 )
+
+func provideNIl() (prometheus.Registerer, logr.Logger) {
+	zapLogger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	logger := zapr.NewLogger(zapLogger)
+	return nil, logger
+}

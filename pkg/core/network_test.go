@@ -35,7 +35,7 @@ func TestPatitionChain(t *testing.T) {
 				},
 				chains: []*pb.Chain{
 					{
-						Name:      "OUTPUT/1",
+						Name:      "OUTPUT/3c552_e0172bc4fd046_",
 						Ipsets:    []string{"test"},
 						Direction: pb.Chain_OUTPUT,
 						Protocol:  "tcp",
@@ -53,7 +53,7 @@ func TestPatitionChain(t *testing.T) {
 				},
 				chains: []*pb.Chain{
 					{
-						Name:      "INPUT/1",
+						Name:      "INPUT/3c552_e0172bc4fd046_",
 						Ipsets:    []string{"test"},
 						Direction: pb.Chain_INPUT,
 						Protocol:  "tcp",
@@ -71,14 +71,14 @@ func TestPatitionChain(t *testing.T) {
 				},
 				chains: []*pb.Chain{
 					{
-						Name:      "OUTPUT/1",
+						Name:      "OUTPUT/3c552_e0172bc4fd046_",
 						Ipsets:    []string{"test"},
 						Direction: pb.Chain_OUTPUT,
 						Protocol:  "tcp",
 						Target:    "DROP",
 					},
 					{
-						Name:      "INPUT/1",
+						Name:      "INPUT/3c552_e0172bc4fd046_",
 						Ipsets:    []string{"test"},
 						Direction: pb.Chain_INPUT,
 						Protocol:  "tcp",
@@ -97,7 +97,7 @@ func TestPatitionChain(t *testing.T) {
 				},
 				chains: []*pb.Chain{
 					{
-						Name:      "OUTPUT/0",
+						Name:      "OUTPUT/3c552_e0172bc4fd04_",
 						Ipsets:    []string{"test"},
 						Direction: pb.Chain_OUTPUT,
 						Protocol:  "tcp",
@@ -105,14 +105,14 @@ func TestPatitionChain(t *testing.T) {
 						Target:    "ACCEPT",
 					},
 					{
-						Name:      "OUTPUT/1",
+						Name:      "OUTPUT/3c552_e0172bc4fd046_",
 						Ipsets:    []string{"test"},
 						Direction: pb.Chain_OUTPUT,
 						Protocol:  "tcp",
 						Target:    "DROP",
 					},
 					{
-						Name:      "INPUT/0",
+						Name:      "INPUT/3c552_e0172bc4fd04_",
 						Ipsets:    []string{"test"},
 						Direction: pb.Chain_INPUT,
 						Protocol:  "tcp",
@@ -120,7 +120,7 @@ func TestPatitionChain(t *testing.T) {
 						Target:    "ACCEPT",
 					},
 					{
-						Name:      "INPUT/1",
+						Name:      "INPUT/3c552_e0172bc4fd046_",
 						Ipsets:    []string{"test"},
 						Direction: pb.Chain_INPUT,
 						Protocol:  "tcp",
@@ -130,7 +130,7 @@ func TestPatitionChain(t *testing.T) {
 			},
 		}
 		for _, tc := range testCases {
-			chains, err := tc.cmd.PartitionChain("test")
+			chains, err := tc.cmd.AdditionalChain("test", "3c5528e1-4c32-4f80-983c-913ad7e860e2")
 			if err != nil {
 				t.Errorf("failed to partition chain: %v", err)
 			}

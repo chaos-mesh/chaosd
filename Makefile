@@ -10,7 +10,7 @@ GO     := $(GOENV) go
 CGO    := $(CGOENV) go
 GOTEST := TEST_USE_EXISTING_CLUSTER=false NO_PROXY="${NO_PROXY},testhost" go test
 SHELL    := /usr/bin/env bash
-BYTEMAN_DIR := byteman-chaos-mesh-download-v4.0.18-0.9
+BYTEMAN_DIR := byteman-chaos-mesh-download-v4.0.20-0.12
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -30,11 +30,25 @@ endif
 PACKAGE_LIST := go list ./... | grep -vE "chaos-daemon/test|pkg/ptrace|zz_generated|vendor"
 PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/chaos-mesh/chaosd/||'
 
+UNAME_M := $(shell uname -m)
+ifeq ($(UNAME_M),x86_64)
+	ARCH = x86_64
+endif
+ifeq ($(UNAME_M),amd64)
+	ARCH = x86_64
+endif
+ifeq ($(UNAME_M),aarch64)
+	ARCH = aarch64
+endif
+ifeq ($(UNAME_M),arm64)
+	ARCH = aarch64
+endif
+
 $(GOBIN)/revive:
-	$(GO) get github.com/mgechev/revive@v1.0.2-0.20200225072153-6219ca02fffb
+	$(GO) install github.com/mgechev/revive@v1.0.2-0.20200225072153-6219ca02fffb
 
 $(GOBIN)/goimports:
-	$(GO) get golang.org/x/tools/cmd/goimports@v0.1.1
+	$(GO) install golang.org/x/tools/cmd/goimports@v0.1.1
 
 build: binary
 
@@ -67,13 +81,23 @@ chaos-tools:
 	$(CGOENV) go build -o bin/tools/PortOccupyTool tools/PortOccupyTool.go
 	$(CGOENV) go build -o bin/tools/FileTool tools/file/*.go
 ifeq (,$(wildcard bin/tools/stress-ng))
-	curl -fsSL -o ./bin/tools/stress-ng https://mirrors.chaos-mesh.org/latest/stress-ng
+	curl -fsSL -o ./bin/tools/stress-ng https://github.com/chaos-mesh/stress-ng/releases/download/v0.14.02/stress-ng-${ARCH}
 	chmod +x ./bin/tools/stress-ng
 endif
 ifeq (,$(wildcard bin/tools/byteman))
 	curl -fsSL -o ${BYTEMAN_DIR}.tar.gz https://mirrors.chaos-mesh.org/${BYTEMAN_DIR}.tar.gz
 	tar zxvf ${BYTEMAN_DIR}.tar.gz
 	mv ${BYTEMAN_DIR} ./bin/tools/byteman
+endif
+ifeq (,$(wildcard bin/tools/memStress))
+	curl -fsSL -o memStress_v0.3-${ARCH}-linux-gnu.tar.gz https://github.com/chaos-mesh/memStress/releases/download/v0.3/memStress_v0.3-${ARCH}-linux-gnu.tar.gz
+	tar zxvf memStress_v0.3-${ARCH}-linux-gnu.tar.gz
+	mv memStress ./bin/tools/memStress
+endif
+ifeq (,$(wildcard bin/tools/tproxy))
+	curl -fsSL -o tproxy-${ARCH}.tar.gz https://github.com/chaos-mesh/chaos-tproxy/releases/download/v0.5.4/tproxy-${ARCH}.tar.gz
+	tar zxvf tproxy-${ARCH}.tar.gz
+	mv tproxy ./bin/tools/tproxy
 endif
 
 swagger_spec:
