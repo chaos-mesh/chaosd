@@ -38,8 +38,9 @@ func NewCommandPools(ctx context.Context, deadline *time.Time, size int) *Comman
 	var cancel context.CancelFunc
 	if deadline != nil {
 		ctx2, cancel = context.WithDeadline(ctx, *deadline)
+	} else {
+		ctx2, cancel = context.WithCancel(ctx)
 	}
-	ctx2, cancel = context.WithCancel(ctx)
 	return &CommandPools{
 		cancel: cancel,
 		pools: tunny.NewFunc(size, func(payload interface{}) interface{} {
