@@ -16,8 +16,8 @@ package httpserver
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -60,7 +60,7 @@ func (s *HttpServer) startHttpsServer() (err error) {
 	if mode == MTLSServer {
 		log.Info("starting HTTPS server with Client Auth", zap.String("address", httpsServerAddr))
 
-		caCert, ioErr := ioutil.ReadFile(s.conf.SSLClientCAFile)
+		caCert, ioErr := os.ReadFile(s.conf.SSLClientCAFile)
 		if ioErr != nil {
 			err = ioErr
 			return
