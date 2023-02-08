@@ -37,7 +37,7 @@ var (
 	errMissingClientCert = utils.ErrAuth.New("Sorry, but you need to provide a client certificate to continue")
 )
 
-func (s *httpServer) serverMode() string {
+func (s *HttpServer) serverMode() string {
 	if len(s.conf.SSLCertFile) > 0 {
 		if len(s.conf.SSLClientCAFile) > 0 {
 			return MTLSServer
@@ -47,7 +47,7 @@ func (s *httpServer) serverMode() string {
 	return HTTPServer
 }
 
-func (s *httpServer) startHttpsServer() (err error) {
+func (s *HttpServer) startHttpsServer() (err error) {
 	mode := s.serverMode()
 	if mode == HTTPServer {
 		return nil

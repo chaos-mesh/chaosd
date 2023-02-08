@@ -30,7 +30,7 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/swaggerserver"
 )
 
-type httpServer struct {
+type HttpServer struct {
 	conf  *config.Config
 	chaos *chaosd.Server
 	exp   core.ExperimentStore
@@ -40,15 +40,15 @@ func NewServer(
 	conf *config.Config,
 	chaos *chaosd.Server,
 	exp core.ExperimentStore,
-) *httpServer {
-	return &httpServer{
+) *HttpServer {
+	return &HttpServer{
 		conf:  conf,
 		chaos: chaos,
 		exp:   exp,
 	}
 }
 
-func Register(s *httpServer, scheduler scheduler.Scheduler) {
+func Register(s *HttpServer, scheduler scheduler.Scheduler) {
 	if s.conf.Platform != config.LocalPlatform {
 		return
 	}
@@ -66,7 +66,7 @@ func Register(s *httpServer, scheduler scheduler.Scheduler) {
 	scheduler.Start()
 }
 
-func (s *httpServer) startHttpServer() error {
+func (s *HttpServer) startHttpServer() error {
 	httpServerAddr := s.conf.Address()
 	log.Info("starting HTTP server", zap.String("address", httpServerAddr))
 	e := gin.Default()
@@ -78,7 +78,7 @@ func (s *httpServer) startHttpServer() error {
 	return e.Run(httpServerAddr)
 }
 
-func (s *httpServer) handler(engine *gin.Engine) {
+func (s *HttpServer) handler(engine *gin.Engine) {
 	api := engine.Group("/api")
 	{
 		api.GET("/swagger/*any", swaggerserver.Handler())
@@ -107,7 +107,7 @@ func (s *httpServer) handler(engine *gin.Engine) {
 	}
 }
 
-func (s *httpServer) systemHandler(engine *gin.Engine) {
+func (s *HttpServer) systemHandler(engine *gin.Engine) {
 	api := engine.Group("/api")
 	system := api.Group("/system")
 	{
@@ -125,10 +125,10 @@ func (s *httpServer) systemHandler(engine *gin.Engine) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/process [post]
-func (s *httpServer) createProcessAttack(c *gin.Context) {
+func (s *HttpServer) createProcessAttack(c *gin.Context) {
 	attack := core.NewProcessCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -157,10 +157,10 @@ func (s *httpServer) createProcessAttack(c *gin.Context) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/network [post]
-func (s *httpServer) createNetworkAttack(c *gin.Context) {
+func (s *HttpServer) createNetworkAttack(c *gin.Context) {
 	attack := core.NewNetworkCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -189,10 +189,10 @@ func (s *httpServer) createNetworkAttack(c *gin.Context) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/stress [post]
-func (s *httpServer) createStressAttack(c *gin.Context) {
+func (s *HttpServer) createStressAttack(c *gin.Context) {
 	attack := core.NewStressCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -221,10 +221,10 @@ func (s *httpServer) createStressAttack(c *gin.Context) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/disk [post]
-func (s *httpServer) createDiskAttack(c *gin.Context) {
+func (s *HttpServer) createDiskAttack(c *gin.Context) {
 	options := core.NewDiskOption()
 	if err := c.ShouldBindJSON(options); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -254,10 +254,10 @@ func (s *httpServer) createDiskAttack(c *gin.Context) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/clock [post]
-func (s *httpServer) createClockAttack(c *gin.Context) {
+func (s *HttpServer) createClockAttack(c *gin.Context) {
 	options := core.NewClockOption()
 	if err := c.ShouldBindJSON(options); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -286,10 +286,10 @@ func (s *httpServer) createClockAttack(c *gin.Context) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/http [post]
-func (s *httpServer) createHTTPAttack(c *gin.Context) {
+func (s *HttpServer) createHTTPAttack(c *gin.Context) {
 	attack := core.NewHTTPAttackOption()
 	if err := c.ShouldBindJSON(attack); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -318,10 +318,10 @@ func (s *httpServer) createHTTPAttack(c *gin.Context) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/jvm [post]
-func (s *httpServer) createJVMAttack(c *gin.Context) {
+func (s *HttpServer) createJVMAttack(c *gin.Context) {
 	options := core.NewJVMCommand()
 	if err := c.ShouldBindJSON(options); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -350,10 +350,10 @@ func (s *httpServer) createJVMAttack(c *gin.Context) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/kafka [post]
-func (s *httpServer) createKafkaAttack(c *gin.Context) {
+func (s *HttpServer) createKafkaAttack(c *gin.Context) {
 	options := core.NewKafkaCommand()
 	if err := c.ShouldBindJSON(options); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -382,10 +382,10 @@ func (s *httpServer) createKafkaAttack(c *gin.Context) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/vm [post]
-func (s *httpServer) createVMAttack(c *gin.Context) {
+func (s *HttpServer) createVMAttack(c *gin.Context) {
 	options := core.NewVMOption()
 	if err := c.ShouldBindJSON(options); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -414,10 +414,10 @@ func (s *httpServer) createVMAttack(c *gin.Context) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/redis [post]
-func (s *httpServer) createRedisAttack(c *gin.Context) {
+func (s *HttpServer) createRedisAttack(c *gin.Context) {
 	attack := core.NewRedisCommand()
 	if err := c.ShouldBindJSON(attack); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -446,10 +446,10 @@ func (s *httpServer) createRedisAttack(c *gin.Context) {
 // @Failure 400 {object} utils.APIError
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/user_defined [post]
-func (s *httpServer) createUserDefinedAttack(c *gin.Context) {
+func (s *HttpServer) createUserDefinedAttack(c *gin.Context) {
 	attack := core.NewUserDefinedOption()
 	if err := c.ShouldBindJSON(attack); err != nil {
-		c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return
 	}
 
@@ -477,7 +477,7 @@ func (s *httpServer) createUserDefinedAttack(c *gin.Context) {
 // @Success 200 {object} utils.Response
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/{uid} [delete]
-func (s *httpServer) recoverAttack(c *gin.Context) {
+func (s *HttpServer) recoverAttack(c *gin.Context) {
 	uid := c.Param("uid")
 	err := s.chaos.RecoverAttack(uid)
 	if err != nil {
