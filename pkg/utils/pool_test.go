@@ -27,13 +27,15 @@ func TestCommandPools_Cancel(t *testing.T) {
 	now := time.Now()
 	cmdPools := NewCommandPools(context.Background(), nil, 1)
 	var gErr []error
-	cmdPools.Start("sleep", []string{"10s"}, func(output []byte, err error) {
-		if err != nil {
-			log.Error(string(output), zap.Error(err))
-			gErr = append(gErr, err)
-		}
-		log.Info(string(output))
-	})
+	runner := NewCommandRunner("sleep", []string{"10s"}).
+		WithOutputHandler(func(output []byte, err error, _ *chan interface{}) {
+			if err != nil {
+				log.Error(string(output), zap.Error(err))
+				gErr = append(gErr, err)
+			}
+			log.Info(string(output))
+		}, nil)
+	cmdPools.Start(runner)
 	cmdPools.Close()
 	assert.Less(t, time.Since(now).Seconds(), 10.0)
 	assert.Equal(t, 1, len(gErr))
@@ -44,13 +46,15 @@ func TestCommandPools_Deadline(t *testing.T) {
 	deadline := time.Now().Add(time.Millisecond * 50)
 	cmdPools := NewCommandPools(context.Background(), &deadline, 1)
 	var gErr []error
-	cmdPools.Start("sleep", []string{"10s"}, func(output []byte, err error) {
-		if err != nil {
-			log.Error(string(output), zap.Error(err))
-			gErr = append(gErr, err)
-		}
-		log.Info(string(output))
-	})
+	runner := NewCommandRunner("sleep", []string{"10s"}).
+		WithOutputHandler(func(output []byte, err error, _ *chan interface{}) {
+			if err != nil {
+				log.Error(string(output), zap.Error(err))
+				gErr = append(gErr, err)
+			}
+			log.Info(string(output))
+		}, nil)
+	cmdPools.Start(runner)
 	cmdPools.Wait()
 	assert.Less(t, math.Abs(float64(time.Since(now).Milliseconds()-50)), 10.0)
 	assert.Equal(t, 1, len(gErr))
@@ -61,13 +65,15 @@ func TestCommandPools_Normal(t *testing.T) {
 	now := time.Now()
 	cmdPools := NewCommandPools(context.Background(), nil, 1)
 	var gErr []error
-	cmdPools.Start("sleep", []string{"1s"}, func(output []byte, err error) {
-		if err != nil {
-			log.Error(string(output), zap.Error(err))
-			gErr = append(gErr, err)
-		}
-		log.Info(string(output))
-	})
+	runner := NewCommandRunner("sleep", []string{"1s"}).
+		WithOutputHandler(func(output []byte, err error, _ *chan interface{}) {
+			if err != nil {
+				log.Error(string(output), zap.Error(err))
+				gErr = append(gErr, err)
+			}
+			log.Info(string(output))
+		}, nil)
+	cmdPools.Start(runner)
 	cmdPools.Wait()
 	assert.Less(t, time.Since(now).Seconds(), 2.0)
 	assert.Equal(t, 0, len(gErr))

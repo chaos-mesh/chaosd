@@ -59,6 +59,32 @@ func NewCommandPools(ctx context.Context, deadline *time.Time, size int) *Comman
 	}
 }
 
+type CommandRunner struct {
+	Name string
+	Args []string
+
+	outputHandler func([]byte, error, *chan interface{})
+	outputChanel  *chan interface{}
+}
+
+func NewCommandRunner(name string, args []string) *CommandRunner {
+	return &CommandRunner{
+		Name:          name,
+		Args:          args,
+		outputHandler: func(bytes []byte, err error, c *chan interface{}) {},
+		outputChanel:  nil,
+	}
+}
+
+func (r *CommandRunner) WithOutputHandler(
+	handler func([]byte, error, *chan interface{}),
+	outputChanel *chan interface{},
+) *CommandRunner {
+	r.outputHandler = handler
+	r.outputChanel = outputChanel
+	return r
+}
+
 func (p *CommandPools) Process(name string, args []string) ([]byte, error) {
 	result, ok := p.pools.Process(lo.Tuple2[string, []string]{
 		A: name,
@@ -71,12 +97,11 @@ func (p *CommandPools) Process(name string, args []string) ([]byte, error) {
 }
 
 // Start command async.
-// TODO: give an input channel for output value when needed
-func (p *CommandPools) Start(name string, args []string, outputHandler func([]byte, error)) {
+func (p *CommandPools) Start(runner *CommandRunner) {
 	p.wg.Add(1)
 	go func() {
-		output, err := p.Process(name, args)
-		outputHandler(output, err)
+		output, err := p.Process(runner.Name, runner.Args)
+		runner.outputHandler(output, err, runner.outputChanel)
 		p.wg.Done()
 	}()
 }
