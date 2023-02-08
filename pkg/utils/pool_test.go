@@ -23,53 +23,52 @@ import (
 	"go.uber.org/zap"
 )
 
-var GlobalErrors []error
-
 func TestCommandPools_Cancel(t *testing.T) {
 	now := time.Now()
 	cmdPools := NewCommandPools(context.Background(), nil, 1)
+	var gErr []error
 	cmdPools.Start("sleep", []string{"10s"}, func(output []byte, err error) {
 		if err != nil {
 			log.Error(string(output), zap.Error(err))
-			GlobalErrors = append(GlobalErrors, err)
+			gErr = append(gErr, err)
 		}
 		log.Info(string(output))
 	})
 	cmdPools.Close()
 	assert.Less(t, time.Since(now).Seconds(), 10.0)
-	assert.Equal(t, 1, len(GlobalErrors))
-	GlobalErrors = []error{}
+	assert.Equal(t, 1, len(gErr))
 }
 
 func TestCommandPools_Deadline(t *testing.T) {
 	now := time.Now()
 	deadline := time.Now().Add(time.Millisecond * 50)
 	cmdPools := NewCommandPools(context.Background(), &deadline, 1)
+	var gErr []error
 	cmdPools.Start("sleep", []string{"10s"}, func(output []byte, err error) {
 		if err != nil {
 			log.Error(string(output), zap.Error(err))
-			GlobalErrors = append(GlobalErrors, err)
+			gErr = append(gErr, err)
 		}
 		log.Info(string(output))
 	})
 	cmdPools.Wait()
 	assert.Less(t, math.Abs(float64(time.Since(now).Milliseconds()-50)), 10.0)
-	assert.Equal(t, 1, len(GlobalErrors))
-	GlobalErrors = []error{}
+	assert.Equal(t, 1, len(gErr))
+
 }
 
 func TestCommandPools_Normal(t *testing.T) {
 	now := time.Now()
 	cmdPools := NewCommandPools(context.Background(), nil, 1)
+	var gErr []error
 	cmdPools.Start("sleep", []string{"1s"}, func(output []byte, err error) {
 		if err != nil {
 			log.Error(string(output), zap.Error(err))
-			GlobalErrors = append(GlobalErrors, err)
+			gErr = append(gErr, err)
 		}
 		log.Info(string(output))
 	})
 	cmdPools.Wait()
 	assert.Less(t, time.Since(now).Seconds(), 2.0)
-	assert.Equal(t, 0, len(GlobalErrors))
-	GlobalErrors = []error{}
+	assert.Equal(t, 0, len(gErr))
 }
