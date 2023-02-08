@@ -141,8 +141,8 @@ type JVMStressSpec struct {
 // only when SQL match the Database, Table and SQLType, chaosd will inject fault
 // for example:
 //
-//   SQL is "select * from test.t1",
-//   only when ((Database == "test" || Database == "") && (Table == "t1" || Table == "") && (SQLType == "select" || SQLType == "")) is true, chaosd will inject fault
+//	SQL is "select * from test.t1",
+//	only when ((Database == "test" || Database == "") && (Table == "t1" || Table == "") && (SQLType == "select" || SQLType == "")) is true, chaosd will inject fault
 type JVMMySQLSpec struct {
 	// the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8) now
 	MySQLConnectorVersion string `json:"mysql-connector-version,omitempty"`
