@@ -22,7 +22,7 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
-func (s *httpServer) listExperiments(c *gin.Context) {
+func (s *HttpServer) listExperiments(c *gin.Context) {
 	mode, ok := c.GetQuery("launch_mode")
 	var chaosList []*core.Experiment
 	var err error
@@ -32,17 +32,17 @@ func (s *httpServer) listExperiments(c *gin.Context) {
 		chaosList, err = s.exp.List(context.Background())
 	}
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, chaosList)
 }
 
-func (s *httpServer) listExperimentRuns(c *gin.Context) {
+func (s *HttpServer) listExperimentRuns(c *gin.Context) {
 	uid := c.Param("uid")
 	runsList, err := s.chaos.ExpRun.ListByExperimentUID(context.Background(), uid)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, runsList)

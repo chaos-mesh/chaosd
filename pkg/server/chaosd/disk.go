@@ -14,17 +14,15 @@
 package chaosd
 
 import (
+	"context"
 	"fmt"
 	"os"
-	"os/exec"
-	"sync"
-	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
 
-	"github.com/chaos-mesh/chaosd/pkg/server/utils"
+	pkgUtils "github.com/chaos-mesh/chaosd/pkg/utils"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -33,88 +31,71 @@ type diskAttack struct{}
 
 var DiskAttack AttackType = diskAttack{}
 
-func (disk diskAttack) Attack(options core.AttackConfig, env Environment) error {
+func handleDiskAttackOutput(output []byte, err error, c chan interface{}) {
+	if err != nil {
+		log.Error(string(output), zap.Error(err))
+		c <- err
+	}
+	log.Info(string(output))
+}
+
+func (diskAttack) Attack(options core.AttackConfig, env Environment) error {
+	err := ApplyDiskAttack(options, env)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func handleOutputChannelError(c chan interface{}) error {
+	close(c)
+	var multiErrs error
+	for i := range c {
+		if err, ok := i.(error); ok {
+			multiErrs = multierror.Append(multiErrs, err)
+		}
+	}
+	if multiErrs != nil {
+		return multiErrs
+	}
+	return nil
+}
+
+func ApplyDiskAttack(options core.AttackConfig, env Environment) error {
 	var attackConf *core.DiskAttackConfig
 	var ok bool
 	if attackConf, ok = options.(*core.DiskAttackConfig); !ok {
 		return fmt.Errorf("AttackConfig -> *DiskAttackConfig meet error")
 	}
+	poolSize := getPoolSize(attackConf)
+	outputChan := make(chan interface{}, poolSize+1)
 	if attackConf.Action == core.DiskFillAction {
-		if attackConf.FAllocateOption != nil {
-			cmd := core.FAllocateCommand.Unmarshal(*attackConf.FAllocateOption)
-			output, err := cmd.CombinedOutput()
-
-			if err != nil {
-				log.Error(string(output), zap.Error(err))
-				return err
-			}
-			log.Info(string(output))
-			return nil
-		}
-
-		for _, DdOption := range *attackConf.DdOptions {
-			cmd := core.DdCommand.Unmarshal(DdOption)
-			output, err := cmd.CombinedOutput()
-
-			if err != nil {
-				log.Error(string(output), zap.Error(err))
-				return err
-			}
-			log.Info(string(output))
-		}
-		return nil
+		cmdPool := pkgUtils.NewCommandPools(context.Background(), nil, poolSize)
+		env.Chaos.CmdPools[env.AttackUid] = cmdPool
+		fillDisk(attackConf, cmdPool, NewOutputHandler(handleDiskAttackOutput, outputChan))
+		cmdPool.Wait()
+		cmdPool.Close()
+		return handleOutputChannelError(outputChan)
 	}
 
 	if attackConf.DdOptions != nil {
-		duration, _ := options.ScheduleDuration()
-		var deadline <-chan time.Time
-		if duration != nil {
-			deadline = time.After(*duration)
+		var cmdPool *pkgUtils.CommandPools
+		deadline := getDeadline(options)
+		if deadline != nil {
+			cmdPool = pkgUtils.NewCommandPools(context.Background(), deadline, poolSize)
 		}
+		cmdPool = pkgUtils.NewCommandPools(context.Background(), nil, poolSize)
+		env.Chaos.CmdPools[env.AttackUid] = cmdPool
 
-		if len(*attackConf.DdOptions) == 0 {
-			return nil
-		}
-		rest := (*attackConf.DdOptions)[len(*attackConf.DdOptions)-1]
-		*attackConf.DdOptions = (*attackConf.DdOptions)[:len(*attackConf.DdOptions)-1]
-
-		cmd := core.DdCommand.Unmarshal(rest)
-		err := utils.ExecWithDeadline(deadline, cmd)
-		if err != nil {
-			return err
-		}
-
-		var wg sync.WaitGroup
-		var mu sync.Mutex
-		var errs error
-		wg.Add(len(*attackConf.DdOptions))
-		for _, ddOpt := range *attackConf.DdOptions {
-			cmd := core.DdCommand.Unmarshal(ddOpt)
-
-			go func(cmd *exec.Cmd) {
-				defer wg.Done()
-				err := utils.ExecWithDeadline(deadline, cmd)
-				if err != nil {
-					log.Error(cmd.String(), zap.Error(err))
-					mu.Lock()
-					defer mu.Unlock()
-					errs = multierror.Append(errs, err)
-					return
-				}
-			}(cmd)
-		}
-
-		wg.Wait()
-
-		if errs != nil {
-			return errs
-		}
+		applyPayload(attackConf, cmdPool, NewOutputHandler(handleDiskAttackOutput, outputChan))
+		cmdPool.Wait()
+		cmdPool.Close()
+		return handleOutputChannelError(outputChan)
 	}
 	return nil
-
 }
 
-func (diskAttack) Recover(exp core.Experiment, _ Environment) error {
+func (diskAttack) Recover(exp core.Experiment, env Environment) error {
 	attackConfig, err := exp.GetRequestCommand()
 	if err != nil {
 		return err
@@ -127,5 +108,10 @@ func (diskAttack) Recover(exp core.Experiment, _ Environment) error {
 			log.Warn(fmt.Sprintf("recover disk: remove %s failed", config.Path), zap.Error(err))
 		}
 	}
+
+	if cmdPool, ok := env.Chaos.CmdPools[exp.Uid]; ok {
+		cmdPool.Close()
+	}
+
 	return nil
 }

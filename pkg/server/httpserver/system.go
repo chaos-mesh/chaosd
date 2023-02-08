@@ -26,10 +26,10 @@ type healthInfo struct {
 	Message string `json:"message"`
 }
 
-func (s *httpServer) healthcheck(c *gin.Context) {
+func (s *HttpServer) healthcheck(c *gin.Context) {
 	c.JSON(http.StatusOK, healthInfo{Status: 0})
 }
 
-func (s *httpServer) version(c *gin.Context) {
+func (s *HttpServer) version(c *gin.Context) {
 	c.JSON(http.StatusOK, version.Get())
 }

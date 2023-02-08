@@ -16,8 +16,8 @@ package httpserver
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -37,7 +37,7 @@ var (
 	errMissingClientCert = utils.ErrAuth.New("Sorry, but you need to provide a client certificate to continue")
 )
 
-func (s *httpServer) serverMode() string {
+func (s *HttpServer) serverMode() string {
 	if len(s.conf.SSLCertFile) > 0 {
 		if len(s.conf.SSLClientCAFile) > 0 {
 			return MTLSServer
@@ -47,7 +47,7 @@ func (s *httpServer) serverMode() string {
 	return HTTPServer
 }
 
-func (s *httpServer) startHttpsServer() (err error) {
+func (s *HttpServer) startHttpsServer() (err error) {
 	mode := s.serverMode()
 	if mode == HTTPServer {
 		return nil
@@ -60,7 +60,7 @@ func (s *httpServer) startHttpsServer() (err error) {
 	if mode == MTLSServer {
 		log.Info("starting HTTPS server with Client Auth", zap.String("address", httpsServerAddr))
 
-		caCert, ioErr := ioutil.ReadFile(s.conf.SSLClientCAFile)
+		caCert, ioErr := os.ReadFile(s.conf.SSLClientCAFile)
 		if ioErr != nil {
 			err = ioErr
 			return

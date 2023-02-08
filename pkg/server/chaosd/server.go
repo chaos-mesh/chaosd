@@ -19,6 +19,7 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/config"
 	"github.com/chaos-mesh/chaosd/pkg/core"
 	"github.com/chaos-mesh/chaosd/pkg/scheduler"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 type Server struct {
@@ -30,6 +31,8 @@ type Server struct {
 	tcRule       core.TCRuleStore
 	conf         *config.Config
 	svr          *chaosdaemon.DaemonServer
+
+	CmdPools map[string]*utils.CommandPools
 }
 
 func NewServer(
@@ -51,5 +54,6 @@ func NewServer(
 		iptablesRule: iptables,
 		tcRule:       tc,
 		svr:          svr,
+		CmdPools:     make(map[string]*utils.CommandPools),
 	}
 }
