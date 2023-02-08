@@ -70,6 +70,8 @@ func (p *CommandPools) Process(name string, args []string) ([]byte, error) {
 	return result.Get()
 }
 
+// Start command async.
+// TODO: give an input channel for output value when needed
 func (p *CommandPools) Start(name string, args []string, outputHandler func([]byte, error)) {
 	p.wg.Add(1)
 	go func() {
