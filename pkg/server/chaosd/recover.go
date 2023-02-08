@@ -61,6 +61,8 @@ func (s *Server) RecoverAttack(uid string) error {
 			attackType = StressAttack
 		case core.DiskAttack:
 			attackType = DiskAttack
+		case core.DiskServerAttack:
+			attackType = DiskServerAttack
 		case core.JVMAttack:
 			attackType = JVMAttack
 		case core.ClockAttack:

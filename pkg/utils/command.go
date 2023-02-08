@@ -14,6 +14,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"reflect"
@@ -24,6 +25,16 @@ type Command struct {
 }
 
 func (c Command) Unmarshal(val interface{}) *exec.Cmd {
+	options := c.getOption(val)
+	return exec.Command(c.Name, options...)
+}
+
+func (c Command) UnmarshalWithCtx(ctx context.Context, val interface{}) *exec.Cmd {
+	options := c.getOption(val)
+	return exec.CommandContext(ctx, c.Name, options...)
+}
+
+func (c Command) getOption(val interface{}) []string {
 	v := reflect.ValueOf(val)
 
 	var options []string
@@ -39,5 +50,5 @@ func (c Command) Unmarshal(val interface{}) *exec.Cmd {
 			options = append(options, fmt.Sprintf("%s=%v", tag, v.Field(i).String()))
 		}
 	}
-	return exec.Command(c.Name, options...) //
+	return options
 }

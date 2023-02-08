@@ -236,7 +236,7 @@ func (s *HttpServer) createDiskAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.DiskAttack, attackConfig, core.ServerMode)
+	uid, err := s.chaos.ExecuteAttack(chaosd.DiskServerAttack, attackConfig, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return
