@@ -43,8 +43,7 @@ type NetworkCommand struct {
 	IPProtocol  string `json:"ip-protocol,omitempty"`
 	Hostname    string `json:"hostname,omitempty"`
 
-	Direction   string `json:"direction,omitempty"`
-	FullDisable bool   `json:"full-disable,omitempty"`
+	Direction string `json:"direction,omitempty"`
 
 	// used for DNS attack
 	DNSServer     string `json:"dns-server,omitempty"`
@@ -143,10 +142,6 @@ func (n *NetworkCommand) validNetworkDelay() error {
 		return errors.Errorf("protocol should be 'tcp' when set accept-tcp-flags")
 	}
 
-	if err := checkNetworkLimitParams(n.Hostname, n.IPAddress, n.FullDisable); err != nil {
-		return err
-	}
-
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
 }
 
@@ -155,9 +150,7 @@ func (n *NetworkCommand) validNetworkBandwidth() error {
 		return errors.Errorf("rate, limit and buffer both are required when action is bandwidth")
 	}
 
-	err := checkNetworkLimitParams(n.Hostname, n.IPAddress, n.FullDisable)
-
-	return err
+	return nil
 }
 
 func (n *NetworkCommand) validNetworkCommon() error {
@@ -179,10 +172,6 @@ func (n *NetworkCommand) validNetworkCommon() error {
 
 	if !utils.CheckIPs(n.IPAddress) {
 		return errors.Errorf("ip addressed %s not valid", n.IPAddress)
-	}
-
-	if err := checkNetworkLimitParams(n.Hostname, n.IPAddress, n.FullDisable); err != nil {
-		return err
 	}
 
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
@@ -209,9 +198,7 @@ func (n *NetworkCommand) validNetworkPartition() error {
 		return errors.Errorf("ip protocols %s not valid", n.IPProtocol)
 	}
 
-	err := checkNetworkLimitParams(n.Hostname, n.IPAddress, n.FullDisable)
-
-	return err
+	return nil
 }
 
 func (n *NetworkCommand) validNetworkDNS() error {
@@ -341,20 +328,6 @@ func checkProtocolAndPorts(p string, sports string, dports string) error {
 		}
 
 		return errors.New("ip protocol is required")
-	}
-
-	return nil
-}
-
-func checkNetworkLimitParams(hostname string, ipaddress string, fullDisable bool) error { // revive:disable-line:flag-parameter
-	if len(hostname) == 0 && len(ipaddress) == 0 && !fullDisable {
-		return errors.New("hostname or ip address is required")
-	}
-
-	if fullDisable {
-		if len(hostname) > 0 || len(ipaddress) > 0 {
-			return errors.New("the host and address are set, but the flag full-disable is enabled")
-		}
 	}
 
 	return nil
