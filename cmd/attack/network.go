@@ -85,7 +85,6 @@ func NewNetworkDelayCommand(dep fx.Option, options *core.NetworkCommand) *cobra.
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
 	cmd.Flags().StringVarP(&options.AcceptTCPFlags, "accept-tcp-flags", "", "", "only the packet which match the tcp flag can be accepted, others will be dropped. only set when the protocol is tcp.")
-	cmd.Flags().BoolVar(&options.FullDisable, "full-disable", false, "network on device full disable flag")
 
 	return cmd
 }
@@ -115,7 +114,6 @@ func NewNetworkLossCommand(dep fx.Option, options *core.NetworkCommand) *cobra.C
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	cmd.Flags().BoolVar(&options.FullDisable, "full-disable", false, "network on device full disable flag")
 
 	return cmd
 }
@@ -145,7 +143,7 @@ func NewNetworkCorruptCommand(dep fx.Option, options *core.NetworkCommand) *cobr
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	cmd.Flags().BoolVar(&options.FullDisable, "full-disable", false, "network on device full disable flag")
+
 	return cmd
 }
 
@@ -174,7 +172,7 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
 		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	cmd.Flags().BoolVar(&options.FullDisable, "full-disable", false, "network on device full disable flag")
+
 	return cmd
 }
 
