@@ -31,64 +31,121 @@ type diskServerAttack struct{}
 
 var DiskServerAttack AttackType = diskServerAttack{}
 
-func handleFillingOutput(output []byte, err error) {
+func handleDiskServerOutput(output []byte, err error, _ chan interface{}) {
 	if err != nil {
 		log.Error(string(output), zap.Error(err))
 	}
 	log.Info(string(output))
 }
 
-func (disk diskServerAttack) Attack(options core.AttackConfig, env Environment) error {
+func (diskServerAttack) Attack(options core.AttackConfig, env Environment) error {
+	err := ApplyDiskServerAttack(options, env)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type OutputHandler struct {
+	StdoutHandler func([]byte, error, chan interface{})
+	OutputChan    chan interface{}
+}
+
+func NewOutputHandler(
+	handler func([]byte, error, chan interface{}),
+	outputChan chan interface{}) *OutputHandler {
+	return &OutputHandler{
+		StdoutHandler: handler,
+		OutputChan:    outputChan,
+	}
+}
+
+func getPoolSize(attackConf *core.DiskAttackConfig) int {
+	poolSize := 1
+	if attackConf.DdOptions != nil && len(*attackConf.DdOptions) > 0 {
+		poolSize = len(*attackConf.DdOptions)
+	}
+	return poolSize
+}
+
+func fillDisk(
+	attackConf *core.DiskAttackConfig,
+	cmdPool *pkgUtils.CommandPools,
+	outputHandler *OutputHandler) {
+	if attackConf.FAllocateOption != nil {
+		name, args := core.FAllocateCommand.GetCmdArgs(*attackConf.FAllocateOption)
+		runner := pkgUtils.NewCommandRunner(name, args).
+			WithOutputHandler(outputHandler.StdoutHandler, outputHandler.OutputChan)
+		cmdPool.Start(runner)
+		return
+	}
+
+	for _, DdOption := range *attackConf.DdOptions {
+		name, args := core.DdCommand.GetCmdArgs(DdOption)
+		runner := pkgUtils.NewCommandRunner(name, args).
+			WithOutputHandler(outputHandler.StdoutHandler, outputHandler.OutputChan)
+		cmdPool.Start(runner)
+	}
+	return
+}
+
+func getDeadline(options core.AttackConfig) *time.Time {
+	duration, _ := options.ScheduleDuration()
+	if duration != nil {
+		deadline := time.Now().Add(*duration)
+		return &deadline
+	}
+	return nil
+}
+
+func applyPayload(
+	attackConf *core.DiskAttackConfig,
+	cmdPool *pkgUtils.CommandPools,
+	outputHandler *OutputHandler) {
+	if len(*attackConf.DdOptions) == 0 {
+		return
+	}
+	rest := (*attackConf.DdOptions)[len(*attackConf.DdOptions)-1]
+	*attackConf.DdOptions = (*attackConf.DdOptions)[:len(*attackConf.DdOptions)-1]
+	name, args := core.DdCommand.GetCmdArgs(rest)
+	runner := pkgUtils.NewCommandRunner(name, args).
+		WithOutputHandler(outputHandler.StdoutHandler, outputHandler.OutputChan)
+	cmdPool.Start(runner)
+
+	for _, ddOpt := range *attackConf.DdOptions {
+		name, args := core.DdCommand.GetCmdArgs(ddOpt)
+		runner := pkgUtils.NewCommandRunner(name, args).
+			WithOutputHandler(outputHandler.StdoutHandler, outputHandler.OutputChan)
+		cmdPool.Start(runner)
+	}
+}
+
+func ApplyDiskServerAttack(options core.AttackConfig, env Environment) error {
 	var attackConf *core.DiskAttackConfig
 	var ok bool
 	if attackConf, ok = options.(*core.DiskAttackConfig); !ok {
 		return fmt.Errorf("AttackConfig -> *DiskAttackConfig meet error")
 	}
-	poolSize := 1
-	if attackConf.DdOptions != nil && len(*attackConf.DdOptions) > 0 {
-		poolSize = len(*attackConf.DdOptions)
-	}
+	poolSize := getPoolSize(attackConf)
 	if attackConf.Action == core.DiskFillAction {
 		cmdPool := pkgUtils.NewCommandPools(context.Background(), nil, poolSize)
 		env.Chaos.CmdPools[env.AttackUid] = cmdPool
-		name, args := core.FAllocateCommand.GetCmdArgs(*attackConf.FAllocateOption)
-		if attackConf.FAllocateOption != nil {
-			cmdPool.Start(name, args, handleFillingOutput)
-			return nil
-		}
-
-		for _, DdOption := range *attackConf.DdOptions {
-			name, args := core.DdCommand.GetCmdArgs(DdOption)
-			cmdPool.Start(name, args, handleFillingOutput)
-		}
+		fillDisk(attackConf, cmdPool, NewOutputHandler(handleDiskServerOutput, nil))
 		return nil
 	}
 
 	if attackConf.DdOptions != nil {
-		duration, _ := options.ScheduleDuration()
 		var cmdPool *pkgUtils.CommandPools
-		if duration != nil {
-			deadline := time.Now().Add(*duration)
-			cmdPool = pkgUtils.NewCommandPools(context.Background(), &deadline, poolSize)
+		deadline := getDeadline(options)
+		if deadline != nil {
+			cmdPool = pkgUtils.NewCommandPools(context.Background(), deadline, poolSize)
 		}
 		cmdPool = pkgUtils.NewCommandPools(context.Background(), nil, poolSize)
 		env.Chaos.CmdPools[env.AttackUid] = cmdPool
 
-		if len(*attackConf.DdOptions) == 0 {
-			return nil
-		}
-		rest := (*attackConf.DdOptions)[len(*attackConf.DdOptions)-1]
-		*attackConf.DdOptions = (*attackConf.DdOptions)[:len(*attackConf.DdOptions)-1]
-		name, args := core.DdCommand.GetCmdArgs(rest)
-		cmdPool.Start(name, args, handleFillingOutput)
-
-		for _, ddOpt := range *attackConf.DdOptions {
-			name, args := core.DdCommand.GetCmdArgs(ddOpt)
-			cmdPool.Start(name, args, handleFillingOutput)
-		}
+		applyPayload(attackConf, cmdPool, NewOutputHandler(handleDiskServerOutput, nil))
 	}
 	return nil
-
 }
 
 func (diskServerAttack) Recover(exp core.Experiment, env Environment) error {
@@ -107,6 +164,7 @@ func (diskServerAttack) Recover(exp core.Experiment, env Environment) error {
 	}
 
 	if cmdPool, ok := env.Chaos.CmdPools[exp.Uid]; ok {
+		log.Info(fmt.Sprintf("stop disk attack,read: %s", config.Path))
 		cmdPool.Close()
 	}
 

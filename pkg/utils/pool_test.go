@@ -28,7 +28,7 @@ func TestCommandPools_Cancel(t *testing.T) {
 	cmdPools := NewCommandPools(context.Background(), nil, 1)
 	var gErr []error
 	runner := NewCommandRunner("sleep", []string{"10s"}).
-		WithOutputHandler(func(output []byte, err error, _ *chan interface{}) {
+		WithOutputHandler(func(output []byte, err error, _ chan interface{}) {
 			if err != nil {
 				log.Error(string(output), zap.Error(err))
 				gErr = append(gErr, err)
@@ -47,7 +47,7 @@ func TestCommandPools_Deadline(t *testing.T) {
 	cmdPools := NewCommandPools(context.Background(), &deadline, 1)
 	var gErr []error
 	runner := NewCommandRunner("sleep", []string{"10s"}).
-		WithOutputHandler(func(output []byte, err error, _ *chan interface{}) {
+		WithOutputHandler(func(output []byte, err error, _ chan interface{}) {
 			if err != nil {
 				log.Error(string(output), zap.Error(err))
 				gErr = append(gErr, err)
@@ -66,7 +66,7 @@ func TestCommandPools_Normal(t *testing.T) {
 	cmdPools := NewCommandPools(context.Background(), nil, 1)
 	var gErr []error
 	runner := NewCommandRunner("sleep", []string{"1s"}).
-		WithOutputHandler(func(output []byte, err error, _ *chan interface{}) {
+		WithOutputHandler(func(output []byte, err error, _ chan interface{}) {
 			if err != nil {
 				log.Error(string(output), zap.Error(err))
 				gErr = append(gErr, err)

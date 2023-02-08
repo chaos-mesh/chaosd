@@ -222,7 +222,7 @@ func (s *HttpServer) createStressAttack(c *gin.Context) {
 // @Failure 500 {object} utils.APIError
 // @Router /api/attack/disk [post]
 func (s *HttpServer) createDiskAttack(c *gin.Context) {
-	options := core.NewDiskOption()
+	options := core.NewDiskOptionForServer()
 	if err := c.ShouldBindJSON(options); err != nil {
 		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
 		return

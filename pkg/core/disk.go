@@ -16,7 +16,6 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -84,6 +83,16 @@ func NewDiskOption() *DiskOption {
 	return &DiskOption{
 		CommonAttackConfig: CommonAttackConfig{
 			Kind: DiskAttack,
+		},
+		PayloadProcessNum: 1,
+		FillByFallocate:   true,
+	}
+}
+
+func NewDiskOptionForServer() *DiskOption {
+	return &DiskOption{
+		CommonAttackConfig: CommonAttackConfig{
+			Kind: DiskServerAttack,
 		},
 		PayloadProcessNum: 1,
 		FillByFallocate:   true,
@@ -191,7 +200,7 @@ func initPath(opt *DiskOption) (string, error) {
 			// check if Path of file is valid when Path is not empty
 			if os.IsNotExist(err) {
 				var b []byte
-				if err := ioutil.WriteFile(opt.Path, b, 0600); err != nil {
+				if err := os.WriteFile(opt.Path, b, 0600); err != nil {
 					return "", err
 				}
 				if err := os.Remove(opt.Path); err != nil {

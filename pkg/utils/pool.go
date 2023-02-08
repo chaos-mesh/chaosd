@@ -63,22 +63,22 @@ type CommandRunner struct {
 	Name string
 	Args []string
 
-	outputHandler func([]byte, error, *chan interface{})
-	outputChanel  *chan interface{}
+	outputHandler func([]byte, error, chan interface{})
+	outputChanel  chan interface{}
 }
 
 func NewCommandRunner(name string, args []string) *CommandRunner {
 	return &CommandRunner{
 		Name:          name,
 		Args:          args,
-		outputHandler: func(bytes []byte, err error, c *chan interface{}) {},
+		outputHandler: func(bytes []byte, err error, c chan interface{}) {},
 		outputChanel:  nil,
 	}
 }
 
 func (r *CommandRunner) WithOutputHandler(
-	handler func([]byte, error, *chan interface{}),
-	outputChanel *chan interface{},
+	handler func([]byte, error, chan interface{}),
+	outputChanel chan interface{},
 ) *CommandRunner {
 	r.outputHandler = handler
 	r.outputChanel = outputChanel
