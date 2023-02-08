@@ -51,14 +51,15 @@ func (disk diskServerAttack) Attack(options core.AttackConfig, env Environment) 
 	if attackConf.Action == core.DiskFillAction {
 		cmdPool := pkgUtils.NewCommandPools(context.Background(), nil, poolSize)
 		env.Chaos.CmdPools[env.AttackUid] = cmdPool
-
+		name, args := core.FAllocateCommand.GetCmdArgs(*attackConf.FAllocateOption)
 		if attackConf.FAllocateOption != nil {
-			cmdPool.Start(core.FAllocateCommand, *attackConf.FAllocateOption, handleFillingOutput)
+			cmdPool.Start(name, args, handleFillingOutput)
 			return nil
 		}
 
 		for _, DdOption := range *attackConf.DdOptions {
-			cmdPool.Start(core.DdCommand, DdOption, handleFillingOutput)
+			name, args := core.DdCommand.GetCmdArgs(DdOption)
+			cmdPool.Start(name, args, handleFillingOutput)
 		}
 		return nil
 	}
@@ -78,11 +79,12 @@ func (disk diskServerAttack) Attack(options core.AttackConfig, env Environment) 
 		}
 		rest := (*attackConf.DdOptions)[len(*attackConf.DdOptions)-1]
 		*attackConf.DdOptions = (*attackConf.DdOptions)[:len(*attackConf.DdOptions)-1]
-
-		cmdPool.Start(core.DdCommand, rest, handleFillingOutput)
+		name, args := core.DdCommand.GetCmdArgs(rest)
+		cmdPool.Start(name, args, handleFillingOutput)
 
 		for _, ddOpt := range *attackConf.DdOptions {
-			cmdPool.Start(core.DdCommand, ddOpt, handleFillingOutput)
+			name, args := core.DdCommand.GetCmdArgs(ddOpt)
+			cmdPool.Start(name, args, handleFillingOutput)
 		}
 	}
 	return nil

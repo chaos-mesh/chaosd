@@ -16,6 +16,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"os/exec"
 	"sync"
 	"time"
 
@@ -42,12 +43,12 @@ func NewCommandPools(ctx context.Context, deadline *time.Time, size int) *Comman
 	return &CommandPools{
 		cancel: cancel,
 		pools: tunny.NewFunc(size, func(payload interface{}) interface{} {
-			cmdPayload, ok := payload.(lo.Tuple2[Command, interface{}])
+			cmdPayload, ok := payload.(lo.Tuple2[string, []string])
 			if !ok {
 				return mo.Err[[]byte](fmt.Errorf("payload is not CommandPayload"))
 			}
-			rawCmd, val := cmdPayload.Unpack()
-			cmd := rawCmd.UnmarshalWithCtx(ctx2, val)
+			name, args := cmdPayload.Unpack()
+			cmd := exec.CommandContext(ctx2, name, args...)
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				return mo.Err[[]byte](fmt.Errorf("%s: %s", err, string(output)))
@@ -57,10 +58,10 @@ func NewCommandPools(ctx context.Context, deadline *time.Time, size int) *Comman
 	}
 }
 
-func (p *CommandPools) Process(cmd Command, val interface{}) ([]byte, error) {
-	result, ok := p.pools.Process(lo.Tuple2[Command, interface{}]{
-		A: cmd,
-		B: val,
+func (p *CommandPools) Process(name string, args []string) ([]byte, error) {
+	result, ok := p.pools.Process(lo.Tuple2[string, []string]{
+		A: name,
+		B: args,
 	}).(mo.Result[[]byte])
 	if !ok {
 		return nil, fmt.Errorf("payload is not Result[[]byte]")
@@ -68,10 +69,10 @@ func (p *CommandPools) Process(cmd Command, val interface{}) ([]byte, error) {
 	return result.Get()
 }
 
-func (p *CommandPools) Start(cmd Command, val interface{}, outputHandler func([]byte, error)) {
+func (p *CommandPools) Start(name string, args []string, outputHandler func([]byte, error)) {
 	p.wg.Add(1)
 	go func() {
-		output, err := p.Process(cmd, val)
+		output, err := p.Process(name, args)
 		outputHandler(output, err)
 		p.wg.Done()
 	}()

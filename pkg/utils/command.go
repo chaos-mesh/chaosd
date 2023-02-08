@@ -25,16 +25,16 @@ type Command struct {
 }
 
 func (c Command) Unmarshal(val interface{}) *exec.Cmd {
-	options := c.getOption(val)
-	return exec.Command(c.Name, options...)
+	name, args := c.GetCmdArgs(val)
+	return exec.Command(name, args...)
 }
 
 func (c Command) UnmarshalWithCtx(ctx context.Context, val interface{}) *exec.Cmd {
-	options := c.getOption(val)
-	return exec.CommandContext(ctx, c.Name, options...)
+	name, args := c.GetCmdArgs(val)
+	return exec.CommandContext(ctx, name, args...)
 }
 
-func (c Command) getOption(val interface{}) []string {
+func (c Command) GetCmdArgs(val interface{}) (string, []string) {
 	v := reflect.ValueOf(val)
 
 	var options []string
@@ -50,5 +50,5 @@ func (c Command) getOption(val interface{}) []string {
 			options = append(options, fmt.Sprintf("%s=%v", tag, v.Field(i).String()))
 		}
 	}
-	return options
+	return c.Name, options
 }
