@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
+	"github.com/chaos-mesh/chaosd/pkg/utils"
 )
 
 func Test_diskAttack_Attack(t *testing.T) {
@@ -30,9 +31,15 @@ func Test_diskAttack_Attack(t *testing.T) {
 		Path:              "./a",
 		PayloadProcessNum: 1,
 	}
+	env := Environment{
+		AttackUid: "a",
+		Chaos: &Server{
+			CmdPools: make(map[string]*utils.CommandPools),
+		},
+	}
 	conf, err := opt.PreProcess()
 	assert.NoError(t, err)
-	err = DiskAttack.Attack(conf, Environment{})
+	err = DiskAttack.Attack(conf, env)
 	assert.NoError(t, err)
 
 	f, err := os.Open("./a")
@@ -47,7 +54,7 @@ func Test_diskAttack_Attack(t *testing.T) {
 	opt.PayloadProcessNum = 4
 	wConf, err := opt.PreProcess()
 	assert.NoError(t, err)
-	err = DiskAttack.Attack(wConf, Environment{})
+	err = DiskAttack.Attack(wConf, env)
 	assert.NoError(t, err)
 
 	f, err = os.Open("./a")
