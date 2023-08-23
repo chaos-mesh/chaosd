@@ -28,10 +28,10 @@ export GOBIN=$PROJECT_DIR/bin
 export PATH=$GOBIN:$PATH
 
 echo "+ Install swagger tools"
-go install github.com/swaggo/swag/cmd/swag
+go install github.com/swaggo/swag/cmd/swag@latest
 
 echo "+ Clean up go mod"
 go mod tidy
 
 echo "+ Generate swagger spec"
-swag init -g cmd/chaosd/main.go
+swag init -g cmd/main.go
