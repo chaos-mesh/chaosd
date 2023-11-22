@@ -141,7 +141,7 @@ func (s *Server) applyIptables(attack *core.NetworkCommand, ipset, uid string) e
 	var newChains []*pb.Chain
 	// Presently, only partition and delay with `accept-tcp-flags` need to add additional chains
 	if attack.NeedAdditionalChains() {
-		newChains, err = attack.AdditionalChain(ipset, uid)
+		newChains, err = attack.AdditionalChain(ipset, attack.Device, uid)
 		if err != nil {
 			return perrors.WithStack(err)
 		}

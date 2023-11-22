@@ -130,7 +130,7 @@ func TestPatitionChain(t *testing.T) {
 			},
 		}
 		for _, tc := range testCases {
-			chains, err := tc.cmd.AdditionalChain("test", "3c5528e1-4c32-4f80-983c-913ad7e860e2")
+			chains, err := tc.cmd.AdditionalChain("test", "eth0", "3c5528e1-4c32-4f80-983c-913ad7e860e2")
 			if err != nil {
 				t.Errorf("failed to partition chain: %v", err)
 			}

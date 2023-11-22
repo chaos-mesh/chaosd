@@ -520,20 +520,20 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 	}
 }
 
-func (n *NetworkCommand) AdditionalChain(ipset string, uid string) ([]*pb.Chain, error) {
+func (n *NetworkCommand) AdditionalChain(ipset string, device string, uid string) ([]*pb.Chain, error) {
 	chains := make([]*pb.Chain, 0, 2)
 	var toChains, fromChains []*pb.Chain
 	var err error
 
 	if n.Direction == "to" || n.Direction == "both" {
-		toChains, err = n.getAdditionalChain(ipset, "to", uid)
+		toChains, err = n.getAdditionalChain(ipset, device, "to", uid)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	if n.Direction == "from" || n.Direction == "both" {
-		fromChains, err = n.getAdditionalChain(ipset, "from", uid)
+		fromChains, err = n.getAdditionalChain(ipset, device, "from", uid)
 		if err != nil {
 			return nil, err
 		}
@@ -545,7 +545,7 @@ func (n *NetworkCommand) AdditionalChain(ipset string, uid string) ([]*pb.Chain,
 	return chains, nil
 }
 
-func (n *NetworkCommand) getAdditionalChain(ipset, direction string, uid string) ([]*pb.Chain, error) {
+func (n *NetworkCommand) getAdditionalChain(ipset, device, direction, uid string) ([]*pb.Chain, error) {
 	var directionStr string
 	var directionChain pb.Chain_Direction
 	if direction == "to" {
@@ -569,6 +569,7 @@ func (n *NetworkCommand) getAdditionalChain(ipset, direction string, uid string)
 			Protocol:  n.IPProtocol,
 			TcpFlags:  n.AcceptTCPFlags,
 			Target:    "ACCEPT",
+			Device:    device,
 		})
 	}
 
@@ -579,6 +580,7 @@ func (n *NetworkCommand) getAdditionalChain(ipset, direction string, uid string)
 			Direction: directionChain,
 			Protocol:  n.IPProtocol,
 			Target:    "DROP",
+			Device:    device,
 		})
 	}
 	return chains, nil
