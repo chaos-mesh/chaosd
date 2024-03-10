@@ -520,7 +520,7 @@ func (n *NetworkCommand) NeedApplyTC() bool {
 	}
 }
 
-func (n *NetworkCommand) AdditionalChain(ipset string, device string, uid string) ([]*pb.Chain, error) {
+func (n *NetworkCommand) AdditionalChain(ipset, device, uid string) ([]*pb.Chain, error) {
 	chains := make([]*pb.Chain, 0, 2)
 	var toChains, fromChains []*pb.Chain
 	var err error
