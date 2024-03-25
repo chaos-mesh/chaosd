@@ -79,6 +79,7 @@ func NewStressMemCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "", "Size specifies N bytes consumed per vm worker, default is the total available memory. One can specify the size as % of total available memory or in units of B, KB/KiB, MB/MiB, GB/GiB, TB/TiB..")
 	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "extend stress-ng options.")
+	cmd.Flags().IntVar(&options.OOMScoreAdj, "oom-score-adj", 0, "OOMScoreAdj specifies the oom_score_adj value for the memory stress process. The default is 0.")
 
 	return cmd
 }
