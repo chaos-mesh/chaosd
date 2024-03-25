@@ -23,7 +23,7 @@ jobs:
 
       - name: Prepare tools
         run: |
-          dnf install -y make python3
+          dnf install -y make gcc python3
 
       - name: Build binary and related tools
         run: make build
