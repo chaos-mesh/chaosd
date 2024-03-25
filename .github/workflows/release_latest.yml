@@ -16,7 +16,7 @@ jobs:
     container: ${{ fromJson('{"amd64":"docker.io/centos:7.2.1511", "arm64":"docker.io/centos:centos7"}')[matrix.arch] }}
     steps:
       - name: Set up Go 1.18
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v4
         with:
           go-version: 1.18.2
         id: go
@@ -29,7 +29,7 @@ jobs:
           echo /opt/rh/rh-git227/root/usr/bin >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=/opt/rh/httpd24/root/usr/lib64:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
