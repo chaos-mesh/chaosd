@@ -11,8 +11,7 @@ jobs:
       matrix:
         arch: [amd64, arm64]
     runs-on: ${{ fromJson('{"amd64":"ubuntu-latest", "arm64":["self-hosted", "Linux", "ARM64"]}')[matrix.arch] }}
-    # glibc version 2.17
-    container: ${{ fromJson('{"amd64":"docker.io/centos:7.2.1511", "arm64":"docker.io/centos:centos7"}')[matrix.arch] }}
+    container: ${{ fromJson('{"amd64":"docker.io/centos:8", "arm64":"docker.io/centos:8"}')[matrix.arch] }}
     steps:
       - uses: actions/checkout@v4
         with:
