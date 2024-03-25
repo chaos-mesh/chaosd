@@ -44,6 +44,7 @@ const (
 	FileAttack        = "file"
 	HTTPAttack        = "http"
 	VMAttack          = "vm"
+	PatroniAttack     = "patroni"
 	UserDefinedAttack = "userDefined"
 )
 
@@ -128,6 +129,8 @@ func GetAttackByKind(kind string) *AttackConfig {
 		attackConfig = &VMOption{}
 	case UserDefinedAttack:
 		attackConfig = &UserDefinedOption{}
+	case PatroniAttack:
+		attackConfig = &PatroniCommand{}
 	default:
 		return nil
 	}
