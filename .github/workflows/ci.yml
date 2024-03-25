@@ -4,6 +4,11 @@ on:
     branches:
       - main
       - release-*
+    paths:
+      - .github/workflows/ci.yml
+      - Makefile
+      - go.*
+      - '**.go'
 
 jobs:
   pull:
