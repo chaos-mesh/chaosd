@@ -34,7 +34,7 @@ func NewFileDeleteCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&fileName, "file-name", "o", "", "the old name of the file/directory")
+	cmd.Flags().StringVarP(&fileName, "file-name", "o", "", "the name of deleted file")
 
 	return cmd
 }
