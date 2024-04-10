@@ -83,6 +83,10 @@ PS> ./bin/chaosd completion powershell > chaosd.ps1
 				if err := cmd.Root().GenFishCompletion(os.Stdout, true); err != nil {
 					utils.ExitWithError(utils.ExitError, err)
 				}
+			case "powershell":
+				if err := cmd.Root().GenPowerShellCompletion(os.Stdout); err != nil {
+					utils.ExitWithError(utils.ExitError, err)
+				}
 			}
 		},
 	}
