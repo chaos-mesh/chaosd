@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -226,7 +225,7 @@ func attackKafkaFill(ctx context.Context, attack *core.KafkaCommand) (err error)
 
 func recoverKafkaFill(attack *core.KafkaCommand) error {
 	newConfigFile := attack.ConfigFile + ".new"
-	if err := ioutil.WriteFile(newConfigFile, []byte(attack.OriginConfig), 0644); err != nil {
+	if err := os.WriteFile(newConfigFile, []byte(attack.OriginConfig), 0644); err != nil {
 		return perr.Wrapf(err, "write config file %s", newConfigFile)
 	}
 	err := os.Rename(newConfigFile, attack.ConfigFile)
@@ -254,7 +253,7 @@ func setRetentionBytes(attack *core.KafkaCommand, bytes uint64) (string, error) 
 	}
 	p.Set("log.retention.bytes", fmt.Sprintf("%d", bytes))
 	newConfigFile := attack.ConfigFile + ".new"
-	if err = ioutil.WriteFile(newConfigFile, []byte(p.String()), 0644); err != nil {
+	if err = os.WriteFile(newConfigFile, []byte(p.String()), 0644); err != nil {
 		return "", perr.Wrapf(err, "write config file %s", newConfigFile)
 	}
 	err = os.Rename(newConfigFile, attack.ConfigFile)

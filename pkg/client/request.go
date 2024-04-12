@@ -16,7 +16,6 @@ package client
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/pingcap/errors"
@@ -71,14 +70,14 @@ func dial(cli *http.Client, req *http.Request) ([]byte, []byte, error) {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		var apiErr []byte
-		apiErr, err = ioutil.ReadAll(resp.Body)
+		apiErr, err = io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, nil, err
 		}
 		return nil, apiErr, nil
 	}
 
-	content, err := ioutil.ReadAll(resp.Body)
+	content, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, nil, err
 	}
