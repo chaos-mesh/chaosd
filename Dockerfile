@@ -2,7 +2,7 @@
 
 FROM pingcap/chaos-build-base AS go_build
 
-RUN curl https://dl.google.com/go/go1.14.6.linux-amd64.tar.gz | tar -xz -C /usr/local
+RUN curl https://dl.google.com/go/go1.22.2.linux-amd64.tar.gz | tar -xz -C /usr/local
 ENV PATH "/usr/local/go/bin:${PATH}"
 ENV GO111MODULE=on
 
