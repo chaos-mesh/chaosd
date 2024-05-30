@@ -42,6 +42,7 @@ func NewAttackCommand() *cobra.Command {
 		NewHTTPAttackCommand(&uid),
 		NewVMAttackCommand(&uid),
 		NewUserDefinedCommand(&uid),
+		NewPatroniAttackCommand(&uid),
 	)
 
 	return cmd
