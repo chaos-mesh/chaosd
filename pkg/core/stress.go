@@ -32,6 +32,7 @@ type StressCommand struct {
 	Size        string   `json:"size,omitempty"`
 	Options     []string `json:"options,omitempty"`
 	StressngPid int32    `json:"stress-ng-pid,omitempty"`
+	OOMScoreAdj int      `json:"oom-score-adj,omitempty"`
 }
 
 var _ AttackConfig = &StressCommand{}

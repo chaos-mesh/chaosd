@@ -62,8 +62,9 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 			Stressor: v1alpha1.Stressor{
 				Workers: attack.Workers,
 			},
-			Size:    attack.Size,
-			Options: attack.Options,
+			Size:        attack.Size,
+			Options:     attack.Options,
+			OOMScoreAdj: attack.OOMScoreAdj,
 		}
 	}
 
@@ -88,6 +89,7 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 	log.Info("stressors normalize", zap.String("arguments", stressorsStr))
 
 	cmd := bpm.DefaultProcessBuilder(stressorTool, strings.Fields(stressorsStr)...).
+		SetOOMScoreAdj(attack.OOMScoreAdj).
 		Build(context.Background())
 
 	// Build will set SysProcAttr.Pdeathsig = syscall.SIGTERM, and so stress-ng will exit while chaosd exit
