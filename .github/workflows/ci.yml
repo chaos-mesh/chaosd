@@ -5,10 +5,11 @@ on:
     branches:
       - main
       - release-*
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+    paths:
+      - .github/workflows/ci.yml
+      - Makefile
+      - go.*
+      - '**.go'
 
 permissions:
   contents: read
