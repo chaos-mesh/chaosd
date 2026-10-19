@@ -7,7 +7,12 @@ on:
       - release-*
     paths:
       - .github/workflows/ci.yml
+      - .github/workflows/ci_skip.yml
       - Makefile
+      - Dockerfile
+      - .dockerignore
+      - 'images/**'
+      - 'hack/**'
       - go.*
       - '**.go'
 
@@ -50,9 +55,11 @@ jobs:
         run: |
           make check
           git diff --exit-code
-      - name: Build
+      - name: Build and verify runtime image
         if: matrix.job == 'build'
-        run: make build
+        run: |
+          make image-chaosd
+          bash hack/verify-image.sh chaosd:latest
       - name: Unit tests
         if: matrix.job == 'unit-test'
         run: make unit-test

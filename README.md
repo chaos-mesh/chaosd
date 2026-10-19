@@ -97,6 +97,33 @@ tar -tzf chaosd.tar.gz
 tar -xzf chaosd.tar.gz
 ```
 
+## Build a Docker image
+
+Build the runtime image with the current checkout's version information.
+Docker builds support native Linux amd64 and arm64 workers.
+
+```bash
+make image-chaosd IMAGE_TAG=dev
+docker run --rm chaosd:dev /usr/local/bin/chaosd version
+bash hack/verify-image.sh chaosd:dev
+```
+
+Set `IMAGE_NAME`, `IMAGE_TAG`, and `DOCKER_REGISTRY_PREFIX` to change the image name, for example `DOCKER_REGISTRY_PREFIX=registry.example.com/team/`.
+Use `DOCKER_BUILD_ARGS` for Docker options and `SWAGGER=1` for the Swagger UI.
+
+The root Dockerfile uses official Go and Debian images and needs no prebuilt Chaosd images.
+Direct builds omit Git version information because the Docker context excludes `.git`.
+
+```bash
+docker build -t chaosd:dev .
+docker run --rm chaosd:dev /usr/local/bin/chaosd --help
+```
+
+Use `make image-build-base` for the compiler image `chaosd-build-base:local`.
+Use `make image-binary` for the scratch artifact image `chaosd-binary:local`, which contains `/bin/chaosd` and `/bin/tools`.
+The runtime image installs the executable and helpers under `/usr/local/bin`.
+All image targets reuse shared BuildKit caches.
+
 ## Inspect commands and recover a process
 
 Help and version commands do not inject faults.
@@ -184,7 +211,7 @@ The license checker requires Python 3.
 Inspect the resulting diff before committing.
 Run `make chaosd` to build the main binary, or `make binary` to include helper tools.
 Use `SWAGGER=1 make chaosd` to generate and include the optional Swagger UI.
-`make image-chaosd` builds the compiler, binary bundle, and runtime images with the current checkout version.
+`make image-chaosd` builds the runtime image with the current checkout version.
 
 Run `make unit-test` in a disposable Linux environment.
 The suite includes disk operations and real subprocesses.
