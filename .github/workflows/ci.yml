@@ -1,4 +1,5 @@
 name: ci
+
 on:
   pull_request:
     branches:
@@ -10,50 +11,52 @@ on:
       - go.*
       - '**.go'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pull:
     strategy:
       fail-fast: false
       matrix:
         arch: [amd64, arm64]
-        job:
-          - verify
-          - build
-          - unit-test
-          - integration-test
-    runs-on: ${{ fromJson('{"amd64":"ubuntu-latest", "arm64":["self-hosted", "Linux", "ARM64"]}')[matrix.arch] }}
-
+        job: [verify, build, unit-test, integration-test]
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          path: go/src/github.com/${{ github.repository }}
-      - uses: actions/setup-go@v5
+          persist-credentials: false
+      - uses: actions/setup-go@v7.0.0
         with:
           go-version: 1.20.x
-
-      - name: ${{ matrix.job }}
+          cache-dependency-path: go.sum
+      - name: Install integration prerequisites
+        if: matrix.job == 'integration-test'
         run: |
-          # use sh function
-          if [[ "$job" == "verify" ]]; then
-            # preload go modules before goimports
-            go mod download -x
-            make check
-            make groupimports || echo 0
-            echo "Please make check before creating a PR"
-            git diff --quiet -- . || (git diff | cat && false)
-          elif [[ "$job" == "build" ]]; then
-            make build
-          elif [[ "$job" == "unit-test" ]]; then
-            make unit-test
-          elif [[ "$job" == "integration-test" ]]; then
-            curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-            sudo apt-get update
-            sudo apt-get install -y stress-ng
-            make integration-test
-          else
-            make $job
-          fi
-        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
-        env:
-          job: ${{ matrix.job }}
+          sudo apt-get update
+          sudo apt-get install -y ipset iptables iproute2 net-tools iperf stress-ng
+      - name: Install verification prerequisites
+        if: matrix.job == 'verify'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python-is-python3
+      - name: Verify
+        if: matrix.job == 'verify'
+        run: |
+          make check
+          git diff --exit-code
+      - name: Build
+        if: matrix.job == 'build'
+        run: make build
+      - name: Unit tests
+        if: matrix.job == 'unit-test'
+        run: make unit-test
+      - name: Integration tests
+        if: matrix.job == 'integration-test'
+        run: |
+          sudo env "PATH=$PATH" "GOCACHE=$(go env GOCACHE)" "GOMODCACHE=$(go env GOMODCACHE)" "GOPATH=$(go env GOPATH)" make integration-test

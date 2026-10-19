@@ -68,8 +68,9 @@ arm64) ARCH=arm64;;
 esac
 tidb_dir="tidb-v5.3.0-linux-$ARCH"
 if [[ ! (-e ${tidb_dir}.tar.gz) ]]; then
-    curl -fsSL -o ${tidb_dir}.tar.gz https://download.pingcap.org/${tidb_dir}.tar.gz
-    tar zxvf ${tidb_dir}.tar.gz
+    curl -fsSL -o ${tidb_dir}.tar.gz https://tiup-mirrors.pingcap.com/${tidb_dir}.tar.gz
+    mkdir -p ${tidb_dir}/bin
+    tar zxvf ${tidb_dir}.tar.gz -C ${tidb_dir}/bin
 fi
 ${tidb_dir}/bin/tidb-server -store mocktikv -P 4111 > tidb.log 2>&1 &
 sleep 5

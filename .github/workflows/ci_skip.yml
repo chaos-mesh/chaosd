@@ -20,7 +20,7 @@ jobs:
           - build
           - unit-test
           - integration-test
-    runs-on: ${{ fromJson('{"amd64":"ubuntu-latest", "arm64":["self-hosted", "Linux", "ARM64"]}')[matrix.arch] }}
+    runs-on: ubuntu-latest
 
     steps:
       - run: echo "Not required to run pull jobs."

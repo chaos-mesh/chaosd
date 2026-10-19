@@ -26,21 +26,33 @@ nic=$(cat /proc/net/dev | awk '{i++; if(i>2){print $1}}' | sed 's/^[\t]*//g' | s
 ifconfig ${nic}:0 192.168.10.28 up
 
 test_nic=$(ifconfig | grep ${nic}:0 | sed 's/:0:.*/:0/g')
-if [[ test_nic == "" ]]; then
+if [[ ${test_nic} == "" ]]; then
     echo "create test nic failed"
     exit 1
 fi
 
-${bin_path}/chaosd attack network down -d ${test_nic} --duration 1s
-stat=$(ifconfig | grep ${test_nic} | sed 's/:0:.*/:0/g')
+${bin_path}/chaosd attack network down -d ${test_nic} --duration 5s &
+attack_pid=$!
+for (( i=0; i<30; i++ )); do
+    stat=$(ifconfig | grep ${test_nic} | sed 's/:0:.*/:0/g')
+    if [[ -z ${stat} ]]; then
+        break
+    fi
+    sleep 0.1
+done
 
 if [[ -n ${stat} ]]; then
     echo "fail to disable the test nic"
+    wait ${attack_pid}
     ifconfig ${test_nic} down
     exit 1
 fi
 
-sleep 1s
+if ! wait ${attack_pid}; then
+    echo "network attack command failed"
+    ifconfig ${test_nic} down
+    exit 1
+fi
 
 stat=$(ifconfig | grep ${test_nic} | sed 's/:0:.*/:0/g')
 if [[ ${stat} != ${test_nic} ]]; then
