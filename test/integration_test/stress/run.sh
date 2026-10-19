@@ -20,12 +20,6 @@ cd $cur
 
 bin_path=../../../bin
 
-echo "download memStress && set environment variable"
-if [[ ! (-e memStress_v0.3-x86_64-linux-gnu.tar.gz) ]]; then
-    curl -fsSL -o memStress_v0.3-x86_64-linux-gnu.tar.gz https://github.com/chaos-mesh/memStress/releases/download/v0.3/memStress_v0.3-x86_64-linux-gnu.tar.gz
-	tar zxvf memStress_v0.3-x86_64-linux-gnu.tar.gz
-fi
-
 # test cpu stress
 ${bin_path}/chaosd attack stress cpu -l 10 -w 1 > cpu.out
 
