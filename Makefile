@@ -46,10 +46,11 @@ build: binary
 binary: chaosd chaos-tools
 
 taily-build: image-build-base
-	@ids=$$(docker ps -aq --filter 'name=^/taily-build$$') || exit $$?; \
+	@builder_identity=$$(docker image inspect --format '{{json .RootFS.Layers}} {{json .Config}}' pingcap/chaos-build-base) || exit $$?; \
+	ids=$$(docker ps -aq --filter 'name=^/taily-build$$') || exit $$?; \
 	if [ -n "$$ids" ]; then \
 		test "$$(docker inspect --format '{{.State.Running}}' taily-build)" = true && \
-		test "$$(docker inspect --format '{{.Image}}' taily-build)" = "$$(docker image inspect --format '{{.Id}}' pingcap/chaos-build-base)" && \
+		test "$$(docker inspect --format '{{index .Config.Labels "io.chaos-mesh.chaosd.builder"}}' taily-build)" = "$$builder_identity" && \
 		test "$$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/src"}}{{.Source}}{{end}}{{end}}' taily-build)" = "$(CURDIR)" || \
 		{ echo "Existing taily-build uses another checkout or builder; inspect it before running make taily-build-clean" >&2; exit 1; }; \
 	else \
@@ -58,7 +59,7 @@ taily-build: image-build-base
 			--mount "type=bind,source=$(shell go env GOMODCACHE),target=/go/pkg/mod" \
 			--mount "type=bind,source=$(shell go env GOCACHE),target=/root/.cache/go-build" \
 			--mount "type=bind,source=$(CHAOSD_TOOLS_CACHE),target=/root/.cache/chaosd" \
-			--workdir /src --name taily-build -d pingcap/chaos-build-base tail -f /dev/null; \
+			--workdir /src --name taily-build --label "io.chaos-mesh.chaosd.builder=$$builder_identity" -d pingcap/chaos-build-base tail -f /dev/null; \
 	fi
 
 taily-build-clean:
