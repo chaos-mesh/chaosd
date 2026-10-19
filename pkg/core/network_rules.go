@@ -213,9 +213,9 @@ func (in *DelaySpec) ToNetem() (*pb.Netem, error) {
 	}
 
 	netem := &pb.Netem{
-		Time:      uint32(delayTime.Nanoseconds() / 1e3),
+		Time:      delayTime.String(),
 		DelayCorr: float32(corr),
-		Jitter:    uint32(jitter.Nanoseconds() / 1e3),
+		Jitter:    jitter.String(),
 	}
 
 	if in.Reorder != nil {
@@ -349,7 +349,7 @@ func (in *BandwidthSpec) ToTbf() (*pb.Tbf, error) {
 	}
 
 	tbf := &pb.Tbf{
-		Rate:   rate,
+		Rate:   strconv.FormatUint(rate, 10),
 		Limit:  in.Limit,
 		Buffer: in.Buffer,
 	}
@@ -450,8 +450,8 @@ func mergeNetem(a, b *pb.Netem) *pb.Netem {
 		b = &pb.Netem{}
 	}
 	return &pb.Netem{
-		Time:          maxu32(a.GetTime(), b.GetTime()),
-		Jitter:        maxu32(a.GetJitter(), b.GetJitter()),
+		Time:          maxDuration(a.GetTime(), b.GetTime()),
+		Jitter:        maxDuration(a.GetJitter(), b.GetJitter()),
 		DelayCorr:     maxf32(a.GetDelayCorr(), b.GetDelayCorr()),
 		Limit:         maxu32(a.GetLimit(), b.GetLimit()),
 		Loss:          maxf32(a.GetLoss(), b.GetLoss()),
@@ -475,4 +475,13 @@ func maxu32(a, b uint32) uint32 {
 
 func maxf32(a, b float32) float32 {
 	return float32(math.Max(float64(a), float64(b)))
+}
+
+func maxDuration(a, b string) string {
+	da, _ := time.ParseDuration(a)
+	db, _ := time.ParseDuration(b)
+	if da > db {
+		return a
+	}
+	return b
 }

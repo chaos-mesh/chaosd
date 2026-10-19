@@ -20,7 +20,7 @@ import (
 	"syscall"
 
 	"github.com/pingcap/errors"
-	"github.com/shirou/gopsutil/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"go.uber.org/zap"
 
 	"github.com/pingcap/log"

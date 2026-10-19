@@ -16,13 +16,13 @@ package chaosd
 import (
 	"testing"
 
-	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
 func TestGenerateRuleData(t *testing.T) {
-	g := NewGomegaWithT(t)
+	g := gomega.NewGomegaWithT(t)
 
 	testCases := []struct {
 		cmd      *core.JVMCommand
@@ -147,7 +147,7 @@ func TestGenerateRuleData(t *testing.T) {
 
 	for _, testCase := range testCases {
 		ruleData, err := generateRuleData(testCase.cmd)
-		g.Expect(err).ShouldNot(HaveOccurred())
-		g.Expect(ruleData).Should(Equal(testCase.ruleData))
+		g.Expect(err).ShouldNot(gomega.HaveOccurred())
+		g.Expect(ruleData).Should(gomega.Equal(testCase.ruleData))
 	}
 }

@@ -16,11 +16,11 @@ package utils
 import (
 	"testing"
 
-	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega"
 )
 
 func TestCheckPorts(t *testing.T) {
-	g := NewGomegaWithT(t)
+	g := gomega.NewGomegaWithT(t)
 
 	type TestCase struct {
 		name          string
@@ -57,12 +57,12 @@ func TestCheckPorts(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		g.Expect(CheckPorts(tc.ports)).To(Equal(tc.expectedValue), tc.name)
+		g.Expect(CheckPorts(tc.ports)).To(gomega.Equal(tc.expectedValue), tc.name)
 	}
 }
 
 func TestCheckIPs(t *testing.T) {
-	g := NewGomegaWithT(t)
+	g := gomega.NewGomegaWithT(t)
 
 	type TestCase struct {
 		name          string
@@ -105,12 +105,12 @@ func TestCheckIPs(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		g.Expect(CheckIPs(tc.ips)).To(Equal(tc.expectedValue), tc.name)
+		g.Expect(CheckIPs(tc.ips)).To(gomega.Equal(tc.expectedValue), tc.name)
 	}
 }
 
 func TestCheckIPProtocols(t *testing.T) {
-	g := NewGomegaWithT(t)
+	g := gomega.NewGomegaWithT(t)
 
 	type TestCase struct {
 		name          string
@@ -132,12 +132,12 @@ func TestCheckIPProtocols(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		g.Expect(CheckIPProtocols(tc.protocol)).To(Equal(tc.expectedValue))
+		g.Expect(CheckIPProtocols(tc.protocol)).To(gomega.Equal(tc.expectedValue))
 	}
 }
 
 func TestCheckPercent(t *testing.T) {
-	g := NewGomegaWithT(t)
+	g := gomega.NewGomegaWithT(t)
 
 	type TestCase struct {
 		name          string
@@ -168,6 +168,6 @@ func TestCheckPercent(t *testing.T) {
 		},
 	}
 	for _, tc := range tcs {
-		g.Expect(CheckPercent(tc.percent)).To(Equal(tc.expectedValue))
+		g.Expect(CheckPercent(tc.percent)).To(gomega.Equal(tc.expectedValue))
 	}
 }

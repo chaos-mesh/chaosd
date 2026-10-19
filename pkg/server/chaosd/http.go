@@ -27,7 +27,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/shirou/gopsutil/process"
+	"github.com/shirou/gopsutil/v4/process"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )

@@ -33,7 +33,7 @@ import (
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
 	perrors "github.com/pingcap/errors"
 	"github.com/pingcap/log"
-	"github.com/shirou/gopsutil/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"

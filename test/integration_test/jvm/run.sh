@@ -66,7 +66,7 @@ aarch64) ARCH=arm64;;
 arm64) ARCH=arm64;;
 *)     ARCH=amd64;;
 esac
-tidb_dir="tidb-v5.3.0-linux-$ARCH"
+tidb_dir="tidb-v8.5.8-linux-$ARCH"
 if [[ ! (-e ${tidb_dir}.tar.gz) ]]; then
     curl -fsSL -o ${tidb_dir}.tar.gz https://tiup-mirrors.pingcap.com/${tidb_dir}.tar.gz
     mkdir -p ${tidb_dir}/bin

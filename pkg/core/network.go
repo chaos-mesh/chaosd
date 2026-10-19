@@ -356,9 +356,9 @@ func (n *NetworkCommand) ToDelayNetem() (*pb.Netem, error) {
 	}
 
 	netem := &pb.Netem{
-		Time:      uint32(delayTime.Nanoseconds() / 1e3),
+		Time:      delayTime.String(),
 		DelayCorr: float32(corr),
-		Jitter:    uint32(jitter.Nanoseconds() / 1e3),
+		Jitter:    jitter.String(),
 	}
 
 	return netem, nil

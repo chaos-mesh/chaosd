@@ -16,10 +16,8 @@ package main
 import (
 	"strings"
 
-	_ "github.com/alecthomas/template"
 	"github.com/pingcap/log"
 	"github.com/spf13/cobra"
-	_ "github.com/swaggo/swag"
 	"go.uber.org/zap"
 	ctrl "sigs.k8s.io/controller-runtime"
 	ctrlzap "sigs.k8s.io/controller-runtime/pkg/log/zap"

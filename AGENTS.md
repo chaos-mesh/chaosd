@@ -2,8 +2,8 @@
 
 Chaosd is a Linux host fault injector with Cobra CLI commands and a Gin HTTP service.
 Both call the same attack service and persist experiments and recovery configuration in SQLite.
-The root Go module builds the application and release helpers. `tools/file` also has a separate `go.mod`.
-Root `go test ./...` does not enter that nested module. The Makefile builds `FileTool` from its Go files using root-module dependencies.
+The root Go module builds the application and release helpers, including `tools/file`.
+Root `go test ./...` covers the file helper with the same dependencies used by release builds.
 
 ## Find the implementation
 
@@ -51,7 +51,7 @@ Check packaged helper compatibility when any of these types change.
 Review effective versions and root replacements when changing dependencies.
 The root `go.mod` replaces the Chaos Mesh API module, gRPC, and Kubernetes modules.
 Check the upstream requirement behind each replacement before removing or changing it.
-Account for `tools/file/go.mod` when changing helper dependencies.
+The file helper shares the root module and its dependency versions.
 
 ## Build and check
 

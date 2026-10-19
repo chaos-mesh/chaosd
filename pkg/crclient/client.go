@@ -48,3 +48,7 @@ func (n *NodeCRClient) ContainerKillByContainerID(_ context.Context, _ string) e
 func (n *NodeCRClient) FormatContainerID(_ context.Context, _ string) (string, error) {
 	return "", nil
 }
+
+func (n *NodeCRClient) GetSandboxPidFromPodUID(_ context.Context, _ string) (uint32, error) {
+	return n.Pid, nil
+}

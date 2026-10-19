@@ -12,12 +12,12 @@ GOTEST := TEST_USE_EXISTING_CLUSTER=false NO_PROXY="${NO_PROXY},testhost" go tes
 SHELL    := /usr/bin/env bash
 BYTEMAN_DIR := byteman-chaos-mesh-download-v4.0.20-0.12
 
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
+TOOLS_BIN ?= $(CURDIR)/bin/dev-tools/$(shell go env GOHOSTOS)-$(shell go env GOHOSTARCH)
+
+REVIVE_VERSION := v1.17.1
+GOIMPORTS_VERSION := v0.52.0
+REVIVE := $(TOOLS_BIN)/revive-$(REVIVE_VERSION)
+GOIMPORTS := $(TOOLS_BIN)/goimports-$(GOIMPORTS_VERSION)
 
 IMAGE_TAG := $(if $(IMAGE_TAG),$(IMAGE_TAG),latest)
 
@@ -44,11 +44,13 @@ ifeq ($(UNAME_M),arm64)
 	ARCH = aarch64
 endif
 
-$(GOBIN)/revive:
-	$(GO) install github.com/mgechev/revive@v1.0.2-0.20200225072153-6219ca02fffb
+$(REVIVE):
+	GOBIN=$(TOOLS_BIN) CGO_ENABLED=0 GOOS= GOARCH= go install github.com/mgechev/revive@$(REVIVE_VERSION)
+	mv $(TOOLS_BIN)/revive $@
 
-$(GOBIN)/goimports:
-	$(GO) install golang.org/x/tools/cmd/goimports@v0.1.1
+$(GOIMPORTS):
+	GOBIN=$(TOOLS_BIN) CGO_ENABLED=0 GOOS= GOARCH= go install golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION)
+	mv $(TOOLS_BIN)/goimports $@
 
 build: binary
 
@@ -117,14 +119,14 @@ check: fmt vet boilerplate lint tidy
 fmt: groupimports
 	$(CGOENV) go fmt ./...
 
-groupimports: $(GOBIN)/goimports
+groupimports: $(GOIMPORTS)
 	$< -w -l -local github.com/chaos-mesh/chaosd $$($(PACKAGE_DIRECTORIES))
 
 # Run go vet against code
 vet:
 	$(CGOENV) go vet ./...
 
-lint: $(GOBIN)/revive
+lint: $(REVIVE)
 	@echo "linting"
 	$< -formatter friendly -config revive.toml $$($(PACKAGE_LIST))
 

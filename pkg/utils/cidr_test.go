@@ -16,12 +16,12 @@ package utils
 import (
 	"testing"
 
-	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega"
 )
 
 // TODO: support more cases such as IPv6 contained IPv4
 func TestIPToCidr(t *testing.T) {
-	g := NewGomegaWithT(t)
+	g := gomega.NewGomegaWithT(t)
 	type TestCase struct {
 		name          string
 		ip            string
@@ -40,7 +40,7 @@ func TestIPToCidr(t *testing.T) {
 		},
 	}
 	for _, tc := range tcs {
-		g.Expect(IPToCidr(tc.ip)).To(Equal(tc.expectedValue))
+		g.Expect(IPToCidr(tc.ip)).To(gomega.Equal(tc.expectedValue))
 	}
 }
 
@@ -50,7 +50,7 @@ func TestResolveCidrs(t *testing.T) {
 		names         []string
 		expectedValue []string
 	}
-	g := NewGomegaWithT(t)
+	g := gomega.NewGomegaWithT(t)
 	tcs := []TestCase{
 		{
 			// TODO: the last one need further discussion.
@@ -61,6 +61,6 @@ func TestResolveCidrs(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		g.Expect(ResolveCidrs(tc.names)).To(Equal(tc.expectedValue))
+		g.Expect(ResolveCidrs(tc.names)).To(gomega.Equal(tc.expectedValue))
 	}
 }

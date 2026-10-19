@@ -17,9 +17,7 @@ import (
 	"fmt"
 	"os"
 
-	_ "github.com/alecthomas/template"
 	"github.com/spf13/cobra"
-	_ "github.com/swaggo/swag"
 )
 
 // CommandFlags are flags that used in all Commands
