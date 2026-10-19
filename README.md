@@ -60,7 +60,7 @@ make chaosd
 ```
 
 Build the local helpers and download the pinned Linux tools.
-This step requires network access and supports the architectures selected by the Makefile.
+This step supports Linux amd64 and arm64. Downloads reuse versioned archives under `${XDG_CACHE_HOME:-$HOME/.cache}/chaosd`; set `CHAOSD_TOOLS_CACHE` to use another shared directory. Network access is needed for missing archives.
 
 ```bash
 make chaos-tools
@@ -178,10 +178,12 @@ The current run relies on its existing recovery timer.
 ## Develop and validate
 
 Run `make check` for formatting, vet, license headers, lint, and module consistency.
-The license checker invokes `python`, which must be available in `PATH`.
-`make check` formats Go files and runs `go mod tidy`, so it can change source and module files.
+The license checker requires Python 3.
+`make check` reports formatting and module drift without changing files. Use `make fmt` or `go mod tidy` to apply the corresponding changes.
 Inspect the resulting diff before committing.
 Run `make chaosd` to build the main binary, or `make binary` to include helper tools.
+Use `SWAGGER=1 make chaosd` to generate and include the optional Swagger UI.
+`make image-chaosd` builds the compiler, binary bundle, and runtime images with the current checkout version.
 
 Run `make unit-test` in a disposable Linux environment.
 The suite includes disk operations and real subprocesses.

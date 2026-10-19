@@ -25,14 +25,8 @@ if [[ ! (-e byteman-example) ]]; then
     git clone https://github.com/chaos-mesh/byteman-example.git
 fi
 
-echo "download byteman && set environment variable"
-byteman_dir="byteman-chaos-mesh-download-v4.0.20-0.12"
-if [[ ! (-e ${byteman_dir}.tar.gz) ]]; then
-    curl -fsSL -o ${byteman_dir}.tar.gz https://mirrors.chaos-mesh.org/${byteman_dir}.tar.gz
-    tar zxvf ${byteman_dir}.tar.gz
-fi
-export BYTEMAN_HOME=$cur/${byteman_dir}
-export PATH=$PATH:${BYTEMAN_HOME}/bin
+export BYTEMAN_HOME="$(cd "$bin_path/tools/byteman" && pwd)"
+export PATH="$BYTEMAN_HOME/bin:$PATH"
 
 echo "build && run Java example program helloworld"
 cd byteman-example/example.helloworld

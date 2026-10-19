@@ -1,33 +1,23 @@
-# syntax=docker/dockerfile:experimental
+# syntax=docker/dockerfile:1
 
 FROM pingcap/chaos-build-base AS go_build
 
-RUN curl https://dl.google.com/go/go1.14.6.linux-amd64.tar.gz | tar -xz -C /usr/local
-ENV PATH "/usr/local/go/bin:${PATH}"
-ENV GO111MODULE=on
-
-ARG HTTPS_PROXY
-ARG HTTP_PROXY
-
-RUN if [[ -n "$HTTP_PROXY" ]]; then yarn config set proxy $HTTP_PROXY; fi
-
 WORKDIR /src
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
+COPY . .
 
-COPY . /src
-
-ARG UI
 ARG SWAGGER
 ARG LDFLAGS
-
-RUN --mount=type=cache,target=/root/go/pkg \
+RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    --mount=type=cache,target=/src/ui/node_modules \
-    IMG_LDFLAGS=$LDFLAGS make binary
+    --mount=type=cache,target=/root/.cache/chaosd \
+    SWAGGER=$SWAGGER IMG_LDFLAGS=$LDFLAGS make binary
 
-FROM alpine:3.12
+FROM debian:bookworm-slim
 
-RUN apk add --no-cache curl tar
-
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl tar \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /bin
-
-COPY --from=go_build /src/bin /bin
+COPY --from=go_build /src/bin/chaosd /bin/chaosd
+COPY --from=go_build /src/bin/tools /bin/tools
