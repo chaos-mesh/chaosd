@@ -38,11 +38,11 @@ type IPSetRuleStore interface {
 type IPSetRule struct {
 	gorm.Model
 	// The name of ipset
-	Name string `gorm:"index:name" json:"name"`
+	Name string `gorm:"index" json:"name"`
 	// The contents of ipset
 	Cidrs string `json:"cidrs"`
 	// Experiment represents the experiment which the rule belong to.
-	Experiment string `gorm:"index:experiment" json:"experiment"`
+	Experiment string `gorm:"index" json:"experiment"`
 }
 
 type Cidr struct {
@@ -63,13 +63,13 @@ type IptablesRuleStore interface {
 type IptablesRule struct {
 	gorm.Model
 	// The name of iptables chain
-	Name string `gorm:"index:name" json:"name"`
+	Name string `gorm:"index" json:"name"`
 	// The name of related ipset
 	IPSets string `json:"ipsets"`
 	// The block direction of this iptables rule
 	Direction string `json:"direction"`
 	// Experiment represents the experiment which the rule belong to.
-	Experiment string `gorm:"index:experiment" json:"experiment"`
+	Experiment string `gorm:"index" json:"experiment"`
 
 	Protocol string `json:"protocol"`
 }
@@ -115,7 +115,7 @@ type TCRule struct {
 	// The name of target ipset
 	IPSet string `json:"ipset,omitempty"`
 	// Experiment represents the experiment which the rule belong to.
-	Experiment string `gorm:"index:experiment" json:"experiment"`
+	Experiment string `gorm:"index" json:"experiment"`
 
 	Protocal   string
 	SourcePort string

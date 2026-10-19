@@ -40,7 +40,7 @@ type ExperimentRunStore interface {
 // ExperimentRun represents a run of an experiment
 type ExperimentRun struct {
 	ID           uint      `gorm:"primary_key" json:"id"`
-	UID          string    `gorm:"index:uid" json:"uid"`
+	UID          string    `gorm:"index:experiment_runs_uid" json:"uid"`
 	StartAt      time.Time `gorm:"autoCreateTime" json:"start_at"`
 	FinishedAt   time.Time `json:"finished_at"`
 	Status       string    `json:"status"`

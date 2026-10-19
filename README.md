@@ -130,6 +130,7 @@ wait "$target_pid" 2>/dev/null || true
 
 Successful recovery resumes the process with `SIGCONT` and records `destroyed`.
 Use `search --all` to list experiments and `search --help` to inspect filters.
+Use `search --status scheduled` to find experiments recorded as scheduled.
 
 ## Start the HTTP service
 
