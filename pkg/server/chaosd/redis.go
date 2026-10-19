@@ -14,14 +14,15 @@
 package chaosd
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"os/exec"
 	"strconv"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/pingcap/errors"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -45,7 +46,7 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 		Addr:     attack.Addr,
 		Password: attack.Password,
 	})
-	_, err := cli.Ping(cli.Context()).Result()
+	_, err := cli.Ping(context.Background()).Result()
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -64,21 +65,19 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 	case core.RedisCachePenetrationAction:
 		pipe := cli.Pipeline()
 		for i := 0; i < attack.RequestNum; i++ {
-			pipe.Get(cli.Context(), "CHAOS_MESH_nqE3BWm7khHv")
+			pipe.Get(context.Background(), "CHAOS_MESH_nqE3BWm7khHv")
 		}
-		_, err := pipe.Exec(cli.Context())
+		_, err := pipe.Exec(context.Background())
 		if err != redis.Nil {
 			return errors.WithStack(err)
 		}
 
 	case core.RedisCacheLimitAction:
-		// `maxmemory` is an interface listwith content similar to `[maxmemory 1024]`
-		maxmemory, err := cli.ConfigGet(cli.Context(), "maxmemory").Result()
+		maxmemory, err := cli.ConfigGet(context.Background(), "maxmemory").Result()
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		// Get the value of maxmemory
-		attack.OriginCacheSize = fmt.Sprint(maxmemory[1])
+		attack.OriginCacheSize = maxmemory["maxmemory"]
 
 		var cacheSize string
 		if attack.Percent != "" {
@@ -95,7 +94,7 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 			cacheSize = attack.CacheSize
 		}
 
-		result, err := cli.ConfigSet(cli.Context(), "maxmemory", cacheSize).Result()
+		result, err := cli.ConfigSet(context.Background(), "maxmemory", cacheSize).Result()
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -126,7 +125,7 @@ func (redisAttack) Recover(exp core.Experiment, env Environment) error {
 			Password: attack.Password,
 		})
 
-		result, err := cli.ConfigSet(cli.Context(), "maxmemory", attack.OriginCacheSize).Result()
+		result, err := cli.ConfigSet(context.Background(), "maxmemory", attack.OriginCacheSize).Result()
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -143,7 +142,7 @@ func (s *Server) shutdownSentinelServer(attack *core.RedisCommand, cli *redis.Cl
 		sentinelCli := redis.NewSentinelClient(&redis.Options{
 			Addr: attack.Addr,
 		})
-		result, err := sentinelCli.FlushConfig(sentinelCli.Context()).Result()
+		result, err := sentinelCli.FlushConfig(context.Background()).Result()
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -153,7 +152,7 @@ func (s *Server) shutdownSentinelServer(attack *core.RedisCommand, cli *redis.Cl
 	}
 
 	// If cli.Shutdown() runs successfully, the result will be nil and the err will be "connection refused"
-	result, err := cli.Shutdown(cli.Context()).Result()
+	result, err := cli.Shutdown(context.Background()).Result()
 	if result != "" {
 		return errors.WithStack(err)
 	}
@@ -187,7 +186,7 @@ func (s *Server) expireKeys(attack *core.RedisCommand, cli *redis.Client) error 
 	}
 	if attack.Key == "" {
 		// Get all keys from the server
-		allKeys, err := cli.Keys(cli.Context(), "*").Result()
+		allKeys, err := cli.Keys(context.Background(), "*").Result()
 		if err != nil {
 			return errors.WithStack(err)
 		}
@@ -217,14 +216,14 @@ func (s *Server) expireKeys(attack *core.RedisCommand, cli *redis.Client) error 
 func ExpireFunc(cli *redis.Client, key string, expiration time.Duration, option string) *redis.BoolCmd {
 	switch option {
 	case OPTIONNX:
-		return cli.ExpireNX(cli.Context(), key, expiration)
+		return cli.ExpireNX(context.Background(), key, expiration)
 	case OPTIONXX:
-		return cli.ExpireXX(cli.Context(), key, expiration)
+		return cli.ExpireXX(context.Background(), key, expiration)
 	case OPTIONGT:
-		return cli.ExpireGT(cli.Context(), key, expiration)
+		return cli.ExpireGT(context.Background(), key, expiration)
 	case OPTIONLT:
-		return cli.ExpireLT(cli.Context(), key, expiration)
+		return cli.ExpireLT(context.Background(), key, expiration)
 	default:
-		return cli.Expire(cli.Context(), key, expiration)
+		return cli.Expire(context.Background(), key, expiration)
 	}
 }

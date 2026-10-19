@@ -14,23 +14,23 @@
 package utils
 
 import (
-	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega"
 
 	"testing"
 )
 
 func TestEncodeClkIds(t *testing.T) {
-	g := NewGomegaWithT(t)
+	g := gomega.NewGomegaWithT(t)
 
 	mask, err := EncodeClkIds([]string{"CLOCK_REALTIME"})
-	g.Expect(err).ShouldNot(HaveOccurred(), "error: %+v", err)
-	g.Expect(mask).Should(Equal(uint64(1)))
+	g.Expect(err).ShouldNot(gomega.HaveOccurred(), "error: %+v", err)
+	g.Expect(mask).Should(gomega.Equal(uint64(1)))
 
 	mask, err = EncodeClkIds([]string{"CLOCK_REALTIME", "CLOCK_MONOTONIC"})
-	g.Expect(err).ShouldNot(HaveOccurred(), "error: %+v", err)
-	g.Expect(mask).Should(Equal(uint64(3)))
+	g.Expect(err).ShouldNot(gomega.HaveOccurred(), "error: %+v", err)
+	g.Expect(mask).Should(gomega.Equal(uint64(3)))
 
 	mask, err = EncodeClkIds([]string{"CLOCK_MONOTONIC"})
-	g.Expect(err).ShouldNot(HaveOccurred(), "error: %+v", err)
-	g.Expect(mask).Should(Equal(uint64(2)))
+	g.Expect(err).ShouldNot(gomega.HaveOccurred(), "error: %+v", err)
+	g.Expect(mask).Should(gomega.Equal(uint64(2)))
 }

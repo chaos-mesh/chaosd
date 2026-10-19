@@ -26,7 +26,7 @@ import (
 	"github.com/chaos-mesh/chaos-mesh/api/v1alpha1"
 	"github.com/chaos-mesh/chaos-mesh/pkg/bpm"
 	"github.com/pingcap/log"
-	"github.com/shirou/gopsutil/process"
+	"github.com/shirou/gopsutil/v4/process"
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 

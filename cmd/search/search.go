@@ -18,6 +18,8 @@ import (
 	"time"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
@@ -70,21 +72,27 @@ func searchCommandFunc(chaos *chaosd.Server, options *core.SearchCommand) {
 		utils.ExitWithError(utils.ExitError, err)
 	}
 
-	tw := tablewriter.NewWriter(os.Stdout)
-	tw.SetHeader([]string{"UID", "Kind", "Action", "Status", "Create Time", "Configuration"})
-	tw.SetBorders(tablewriter.Border{Left: false, Top: false, Right: false, Bottom: false})
-	tw.SetAlignment(3)
-	tw.SetRowSeparator("-")
-	tw.SetCenterSeparator(" ")
-	tw.SetColumnSeparator(" ")
+	table := tablewriter.NewTable(os.Stdout,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Borders:  tw.BorderNone,
+			Symbols:  tw.NewSymbols(tw.StyleASCII),
+			Settings: tw.Settings{Separators: tw.Separators{BetweenColumns: tw.Off}},
+		})),
+		tablewriter.WithRowAlignment(tw.AlignLeft),
+	)
+	table.Header("UID", "Kind", "Action", "Status", "Create Time", "Configuration")
 
 	for _, exp := range exps {
-		tw.Append([]string{
+		if err := table.Append([]string{
 			exp.Uid, exp.Kind, exp.Action, exp.Status, exp.CreatedAt.Format(time.RFC3339), exp.RecoverCommand,
-		})
+		}); err != nil {
+			utils.ExitWithError(utils.ExitError, err)
+		}
 	}
 
-	tw.Render()
+	if err := table.Render(); err != nil {
+		utils.ExitWithError(utils.ExitError, err)
+	}
 
 	utils.NormalExit("")
 }

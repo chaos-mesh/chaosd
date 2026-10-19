@@ -12,6 +12,7 @@ warningCode = 0
 [rule.error-naming]
 [rule.if-return]
 [rule.package-comments]
+  severity = "warning"
 [rule.range]
 [rule.receiver-naming]
 [rule.indent-error-flow]

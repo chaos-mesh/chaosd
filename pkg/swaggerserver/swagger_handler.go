@@ -20,6 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/swag"
 
 	_ "github.com/chaos-mesh/chaosd/docs" // for swagger api
 )
@@ -29,5 +30,6 @@ func Handler() gin.HandlerFunc {
 	return ginSwagger.WrapHandler(
 		swaggerFiles.Handler,
 		ginSwagger.URL("./doc.json"),
+		ginSwagger.InstanceName(swag.Name),
 	)
 }

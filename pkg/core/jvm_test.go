@@ -16,11 +16,11 @@ package core
 import (
 	"testing"
 
-	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega"
 )
 
 func TestJVMCommand(t *testing.T) {
-	g := NewGomegaWithT(t)
+	g := gomega.NewGomegaWithT(t)
 
 	testCases := []struct {
 		cmd    *JVMCommand
@@ -120,9 +120,9 @@ func TestJVMCommand(t *testing.T) {
 	for _, testCase := range testCases {
 		err := testCase.cmd.Validate()
 		if len(testCase.errMsg) == 0 {
-			g.Expect(err).ShouldNot(HaveOccurred())
+			g.Expect(err).ShouldNot(gomega.HaveOccurred())
 		} else {
-			g.Expect(err.Error()).Should(ContainSubstring(testCase.errMsg))
+			g.Expect(err.Error()).Should(gomega.ContainSubstring(testCase.errMsg))
 		}
 	}
 }

@@ -20,8 +20,7 @@ import (
 	"syscall"
 
 	"github.com/containerd/containerd"
-	"github.com/docker/docker/api/types"
-	dockerclient "github.com/docker/docker/client"
+	dockerclient "github.com/moby/moby/client"
 
 	"github.com/chaos-mesh/chaosd/pkg/config"
 	"github.com/chaos-mesh/chaosd/pkg/mock"
@@ -77,8 +76,8 @@ func NewCRIClient(conf *config.Config) (CRIClient, error) {
 
 // DockerClientInterface represents the DockerClient, it's used to simply unit test
 type DockerClientInterface interface {
-	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
-	ContainerKill(ctx context.Context, containerID, signal string) error
+	ContainerInspect(ctx context.Context, containerID string, options dockerclient.ContainerInspectOptions) (dockerclient.ContainerInspectResult, error)
+	ContainerKill(ctx context.Context, containerID string, options dockerclient.ContainerKillOptions) (dockerclient.ContainerKillResult, error)
 }
 
 // DockerClient can get information from docker
@@ -103,12 +102,12 @@ func (c DockerClient) GetPidFromContainerID(ctx context.Context, containerID str
 	if err != nil {
 		return 0, err
 	}
-	container, err := c.client.ContainerInspect(ctx, id)
+	container, err := c.client.ContainerInspect(ctx, id, dockerclient.ContainerInspectOptions{})
 	if err != nil {
 		return 0, err
 	}
 
-	return uint32(container.State.Pid), nil
+	return uint32(container.Container.State.Pid), nil
 }
 
 // ContainerdClientInterface represents the ContainerClient, it's used to simply unit test
@@ -160,7 +159,14 @@ func newDockerClient(host string, version string, client *http.Client, httpHeade
 	}
 
 	// The real logic
-	return dockerclient.NewClient(host, version, client, httpHeaders)
+	opts := []dockerclient.Opt{dockerclient.WithHost(host), dockerclient.WithHTTPHeaders(httpHeaders)}
+	if version != "" {
+		opts = append(opts, dockerclient.WithAPIVersion(version))
+	}
+	if client != nil {
+		opts = append(opts, dockerclient.WithHTTPClient(client))
+	}
+	return dockerclient.NewClientWithOpts(opts...)
 }
 
 // newContainerdClient returns a containerd.New with mock points
@@ -185,7 +191,7 @@ func (c DockerClient) ContainerKillByContainerID(ctx context.Context, containerI
 	if containerID[0:len(dockerProtocolPrefix)] != dockerProtocolPrefix {
 		return fmt.Errorf("expected %s but got %s", dockerProtocolPrefix, containerID[0:len(dockerProtocolPrefix)])
 	}
-	err := c.client.ContainerKill(ctx, containerID[len(dockerProtocolPrefix):], "SIGKILL")
+	_, err := c.client.ContainerKill(ctx, containerID[len(dockerProtocolPrefix):], dockerclient.ContainerKillOptions{Signal: "SIGKILL"})
 
 	return err
 }

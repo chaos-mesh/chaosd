@@ -16,7 +16,7 @@ package utils
 import (
 	"syscall"
 
-	"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/v4/disk"
 )
 
 // GetDiskTotalSize returns the total bytes in disk
