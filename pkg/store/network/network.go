@@ -40,8 +40,8 @@ type ipsetRuleStore struct {
 func (i *ipsetRuleStore) List(_ context.Context) ([]*core.IPSetRule, error) {
 	rules := make([]*core.IPSetRule, 0)
 	if err := i.db.
-		Find(&rules).
 		Order("created_at DESC").
+		Find(&rules).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, perr.WithStack(err)
 	}
@@ -57,7 +57,7 @@ func (i *ipsetRuleStore) FindByExperiment(_ context.Context, experiment string) 
 	rules := make([]*core.IPSetRule, 0)
 	if err := i.db.
 		Where("experiment = ?", experiment).
-		Find(&rules).Order("created_at DESC").
+		Order("created_at DESC").Find(&rules).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, perr.WithStack(err)
 	}
@@ -88,8 +88,8 @@ type iptablesRuleStore struct {
 func (i *iptablesRuleStore) List(_ context.Context) ([]*core.IptablesRule, error) {
 	rules := make([]*core.IptablesRule, 0)
 	if err := i.db.
-		Find(&rules).
 		Order("created_at DESC").
+		Find(&rules).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, perr.WithStack(err)
 	}
@@ -139,8 +139,8 @@ func (t *tcRuleStore) Set(_ context.Context, rule *core.TCRule) error {
 func (t *tcRuleStore) List(_ context.Context) ([]*core.TCRule, error) {
 	rules := make([]*core.TCRule, 0)
 	if err := t.db.
-		Find(&rules).
 		Order("created_at DESC").
+		Find(&rules).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, perr.WithStack(err)
 	}

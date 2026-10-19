@@ -51,9 +51,9 @@ func NewSearchCommand() *cobra.Command {
 
 	cmd.Flags().BoolVarP(&options.All, "all", "A", false, "list all chaos attacks")
 	cmd.Flags().StringVarP(&options.Status, "status", "s", "", "attack status, "+
-		"supported value: created, success, error, destroyed, revoked")
+		"supported value: created, success, error, scheduled, destroyed, revoked")
 	cmd.Flags().StringVarP(&options.Kind, "kind", "k", "", "attack kind, "+
-		"supported value: network, process, stress, disk, host, jvm")
+		"supported value: network, process, stress, disk, disk-server, host, jvm, clock, kafka, redis, file, http, vm, userDefined")
 	cmd.Flags().Uint32VarP(&options.Offset, "offset", "o", 0, "starting to search attacks from offset")
 	cmd.Flags().Uint32VarP(&options.Limit, "limit", "l", 0, "limit the count of attacks")
 	cmd.Flags().BoolVar(&options.Asc, "asc", false, "order by CreateTime, "+

@@ -38,8 +38,8 @@ func (store *experimentRunStore) ListByExperimentID(ctx context.Context, id uint
 	runs := make([]*core.ExperimentRun, 0)
 	if err := store.db.
 		Preload("Experiment").
-		Find(&runs, "experiment_id = ?", id).
 		Order("start_at DESC").
+		Find(&runs, "experiment_id = ?", id).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, perr.WithStack(err)
 	}
@@ -52,8 +52,8 @@ func (store *experimentRunStore) ListByExperimentUID(ctx context.Context, uid st
 	if err := store.db.
 		Joins("Experiment").
 		Where("experiment.uid = ?", uid).
-		Find(&runs).
 		Order("start_at DESC").
+		Find(&runs).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, perr.WithStack(err)
 	}

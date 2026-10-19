@@ -39,8 +39,8 @@ type experimentStore struct {
 func (e *experimentStore) List(_ context.Context) ([]*core.Experiment, error) {
 	exps := make([]*core.Experiment, 0)
 	if err := e.db.
-		Find(&exps).
 		Order("created_at DESC").
+		Find(&exps).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, perr.WithStack(err)
 	}
@@ -52,8 +52,8 @@ func (e *experimentStore) ListByLaunchMode(_ context.Context, mode string) ([]*c
 	exps := make([]*core.Experiment, 0)
 	if err := e.db.
 		Where("launch_mode = ?", mode).
-		Find(&exps).
 		Order("created_at DESC").
+		Find(&exps).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, perr.WithStack(err)
 	}
@@ -65,8 +65,8 @@ func (e *experimentStore) ListByStatus(_ context.Context, status string) ([]*cor
 	exps := make([]*core.Experiment, 0)
 	if err := e.db.
 		Where("status = ?", status).
-		Find(&exps).
 		Order("created_at DESC").
+		Find(&exps).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, perr.WithStack(err)
 	}
@@ -120,8 +120,8 @@ func (e *experimentStore) FindByUid(_ context.Context, uid string) (*core.Experi
 	exps := make([]*core.Experiment, 0)
 	if err := e.db.
 		Where("uid = ?", uid).
-		Find(&exps).
 		Order("created_at DESC").
+		Find(&exps).
 		Error; err != nil {
 		return nil, perr.WithStack(err)
 	}

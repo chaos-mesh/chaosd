@@ -41,7 +41,7 @@ func (s SearchCommand) Validate() error {
 
 	if len(s.Status) > 0 {
 		switch s.Status {
-		case Created, Success, Error, Destroyed, Revoked:
+		case Created, Success, Error, Scheduled, Destroyed, Revoked:
 			break
 		default:
 			return errors.Errorf("status %s not supported", s.Status)
