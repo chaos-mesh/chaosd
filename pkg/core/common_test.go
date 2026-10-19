@@ -42,3 +42,21 @@ func TestScheduleConfig_ParseDuration(t *testing.T) {
 		}
 	})
 }
+
+func TestAttackDurationValidation(t *testing.T) {
+	for _, tc := range []struct {
+		duration, schedule string
+		invalid            bool
+	}{
+		{"", "", false},
+		{"100ms", "", false},
+		{"invalid", "", true},
+		{"", "* * * * *", true},
+		{"100ms", "* * * * *", false},
+	} {
+		config := CommonAttackConfig{SchedulerConfig: SchedulerConfig{Duration: tc.duration, Schedule: tc.schedule}}
+		if err := config.Validate(); (err != nil) != tc.invalid {
+			t.Errorf("duration=%q schedule=%q: %v", tc.duration, tc.schedule, err)
+		}
+	}
+}

@@ -15,6 +15,7 @@ package chaosd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -32,7 +33,7 @@ type diskServerAttack struct{}
 var DiskServerAttack AttackType = diskServerAttack{}
 
 func handleDiskServerOutput(output []byte, err error, _ chan interface{}) {
-	if err != nil {
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		log.Error(string(output), zap.Error(err))
 	}
 	log.Info(string(output))
@@ -135,12 +136,7 @@ func ApplyDiskServerAttack(options core.AttackConfig, env Environment) error {
 	}
 
 	if attackConf.DdOptions != nil {
-		var cmdPool *pkgUtils.CommandPools
-		deadline := getDeadline(options)
-		if deadline != nil {
-			cmdPool = pkgUtils.NewCommandPools(context.Background(), deadline, poolSize)
-		}
-		cmdPool = pkgUtils.NewCommandPools(context.Background(), nil, poolSize)
+		cmdPool := pkgUtils.NewCommandPools(context.Background(), getDeadline(options), poolSize)
 		env.Chaos.CmdPools[env.AttackUid] = cmdPool
 
 		applyPayload(attackConf, cmdPool, NewOutputHandler(handleDiskServerOutput, nil))

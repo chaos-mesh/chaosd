@@ -52,7 +52,10 @@ func NewCommandPools(ctx context.Context, deadline *time.Time, size int) *Comman
 			cmd := exec.CommandContext(ctx2, name, args...)
 			output, err := cmd.CombinedOutput()
 			if err != nil {
-				return mo.Err[[]byte](fmt.Errorf("%s: %s", err, string(output)))
+				if ctx2.Err() != nil {
+					err = ctx2.Err()
+				}
+				return mo.Err[[]byte](fmt.Errorf("%w: %s", err, string(output)))
 			}
 			return mo.Ok[[]byte](output)
 		}),

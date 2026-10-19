@@ -16,10 +16,7 @@ package chaosd
 import (
 	"context"
 
-	"github.com/joomcode/errorx"
-	"github.com/pingcap/log"
 	perr "github.com/pkg/errors"
-	"go.uber.org/zap"
 
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
@@ -85,10 +82,6 @@ func (s *Server) RecoverAttack(uid string) error {
 
 		env := s.newEnvironment(uid)
 		if err = attackType.Recover(*exp, env); err != nil {
-			if errorx.IsOfType(err, core.ErrNonRecoverableAttack) {
-				log.Warn(err.Error(), zap.String("uid", uid), zap.String("kind", exp.Kind))
-				return nil
-			}
 			return perr.WithMessagef(err, "Recover experiment %s failed", uid)
 		}
 	}

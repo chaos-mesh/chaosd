@@ -56,7 +56,6 @@ func NewHTTPAbortCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command
 		Short: "abort selected HTTP connection",
 		Run: func(*cobra.Command, []string) {
 			o.Action = core.HTTPAbortAction
-			o.Abort = true
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
 		},
 	}
@@ -79,7 +78,7 @@ func NewHTTPDelayCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command
 	setTarget(cmd, o)
 	setSelector(cmd, o)
 
-	cmd.Flags().StringVarP(&o.Delay, "delay time", "d", "", "Delay represents the delay of the target request/response.")
+	cmd.Flags().StringVarP(&o.Delay, "delay-time", "d", "", "Delay represents the delay of the target request/response.")
 	return cmd
 }
 
@@ -108,7 +107,7 @@ func NewHTTPConfigCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Comman
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
 		},
 	}
-	cmd.Flags().StringVarP(&o.FilePath, "file path", "p", "", "Config file path.")
+	cmd.Flags().StringVarP(&o.FilePath, "file-path", "p", "", "Config file path.")
 	return cmd
 }
 

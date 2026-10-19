@@ -125,7 +125,8 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 		if o.Port != 0 {
 			rule.Selector.Port = &o.Port
 		}
-		rule.Actions.Abort = &o.Abort
+		abort := o.Action == HTTPAbortAction
+		rule.Actions.Abort = &abort
 		if o.CommonAttackConfig.Action == HTTPDelayAction {
 			rule.Actions.Abort = nil
 			_, err := time.ParseDuration(o.Delay)

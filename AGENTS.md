@@ -37,7 +37,7 @@ Update validation and defaults at the input adapters with any request change.
 Check both dispatch paths in `pkg/server/chaosd` and the kind mapping in `pkg/core/experiment.go`.
 HTTP route registration in `pkg/server/httpserver/server.go` determines availability.
 An annotated handler alone does not expose a route.
-Host, file, and HTTP faults have CLI commands but no registered HTTP creation routes.
+Host and file faults have CLI commands but no registered HTTP creation routes.
 
 Keep serialized recovery fields compatible with existing experiments.
 Implementations can add captured PIDs, original permissions, or other recovery data before the final store update.
