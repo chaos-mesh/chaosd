@@ -27,3 +27,9 @@ bin/
 
 test/integration_test/**/*.*
 !test/integration_test/**/*.sh
+
+chaosd.dat
+chaosd.dat-*
+docs/docs.go
+docs/swagger.json
+docs/swagger.yaml

@@ -17,8 +17,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT=$(unset CDPATH && cd $(dirname "${BASH_SOURCE[0]}")/.. && pwd)
-cd $ROOT
+ROOT=$(unset CDPATH && cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$ROOT"
 
 boiler="${ROOT}/hack/boilerplate/boilerplate.py"
 
@@ -32,6 +32,8 @@ files=($(find . -type f -not \( \
         -o -path './.git/*' \
         -o -path './.*/*' \
         -o -path './vendor/*' \
+        -o -path './bin/*' \
+        -o -path './docs/docs.go' \
         -o -path './ui/*' \
         -o -path '*/Makefile' \
         -o -path '*/Dockerfile' \
@@ -43,15 +45,10 @@ files=($(find . -type f -not \( \
     \) | grep -v -F "$ignored_files"
 ))
 
-files_need_boilerplate=()
-while IFS=$'\n' read -r line; do
-  files_need_boilerplate+=( "$line" )
-done < <("${boiler}" "${files[@]}")
-
-# Run boilerplate check
-if [[ ${#files_need_boilerplate[@]} -gt 0 ]]; then
-    for file in "${files_need_boilerplate[@]}"; do
+files_need_boilerplate=$(python3 "${boiler}" "${files[@]}")
+if [[ -n "$files_need_boilerplate" ]]; then
+    while IFS= read -r file; do
         echo "Boilerplate header is wrong for: ${file}" >&2
-    done
+    done <<< "$files_need_boilerplate"
     exit 1
 fi

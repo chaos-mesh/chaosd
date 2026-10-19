@@ -56,7 +56,7 @@ The file helper shares the root module and its dependency versions.
 ## Build and check
 
 Read `go.mod` and `.github/workflows/ci.yml` before choosing a Go toolchain.
-SQLite requires cgo and a C compiler. The license checker requires a `python` command in `PATH`.
+SQLite requires cgo and a C compiler. The license checker requires a `python3` command in `PATH`.
 Build and runtime validation need Linux facilities. Clock injection is unsupported on arm64.
 Do not treat a cross-compilation result as proof that a fault works on the target architecture.
 
@@ -70,12 +70,12 @@ make chaos-tools
 ```
 
 `make check` runs formatting, vet, boilerplate, lint, and tidy checks.
-It rewrites Go formatting and runs `go mod tidy`, then checks the module diff.
-Inspect the diff after running it. Do not treat it as a read-only check.
+It reports formatting and module drift without rewriting files.
+Use `make fmt` and `go mod tidy` explicitly to apply changes.
 `make chaosd` builds `bin/chaosd` with cgo enabled.
 `make chaos-tools` builds helpers and downloads pinned Linux tools into `bin/tools`.
 `make binary` includes the main binary and tools.
-The Makefile selects downloaded helper architecture from the build host's `uname -m`.
+The Makefile selects downloaded helpers from the effective target GOOS and GOARCH.
 Cross-compiling the Go binary alone does not produce a complete tool bundle for another architecture.
 
 Help and version are suitable smoke checks without creating experiment state.
@@ -88,7 +88,7 @@ Report whether validation covered static checks, builds, selected tests, or actu
 
 Swagger annotations live in the HTTP handlers and reference types in `pkg/core`.
 The optional Swagger UI uses the `swagger_server` build tag and generated files in `docs`.
-Check `hack/generate_swagger_spec.sh` against the actual `cmd/main.go` entrypoint before using the generation target.
+Use `SWAGGER=1 make chaosd` to generate from `cmd/main.go` before the tagged build.
 Do not hand-edit generated files in `docs`.
 Keep `docs/placeholder.go`, which allows builds without generated documentation.
 Review generated output separately from the default build and check the `swagger_server` build tag.
@@ -117,8 +117,8 @@ For Go, inspect `go env GOCACHE GOMODCACHE GOPATH` and reuse those paths.
 Use `go test -count=1` to rerun tests. Do not clear or copy caches for a fresh run.
 Do not create dependency caches per task, branch, worktree, agent, or review snapshot, including under `/tmp`.
 Isolate source, runtime state, and test output when needed, while sharing dependency downloads.
-The Makefile reuses helpers already present in `bin/tools`.
-Before rebuilding a helper, check its pinned version and architecture in the Makefile.
+`hack/install-tools.sh` owns pinned helper versions and architecture mapping.
+It reuses versioned shared archives and matching `bin/tools` outputs.
 For container builds, reuse project BuildKit cache mounts or fixed cache volumes.
 Keep cache IDs tied to compatible platforms and toolchains, not tasks or dates.
 If a shared cache is unwritable, use an existing writable shared cache or the available permission process.

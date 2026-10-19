@@ -1,0 +1,7 @@
+.git
+bin
+*.out
+*.out.tmp
+*.log
+*.dat
+*.dat-*
