@@ -91,6 +91,7 @@ func (s *HttpServer) handler(engine *gin.Engine) {
 		attack.POST("/network", s.createNetworkAttack)
 		attack.POST("/disk", s.createDiskAttack)
 		attack.POST("/clock", s.createClockAttack)
+		attack.POST("/http", s.createHTTPAttack)
 		attack.POST("/jvm", s.createJVMAttack)
 		attack.POST("/kafka", s.createKafkaAttack)
 		attack.POST("/vm", s.createVMAttack)
@@ -300,7 +301,7 @@ func (s *HttpServer) createHTTPAttack(c *gin.Context) {
 		return
 	}
 
-	uid, err := s.chaos.ExecuteAttack(chaosd.HostAttack, attackConfig, core.ServerMode)
+	uid, err := s.chaos.ExecuteAttack(chaosd.HTTPAttack, attackConfig, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return

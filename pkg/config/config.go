@@ -99,7 +99,7 @@ func checkPlatform(platform string) bool {
 	return false
 }
 
-var supportRuntimes = []string{"docker", "runtime"}
+var supportRuntimes = []string{"docker", "containerd"}
 
 func checkRuntime(runtime string) bool {
 	for _, r := range supportRuntimes {

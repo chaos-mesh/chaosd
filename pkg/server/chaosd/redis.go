@@ -46,6 +46,7 @@ func (redisAttack) Attack(options core.AttackConfig, env Environment) error {
 		Addr:     attack.Addr,
 		Password: attack.Password,
 	})
+	defer cli.Close()
 	_, err := cli.Ping(context.Background()).Result()
 	if err != nil {
 		return errors.WithStack(err)
@@ -125,6 +126,7 @@ func (redisAttack) Recover(exp core.Experiment, env Environment) error {
 			Password: attack.Password,
 		})
 
+		defer cli.Close()
 		result, err := cli.ConfigSet(context.Background(), "maxmemory", attack.OriginCacheSize).Result()
 		if err != nil {
 			return errors.WithStack(err)
@@ -142,6 +144,7 @@ func (s *Server) shutdownSentinelServer(attack *core.RedisCommand, cli *redis.Cl
 		sentinelCli := redis.NewSentinelClient(&redis.Options{
 			Addr: attack.Addr,
 		})
+		defer sentinelCli.Close()
 		result, err := sentinelCli.FlushConfig(context.Background()).Result()
 		if err != nil {
 			return errors.WithStack(err)

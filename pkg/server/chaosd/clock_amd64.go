@@ -170,6 +170,9 @@ func (c clockAttack) Attack(options core.AttackConfig, env Environment) error {
 	}
 
 	funcBytes, err := program.ReadSlice(originAddr, size)
+	if err != nil {
+		return err
+	}
 
 	exps, err := env.Chaos.Search(&core.SearchCommand{
 		Status: core.Success,
@@ -202,9 +205,6 @@ func (c clockAttack) Attack(options core.AttackConfig, env Environment) error {
 	opt.Store = core.ClockFuncStore{
 		CodeOfGetClockFunc: *funcBytes,
 		OriginAddress:      originAddr,
-	}
-	if err != nil {
-		return err
 	}
 
 	err = program.JumpToFakeFunc(originAddr, fakeAddr)

@@ -25,8 +25,8 @@ The CLI exposes these fault families. Use each command's `--help` for its action
 | `vm` | Stop a virtual machine through libvirt. |
 | `user-defined` | Run custom attack and recovery commands. |
 
-The HTTP service creates faults at `POST /api/attack/<kind>` for `process`, `network`, `stress`, `disk`, `jvm`, `clock`, `kafka`, `redis`, `vm`, and `user_defined`.
-Host, file, and HTTP faults are available through the CLI only.
+The HTTP service creates faults at `POST /api/attack/<kind>` for `process`, `network`, `stress`, `disk`, `jvm`, `clock`, `kafka`, `redis`, `http`, `vm`, and `user_defined`.
+Host and file faults are available through the CLI only.
 HTTP requests use JSON fields defined in `pkg/core`. They do not accept CLI flags.
 
 ## Prepare a Linux host

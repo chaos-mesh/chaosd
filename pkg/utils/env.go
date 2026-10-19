@@ -33,7 +33,8 @@ func SetRuntimeEnv() error {
 
 	bytemanHome := os.Getenv("BYTEMAN_HOME")
 	if len(bytemanHome) == 0 {
-		err = os.Setenv("BYTEMAN_HOME", fmt.Sprintf("%s/tools/byteman", wd))
+		bytemanHome = fmt.Sprintf("%s/tools/byteman", wd)
+		err = os.Setenv("BYTEMAN_HOME", bytemanHome)
 		if err != nil {
 			return err
 		}

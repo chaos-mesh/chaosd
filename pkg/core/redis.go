@@ -64,11 +64,11 @@ func (r *RedisCommand) Validate() error {
 		}
 
 	case RedisCacheLimitAction:
-		if r.CacheSize != "0" && r.Percent != "" {
+		if r.CacheSize != "" && r.CacheSize != "0" && r.Percent != "" {
 			return errors.New("only one of cachesize and percent can be set")
 		}
 	case RedisCacheExpirationAction:
-		if _, ok := ValidOptions[r.Option]; ok {
+		if r.Option != "" && !ValidOptions[r.Option] {
 			return errors.New("option invalid")
 		}
 	}

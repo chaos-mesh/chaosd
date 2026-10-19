@@ -76,9 +76,9 @@ func (config *CommonAttackConfig) CompleteDefaults() {}
 
 // Validate does a basic validation of common parameters
 func (config *CommonAttackConfig) Validate() error {
-	if len(config.Schedule) > 0 {
+	if len(config.Schedule) > 0 || len(config.Duration) > 0 {
 		if dur, err := config.ScheduleDuration(); dur == nil || err != nil {
-			return errors.New("Provide a valid duration for the scheduled attack")
+			return errors.New("provide a valid duration for the attack")
 		}
 	}
 	return nil
