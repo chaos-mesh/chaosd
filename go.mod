@@ -6,6 +6,7 @@ require (
 	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20261016030316-e020a2df5a69
 	github.com/chaos-mesh/chaos-mesh/api v0.0.0
 	github.com/containerd/containerd v1.7.36
+	github.com/docker/docker v28.5.2+incompatible
 	github.com/dustin/go-humanize v1.1.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-logr/logr v1.4.4
@@ -14,7 +15,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/joomcode/errorx v1.2.0
 	github.com/magiconair/properties v1.18.12
-	github.com/moby/moby/api v1.56.1
 	github.com/moby/moby/client v0.6.2
 	github.com/olekukonko/tablewriter v1.1.5
 	github.com/onsi/gomega v1.44.0
@@ -79,7 +79,6 @@ require (
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/docker v28.5.2+incompatible // indirect
 	github.com/docker/go-connections v0.8.2 // indirect
 	github.com/docker/go-events v0.1.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -136,6 +135,7 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
+	github.com/moby/moby/api v1.56.1 // indirect
 	github.com/moby/sys/mountinfo v0.7.2 // indirect
 	github.com/moby/sys/sequential v0.7.0 // indirect
 	github.com/moby/sys/signal v0.7.1 // indirect

@@ -14,12 +14,15 @@
 package container
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"syscall"
 
 	"github.com/containerd/containerd"
+	dockertypes "github.com/docker/docker/api/types"
 	dockerclient "github.com/moby/moby/client"
 
 	"github.com/chaos-mesh/chaosd/pkg/config"
@@ -76,8 +79,8 @@ func NewCRIClient(conf *config.Config) (CRIClient, error) {
 
 // DockerClientInterface represents the DockerClient, it's used to simply unit test
 type DockerClientInterface interface {
-	ContainerInspect(ctx context.Context, containerID string, options dockerclient.ContainerInspectOptions) (dockerclient.ContainerInspectResult, error)
-	ContainerKill(ctx context.Context, containerID string, options dockerclient.ContainerKillOptions) (dockerclient.ContainerKillResult, error)
+	ContainerInspect(ctx context.Context, containerID string) (dockertypes.ContainerJSON, error)
+	ContainerKill(ctx context.Context, containerID string, signal string) error
 }
 
 // DockerClient can get information from docker
@@ -102,12 +105,12 @@ func (c DockerClient) GetPidFromContainerID(ctx context.Context, containerID str
 	if err != nil {
 		return 0, err
 	}
-	container, err := c.client.ContainerInspect(ctx, id, dockerclient.ContainerInspectOptions{})
+	container, err := c.client.ContainerInspect(ctx, id)
 	if err != nil {
 		return 0, err
 	}
 
-	return uint32(container.Container.State.Pid), nil
+	return uint32(container.State.Pid), nil
 }
 
 // ContainerdClientInterface represents the ContainerClient, it's used to simply unit test
@@ -166,7 +169,30 @@ func newDockerClient(host string, version string, client *http.Client, httpHeade
 	if client != nil {
 		opts = append(opts, dockerclient.WithHTTPClient(client))
 	}
-	return dockerclient.NewClientWithOpts(opts...)
+	sdk, err := dockerclient.New(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &mobyDockerClient{client: sdk}, nil
+}
+
+type mobyDockerClient struct {
+	client *dockerclient.Client
+}
+
+func (c *mobyDockerClient) ContainerInspect(ctx context.Context, id string) (dockertypes.ContainerJSON, error) {
+	result, err := c.client.ContainerInspect(ctx, id, dockerclient.ContainerInspectOptions{})
+	if err != nil {
+		return dockertypes.ContainerJSON{}, err
+	}
+	var container dockertypes.ContainerJSON
+	err = json.NewDecoder(bytes.NewReader(result.Raw)).Decode(&container)
+	return container, err
+}
+
+func (c *mobyDockerClient) ContainerKill(ctx context.Context, id, signal string) error {
+	_, err := c.client.ContainerKill(ctx, id, dockerclient.ContainerKillOptions{Signal: signal})
+	return err
 }
 
 // newContainerdClient returns a containerd.New with mock points
@@ -191,7 +217,7 @@ func (c DockerClient) ContainerKillByContainerID(ctx context.Context, containerI
 	if containerID[0:len(dockerProtocolPrefix)] != dockerProtocolPrefix {
 		return fmt.Errorf("expected %s but got %s", dockerProtocolPrefix, containerID[0:len(dockerProtocolPrefix)])
 	}
-	_, err := c.client.ContainerKill(ctx, containerID[len(dockerProtocolPrefix):], dockerclient.ContainerKillOptions{Signal: "SIGKILL"})
+	err := c.client.ContainerKill(ctx, containerID[len(dockerProtocolPrefix):], "SIGKILL")
 
 	return err
 }
