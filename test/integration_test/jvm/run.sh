@@ -16,13 +16,19 @@
 set -eu
 
 cur=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "$cur/../../../hack/dependency-versions.sh"
 cd $cur
 
 bin_path=../../../bin
 
 echo "download byteman example"
 if [[ ! (-e byteman-example) ]]; then
-    git clone https://github.com/chaos-mesh/byteman-example.git
+    git clone --no-checkout https://github.com/chaos-mesh/byteman-example.git
+    git -C byteman-example checkout --detach "$BYTEMAN_EXAMPLE_COMMIT"
+fi
+if [[ $(git -C byteman-example rev-parse HEAD) != "$BYTEMAN_EXAMPLE_COMMIT" ]]; then
+    echo "byteman-example must be checked out at $BYTEMAN_EXAMPLE_COMMIT" >&2
+    exit 1
 fi
 
 export BYTEMAN_HOME="$(cd "$bin_path/tools/byteman" && pwd)"
@@ -60,11 +66,22 @@ aarch64) ARCH=arm64;;
 arm64) ARCH=arm64;;
 *)     ARCH=amd64;;
 esac
-tidb_dir="tidb-v8.5.8-linux-$ARCH"
-if [[ ! (-e ${tidb_dir}.tar.gz) ]]; then
-    curl -fsSL -o ${tidb_dir}.tar.gz https://tiup-mirrors.pingcap.com/${tidb_dir}.tar.gz
-    mkdir -p ${tidb_dir}/bin
-    tar zxvf ${tidb_dir}.tar.gz -C ${tidb_dir}/bin
+tidb_dir="tidb-$TIDB_VERSION-linux-$ARCH"
+download_cache=${CHAOSD_TOOLS_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/chaosd}
+mkdir -p "$download_cache"
+tidb_archive="$download_cache/$tidb_dir.tar.gz"
+if [[ ! -s "$tidb_archive" ]]; then
+    temporary=$(mktemp "$tidb_archive.XXXXXX")
+    if ! curl --fail --location --retry 3 --output "$temporary" "https://tiup-mirrors.pingcap.com/$tidb_dir.tar.gz"; then
+        rm -f "$temporary"
+        exit 1
+    fi
+    chmod 644 "$temporary"
+    mv "$temporary" "$tidb_archive"
+fi
+if [[ ! -x "$tidb_dir/bin/tidb-server" ]]; then
+    mkdir -p "$tidb_dir/bin"
+    tar -xzf "$tidb_archive" -C "$tidb_dir/bin"
 fi
 ${tidb_dir}/bin/tidb-server -store mocktikv -P 4111 > tidb.log 2>&1 &
 sleep 5
@@ -72,12 +89,12 @@ tidb_pid=`pgrep -n tidb-server`
 
 echo "build && run Java example program mysqldemo"
 cd byteman-example/mysqldemo
-mvn -X package -Dmaven.test.skip=true -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true
+mvn ${MAVEN_REPO_LOCAL:+"-Dmaven.repo.local=$MAVEN_REPO_LOCAL"} -X package -Dmaven.test.skip=true -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true
 
 export MYSQL_DSN=jdbc:"mysql://127.0.0.1:4111/test"                        
 export MYSQL_USER=root                             
 export MYSQL_CONNECTOR_VERSION=8
-mvn exec:java -Dexec.mainClass="com.mysqldemo.App" > mysqldemo.log 2>&1 &
+mvn ${MAVEN_REPO_LOCAL:+"-Dmaven.repo.local=$MAVEN_REPO_LOCAL"} exec:java -Dexec.mainClass="com.mysqldemo.App" > mysqldemo.log 2>&1 &
 # make sure it works
 for (( i=0; i<=20; i++ ))
 do

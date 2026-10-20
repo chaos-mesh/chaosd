@@ -40,6 +40,20 @@ jobs:
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
+      - name: Cache integration downloads
+        if: matrix.job == 'integration-test'
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/chaosd
+          key: ${{ runner.os }}-${{ matrix.arch }}-chaosd-downloads-v1-${{ hashFiles('hack/dependency-versions.sh') }}
+      - name: Cache Maven dependencies
+        if: matrix.job == 'integration-test'
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-${{ matrix.arch }}-maven-v1-${{ hashFiles('hack/dependency-versions.sh', 'test/integration_test/jvm/run.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.arch }}-maven-v1-
       - name: Install integration prerequisites
         if: matrix.job == 'integration-test'
         run: |
@@ -66,4 +80,5 @@ jobs:
       - name: Integration tests
         if: matrix.job == 'integration-test'
         run: |
-          sudo env "PATH=$PATH" "GOCACHE=$(go env GOCACHE)" "GOMODCACHE=$(go env GOMODCACHE)" "GOPATH=$(go env GOPATH)" make integration-test
+          sudo env "PATH=$PATH" "GOCACHE=$(go env GOCACHE)" "GOMODCACHE=$(go env GOMODCACHE)" "GOPATH=$(go env GOPATH)" \
+            "CHAOSD_TOOLS_CACHE=$HOME/.cache/chaosd" "MAVEN_REPO_LOCAL=$HOME/.m2/repository" make integration-test
