@@ -87,6 +87,9 @@ export BYTEMAN_HOME=/usr/local/chaosd/tools/byteman
 export PATH="$BYTEMAN_HOME/bin:$PATH"
 ```
 
+The current Ubuntu 24.04 release workflows produce `latest` and new tagged archives that require glibc 2.34 or later.
+Older archives retain their original requirements. Source build requirements depend on the libraries in the chosen build system.
+
 To use a prebuilt archive, choose its version and architecture from the [installation guide](https://chaos-mesh.org/docs/chaosd-overview/) or [release page](https://github.com/chaos-mesh/chaosd/releases).
 Download and inspect the selected archive before installing its executable and adjacent `tools` directory.
 Replace `<archive-url>` with the selected download URL.

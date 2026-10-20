@@ -1,6 +1,12 @@
 name: Release tag binary
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/release_latest.yml
+      - .github/workflows/release_tag.yml
   push:
     tags:
       - v*
@@ -10,32 +16,33 @@ permissions:
 
 jobs:
   run:
-    name: Upload
+    name: Release tag (${{ matrix.arch }})
     strategy:
       fail-fast: false
       matrix:
         arch: [amd64, arm64]
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
-    container: rockylinux:8
     timeout-minutes: 45
     steps:
-      - name: Prepare build tools
-        run: dnf install -y make gcc git tar gzip curl python3.12 python3.12-pip
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Trust workspace for Git commands
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
       - name: Build binary and related tools
         run: make build
-      - name: Install AWS CLI
-        run: python3.12 -m pip install --upgrade awscli
+      - name: Validate release binaries and runner tools
+        run: |
+          python3 --version
+          aws --version
+          ./bin/chaosd --help
+          ./bin/chaosd version
+          readelf --version-info bin/chaosd bin/tools/FileTool bin/tools/PortOccupyTool
       - name: Upload files
+        if: github.event_name == 'push'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
