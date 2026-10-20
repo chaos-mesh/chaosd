@@ -25,6 +25,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Trust workspace for Git commands
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
