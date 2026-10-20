@@ -117,8 +117,12 @@ For Go, inspect `go env GOCACHE GOMODCACHE GOPATH` and reuse those paths.
 Use `go test -count=1` to rerun tests. Do not clear or copy caches for a fresh run.
 Do not create dependency caches per task, branch, worktree, agent, or review snapshot, including under `/tmp`.
 Isolate source, runtime state, and test output when needed, while sharing dependency downloads.
-`hack/install-tools.sh` owns pinned helper versions and architecture mapping.
+`hack/dependency-versions.sh` owns pinned external helper and JVM test dependency versions.
+`hack/install-tools.sh` owns helper installation and architecture mapping.
 It reuses versioned shared archives and matching `bin/tools` outputs.
+The JVM integration test uses the same archive cache for TiDB.
+Integration CI persists these downloads and the Maven repository with `actions/cache`.
+It passes `CHAOSD_TOOLS_CACHE` and `MAVEN_REPO_LOCAL` through `sudo` so tests use the restored runner caches.
 For container builds, reuse project BuildKit cache mounts or fixed cache volumes.
 Keep cache IDs tied to compatible platforms and toolchains, not tasks or dates.
 If a shared cache is unwritable, use an existing writable shared cache or the available permission process.

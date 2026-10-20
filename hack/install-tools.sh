@@ -15,6 +15,8 @@
 
 set -euo pipefail
 
+source "$(dirname "${BASH_SOURCE[0]}")/dependency-versions.sh"
+
 target_os=${1:?expected target OS}
 target_arch=${2:?expected target architecture}
 destination=${3:?expected output directory}
@@ -42,44 +44,40 @@ download() {
             rm -f "$temporary"
             return 1
         fi
+        chmod 644 "$temporary"
         mv "$temporary" "$archive"
     fi
 }
 
-stress_version=v0.14.02
-mem_version=v0.3.1
-tproxy_version=v0.5.6
-byteman_version=v4.0.20-0.12
-
-if [[ ! -x "$destination/stress-ng" || $(cat "$destination/.stress-ng-version" 2>/dev/null || true) != "$stress_version-$arch" ]]; then
-    archive="$cache/stress-ng-$stress_version-$arch"
-    download "https://github.com/chaos-mesh/stress-ng/releases/download/$stress_version/stress-ng-$arch" "$archive"
+if [[ ! -x "$destination/stress-ng" || $(cat "$destination/.stress-ng-version" 2>/dev/null || true) != "$STRESS_NG_VERSION-$arch" ]]; then
+    archive="$cache/stress-ng-$STRESS_NG_VERSION-$arch"
+    download "https://github.com/chaos-mesh/stress-ng/releases/download/$STRESS_NG_VERSION/stress-ng-$arch" "$archive"
     install -m 755 "$archive" "$destination/stress-ng"
-    echo "$stress_version-$arch" > "$destination/.stress-ng-version"
+    echo "$STRESS_NG_VERSION-$arch" > "$destination/.stress-ng-version"
 fi
 
-if [[ ! -x "$destination/memStress" || $(cat "$destination/.memStress-version" 2>/dev/null || true) != "$mem_version-$arch" ]]; then
-    archive="$cache/memStress_$mem_version-$arch-linux-gnu.tar.gz"
-    download "https://github.com/chaos-mesh/memStress/releases/download/$mem_version/$(basename "$archive")" "$archive"
+if [[ ! -x "$destination/memStress" || $(cat "$destination/.memStress-version" 2>/dev/null || true) != "$MEMSTRESS_VERSION-$arch" ]]; then
+    archive="$cache/memStress_$MEMSTRESS_VERSION-$arch-linux-gnu.tar.gz"
+    download "https://github.com/chaos-mesh/memStress/releases/download/$MEMSTRESS_VERSION/$(basename "$archive")" "$archive"
     tar -xzf "$archive" -C "$staging"
     install -m 755 "$staging/memStress" "$destination/memStress"
-    echo "$mem_version-$arch" > "$destination/.memStress-version"
+    echo "$MEMSTRESS_VERSION-$arch" > "$destination/.memStress-version"
 fi
 
-if [[ ! -x "$destination/tproxy" || $(cat "$destination/.tproxy-version" 2>/dev/null || true) != "$tproxy_version-$arch" ]]; then
-    archive="$cache/tproxy-$tproxy_version-$arch.tar.gz"
-    download "https://github.com/chaos-mesh/chaos-tproxy/releases/download/$tproxy_version/tproxy-$arch.tar.gz" "$archive"
+if [[ ! -x "$destination/tproxy" || $(cat "$destination/.tproxy-version" 2>/dev/null || true) != "$TPROXY_VERSION-$arch" ]]; then
+    archive="$cache/tproxy-$TPROXY_VERSION-$arch.tar.gz"
+    download "https://github.com/chaos-mesh/chaos-tproxy/releases/download/$TPROXY_VERSION/tproxy-$arch.tar.gz" "$archive"
     tar -xzf "$archive" -C "$staging"
     install -m 755 "$staging/tproxy" "$destination/tproxy"
-    echo "$tproxy_version-$arch" > "$destination/.tproxy-version"
+    echo "$TPROXY_VERSION-$arch" > "$destination/.tproxy-version"
 fi
 
-if [[ ! -f "$destination/byteman/lib/byteman.jar" || $(cat "$destination/.byteman-version" 2>/dev/null || true) != "$byteman_version" ]]; then
-    directory="byteman-chaos-mesh-download-$byteman_version"
+if [[ ! -f "$destination/byteman/lib/byteman.jar" || $(cat "$destination/.byteman-version" 2>/dev/null || true) != "$BYTEMAN_VERSION" ]]; then
+    directory="byteman-chaos-mesh-download-$BYTEMAN_VERSION"
     archive="$cache/$directory.tar.gz"
     download "https://mirrors.chaos-mesh.org/$directory.tar.gz" "$archive"
     tar -xzf "$archive" -C "$staging"
     rm -rf "$destination/byteman"
     mv "$staging/$directory" "$destination/byteman"
-    echo "$byteman_version" > "$destination/.byteman-version"
+    echo "$BYTEMAN_VERSION" > "$destination/.byteman-version"
 fi
