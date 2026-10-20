@@ -130,3 +130,12 @@ Record the reason, path, and cleanup plan for a necessary temporary cache except
 Pass the selected shared cache paths to any delegated work.
 Clean up only this task's unused temporary outputs, containers, and mounts.
 Do not clear shared caches, remove source or recovery backups, or run global Docker prune commands.
+
+## Write changelog entries
+
+Keep the changelog focused on core changes that matter to users: major capabilities, significant behavior fixes, and necessary upgrade or compatibility information.
+Summarize related work by its user-visible result. Do not turn commit or PR lists into changelog entries.
+For changes merged through pull requests, end each changelog item with links to the corresponding PRs.
+Omit routine documentation, CI, cache, test fixture, and internal implementation changes unless they materially affect users.
+For dependency upgrades, summarize the major upgrade rather than listing every package and version.
+Use Keep a Changelog categories and keep unreleased work under `Unreleased` until a release is selected.
