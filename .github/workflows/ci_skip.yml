@@ -6,7 +6,12 @@ on:
       - release-*
     paths-ignore:
       - .github/workflows/ci.yml
+      - .github/workflows/ci_skip.yml
       - Makefile
+      - Dockerfile
+      - .dockerignore
+      - 'images/**'
+      - 'hack/**'
       - go.*
       - "**.go"
 

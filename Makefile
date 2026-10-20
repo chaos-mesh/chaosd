@@ -19,6 +19,7 @@ REVIVE := $(TOOLS_BIN)/revive-$(REVIVE_VERSION)
 GOIMPORTS := $(TOOLS_BIN)/goimports-$(GOIMPORTS_VERSION)
 
 IMAGE_TAG := $(if $(IMAGE_TAG),$(IMAGE_TAG),latest)
+IMAGE_NAME ?= chaosd
 
 BUILD_TAGS ?=
 
@@ -31,7 +32,6 @@ PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/chaos-mesh/chaosd/||'
 
 TARGET_GOOS := $(if $(GOOS),$(GOOS),$(shell go env GOOS))
 TARGET_GOARCH := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
-CHAOSD_TOOLS_CACHE ?= $(if $(XDG_CACHE_HOME),$(XDG_CACHE_HOME),$(HOME)/.cache)/chaosd
 
 $(REVIVE):
 	GOBIN=$(TOOLS_BIN) CGO_ENABLED=0 GOOS= GOARCH= go install github.com/mgechev/revive@$(REVIVE_VERSION)
@@ -45,43 +45,16 @@ build: binary
 
 binary: chaosd chaos-tools
 
-taily-build: image-build-base
-	@builder_identity=$$(docker image inspect --format '{{json .RootFS.Layers}} {{json .Config}}' pingcap/chaos-build-base) || exit $$?; \
-	ids=$$(docker ps -aq --filter 'name=^/taily-build$$') || exit $$?; \
-	if [ -n "$$ids" ]; then \
-		test "$$(docker inspect --format '{{.State.Running}}' taily-build)" = true && \
-		test "$$(docker inspect --format '{{index .Config.Labels "io.chaos-mesh.chaosd.builder"}}' taily-build)" = "$$builder_identity" && \
-		test "$$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/src"}}{{.Source}}{{end}}{{end}}' taily-build)" = "$(CURDIR)" || \
-		{ echo "Existing taily-build uses another checkout or builder; inspect it before running make taily-build-clean" >&2; exit 1; }; \
-	else \
-		mkdir -p "$(shell go env GOMODCACHE)" "$(shell go env GOCACHE)" "$(CHAOSD_TOOLS_CACHE)"; \
-		docker run --rm --mount "type=bind,source=$(CURDIR),target=/src" \
-			--mount "type=bind,source=$(shell go env GOMODCACHE),target=/go/pkg/mod" \
-			--mount "type=bind,source=$(shell go env GOCACHE),target=/root/.cache/go-build" \
-			--mount "type=bind,source=$(CHAOSD_TOOLS_CACHE),target=/root/.cache/chaosd" \
-			--workdir /src --name taily-build --label "io.chaos-mesh.chaosd.builder=$$builder_identity" -d pingcap/chaos-build-base tail -f /dev/null; \
-	fi
-
-taily-build-clean:
-	@ids=$$(docker ps -aq --filter 'name=^/taily-build$$') || exit $$?; \
-	if [ -n "$$ids" ]; then docker rm -f taily-build; fi
-
-ifneq ($(TAILY_BUILD),)
-image-binary: taily-build
-	docker exec -e SWAGGER="$(SWAGGER)" -e IMG_LDFLAGS="$(LDFLAGS)" taily-build make binary
-	printf 'FROM scratch\nCOPY chaosd /bin/chaosd\nCOPY tools /bin/tools\n' | docker build -t pingcap/chaos-binary -f - ./bin
-else
-image-binary: image-build-base
-	DOCKER_BUILDKIT=1 docker build --build-arg LDFLAGS="$(LDFLAGS)" --build-arg SWAGGER="$(SWAGGER)" -t pingcap/chaos-binary ${DOCKER_BUILD_ARGS} .
-endif
+image-binary:
+	DOCKER_BUILDKIT=1 docker build --target binary --build-arg LDFLAGS="$(LDFLAGS)" --build-arg SWAGGER="$(SWAGGER)" -t chaosd-binary:local ${DOCKER_BUILD_ARGS} .
 
 chaosd: swagger_spec
 	$(CGOENV) go build -ldflags '$(LDFLAGS)' -tags "${BUILD_TAGS}" -o bin/chaosd ./cmd/main.go
 
 
 chaos-tools:
-	$(CGOENV) go build -o bin/tools/PortOccupyTool ./tools
-	$(CGOENV) go build -o bin/tools/FileTool ./tools/file
+	$(CGOENV) go build -ldflags '-s -w' -o bin/tools/PortOccupyTool ./tools
+	$(CGOENV) go build -ldflags '-s -w' -o bin/tools/FileTool ./tools/file
 	bash hack/install-tools.sh $(TARGET_GOOS) $(TARGET_GOARCH) bin/tools
 
 swagger_spec:
@@ -90,10 +63,10 @@ ifeq ($(SWAGGER),1)
 endif
 
 image-build-base:
-	DOCKER_BUILDKIT=1 docker build --ulimit nofile=65536:65536 -t pingcap/chaos-build-base ${DOCKER_BUILD_ARGS} images/build-base
+	DOCKER_BUILDKIT=1 docker build --target builder --ulimit nofile=65536:65536 -t chaosd-build-base:local ${DOCKER_BUILD_ARGS} .
 
-image-chaosd: image-binary
-	docker build -t ${DOCKER_REGISTRY_PREFIX}pingcap/chaosd:${IMAGE_TAG} ${DOCKER_BUILD_ARGS} images/chaosd
+image-chaosd:
+	DOCKER_BUILDKIT=1 docker build --target runtime --build-arg LDFLAGS="$(LDFLAGS)" --build-arg SWAGGER="$(SWAGGER)" -t ${DOCKER_REGISTRY_PREFIX}${IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_BUILD_ARGS} .
 
 check: fmt-check vet boilerplate lint tidy
 
@@ -138,4 +111,4 @@ dummy:
 integration-test: build dummy
 	bash test/integration_test/run.sh
 
-.PHONY: all chaos taily-build taily-build-clean build check fmt fmt-check groupimports vet boilerplate lint tidy binary chaosd chaos-tools swagger_spec unit-test dummy integration-test image-binary image-build-base image-chaosd
+.PHONY: all chaos build check fmt fmt-check groupimports vet boilerplate lint tidy binary chaosd chaos-tools swagger_spec unit-test dummy integration-test image-binary image-build-base image-chaosd
