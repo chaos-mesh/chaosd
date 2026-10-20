@@ -154,3 +154,36 @@ func TestPatitionChain(t *testing.T) {
 		}
 	})
 }
+
+func TestNetworkDurationValidation(t *testing.T) {
+	for _, tc := range []struct {
+		name, action, duration, schedule string
+		invalid                          bool
+	}{
+		{"flood seconds", NetworkFloodAction, "10", "", false},
+		{"flood default", NetworkFloodAction, "99999999", "", false},
+		{"down seconds", NetworkNICDownAction, "10", "", false},
+		{"down indefinite", NetworkNICDownAction, "-1", "", false},
+		{"scheduled flood seconds", NetworkFloodAction, "10", "* * * * *", true},
+		{"scheduled down indefinite", NetworkNICDownAction, "-1", "* * * * *", true},
+		{"scheduled invalid duration", NetworkFloodAction, "invalid", "* * * * *", true},
+		{"scheduled empty duration", NetworkNICDownAction, "", "* * * * *", true},
+		{"scheduled Go duration", NetworkNICDownAction, "10s", "* * * * *", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := NetworkCommand{
+				CommonAttackConfig: CommonAttackConfig{
+					Action:          tc.action,
+					SchedulerConfig: SchedulerConfig{Duration: tc.duration, Schedule: tc.schedule},
+				},
+				Device:        "eth0",
+				IPAddress:     "127.0.0.1",
+				Port:          "5001",
+				BandwidthSpec: &BandwidthSpec{Rate: "1mbps"},
+			}
+			if err := cmd.Validate(); (err != nil) != tc.invalid {
+				t.Errorf("duration=%q schedule=%q: %v", tc.duration, tc.schedule, err)
+			}
+		})
+	}
+}

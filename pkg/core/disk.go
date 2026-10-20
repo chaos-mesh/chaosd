@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
 	"go.uber.org/zap"
 
@@ -40,6 +41,15 @@ type DiskAttackConfig struct {
 	DdOptions       *[]DdOption
 	FAllocateOption *FAllocateOption
 	Path            string
+}
+
+func (d *DiskAttackConfig) Validate() error {
+	if len(d.Duration) > 0 {
+		if _, err := d.ScheduleDuration(); err != nil {
+			return errors.New("provide a valid duration for the attack")
+		}
+	}
+	return d.CommonAttackConfig.Validate()
 }
 
 func (d DiskAttackConfig) RecoverData() string {
@@ -100,7 +110,8 @@ func NewDiskOptionForServer() *DiskOption {
 }
 
 func (opt *DiskOption) PreProcess() (*DiskAttackConfig, error) {
-	if err := opt.CommonAttackConfig.Validate(); err != nil {
+	config := DiskAttackConfig{CommonAttackConfig: opt.CommonAttackConfig}
+	if err := config.Validate(); err != nil {
 		return nil, err
 	}
 

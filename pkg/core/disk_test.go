@@ -14,6 +14,7 @@
 package core
 
 import (
+	"os"
 	"strconv"
 	"testing"
 
@@ -52,4 +53,70 @@ func Test_initPath(t *testing.T) {
 	}
 	_, err := initPath(&opt)
 	assert.Error(t, err)
+}
+
+func TestDiskAttackDurationValidation(t *testing.T) {
+	for _, tc := range []struct {
+		duration string
+		invalid  bool
+	}{
+		{"", false},
+		{"100ms", false},
+		{"1m", false},
+		{"10", true},
+		{"invalid", true},
+	} {
+		t.Run(tc.duration, func(t *testing.T) {
+			config := DiskAttackConfig{CommonAttackConfig: CommonAttackConfig{
+				Action:          DiskWritePayloadAction,
+				SchedulerConfig: SchedulerConfig{Duration: tc.duration},
+			}}
+			if err := config.Validate(); (err != nil) != tc.invalid {
+				t.Errorf("duration=%q: %v", tc.duration, err)
+			}
+		})
+	}
+}
+
+func TestDiskPreProcessDurationValidation(t *testing.T) {
+	for _, entry := range []struct {
+		name      string
+		newOption func() *DiskOption
+	}{
+		{"cli", NewDiskOption},
+		{"server", NewDiskOptionForServer},
+	} {
+		t.Run(entry.name, func(t *testing.T) {
+			for _, tc := range []struct {
+				duration string
+				invalid  bool
+			}{
+				{"", false},
+				{"100ms", false},
+				{"1m", false},
+				{"10", true},
+				{"invalid", true},
+			} {
+				t.Run(tc.duration, func(t *testing.T) {
+					dir := t.TempDir()
+					opt := entry.newOption()
+					opt.Action = DiskWritePayloadAction
+					opt.Duration = tc.duration
+					opt.Path = dir
+					opt.Size = "1M"
+					config, err := opt.PreProcess()
+					if tc.invalid {
+						assert.Error(t, err)
+						assert.Nil(t, config)
+						assert.Equal(t, dir, opt.Path, "invalid duration must be rejected before preparing a file path")
+					} else if assert.NoError(t, err) && assert.NotNil(t, config) {
+						assert.Equal(t, tc.duration, config.Duration)
+					}
+					entries, err := os.ReadDir(dir)
+					assert.NoError(t, err)
+					assert.Empty(t, entries)
+				})
+			}
+		})
+	}
 }
