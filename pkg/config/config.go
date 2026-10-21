@@ -26,7 +26,8 @@ type Config struct {
 
 	Version bool
 
-	ListenPort      int
+	ListenPort int
+	//revive:disable-next-line:var-naming Preserve the public configuration field.
 	ListenHttpsPort int
 	ListenHost      string
 	SSLCertFile     string
@@ -54,6 +55,8 @@ func (c *Config) Address() string {
 }
 
 // Get the https server address
+//
+//revive:disable-next-line:var-naming Preserve the public configuration method.
 func (c *Config) HttpsServerAddress() string {
 	return fmt.Sprintf("%s:%d", c.ListenHost, c.ListenHttpsPort)
 }

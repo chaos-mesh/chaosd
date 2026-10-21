@@ -217,7 +217,7 @@ func (j *JVMCommand) Validate() error {
 	case "":
 		return errors.New("action not provided")
 	default:
-		return errors.New(fmt.Sprintf("action %s not supported, action can be 'latency', 'exception', 'return', 'stress', 'gc', 'rule-file' of 'rule-data'", j.Action))
+		return errors.Errorf("action %s not supported, action can be 'latency', 'exception', 'return', 'stress', 'gc', 'rule-file' of 'rule-data'", j.Action)
 	}
 
 	return nil

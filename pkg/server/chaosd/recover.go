@@ -21,6 +21,9 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/core"
 )
 
+// RecoverAttack recovers an experiment or cancels its schedule.
+// Scheduled experiments must be canceled in the service that owns their cron entry.
+// An active scheduled run keeps its existing recovery timer.
 func (s *Server) RecoverAttack(uid string) error {
 	exp, err := s.expStore.FindByUid(context.Background(), uid)
 	if err != nil {
@@ -40,8 +43,6 @@ func (s *Server) RecoverAttack(uid string) error {
 		if err = s.Cron.Remove(exp.ID); err != nil {
 			return perr.WithMessage(err, "failed to remove scheduled task")
 		}
-		// it makes sense to not execute recovery for scheduled attacks
-		// by their nature, each run would recover on its own after the given duration
 		attemptRecovery = false
 	}
 

@@ -88,7 +88,7 @@ type DockerClient struct {
 }
 
 // FormatContainerID strips protocol prefix from the container ID
-func (c DockerClient) FormatContainerID(ctx context.Context, containerID string) (string, error) {
+func (c DockerClient) FormatContainerID(_ context.Context, containerID string) (string, error) {
 	if len(containerID) < len(dockerProtocolPrefix) {
 		return "", fmt.Errorf("container id %s is not a docker container id", containerID)
 	}
@@ -123,7 +123,7 @@ type ContainerdClient struct {
 }
 
 // FormatContainerID strips protocol prefix from the container ID
-func (c ContainerdClient) FormatContainerID(ctx context.Context, containerID string) (string, error) {
+func (c ContainerdClient) FormatContainerID(_ context.Context, containerID string) (string, error) {
 	if len(containerID) < len(containerdProtocolPrefix) {
 		return "", fmt.Errorf("container id %s is not a containerd container id", containerID)
 	}

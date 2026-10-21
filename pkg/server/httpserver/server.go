@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package httpserver exposes Chaosd experiments and system operations over HTTP.
 package httpserver
 
 import (
@@ -30,6 +31,7 @@ import (
 	"github.com/chaos-mesh/chaosd/pkg/swaggerserver"
 )
 
+//revive:disable-next-line:var-naming Preserve the public type; HTTPServer is already a protocol constant.
 type HttpServer struct {
 	conf  *config.Config
 	chaos *chaosd.Server
@@ -54,19 +56,19 @@ func Register(s *HttpServer, scheduler scheduler.Scheduler) {
 	}
 
 	go func() {
-		if err := s.startHttpServer(); err != nil {
+		if err := s.startHTTPServer(); err != nil {
 			log.Fatal("failed to start HTTP server", zap.Error(err))
 		}
 	}()
 	go func() {
-		if err := s.startHttpsServer(); err != nil {
+		if err := s.startHTTPSServer(); err != nil {
 			log.Fatal("failed to start HTTPS server", zap.Error(err))
 		}
 	}()
 	scheduler.Start()
 }
 
-func (s *HttpServer) startHttpServer() error {
+func (s *HttpServer) startHTTPServer() error {
 	httpServerAddr := s.conf.Address()
 	log.Info("starting HTTP server", zap.String("address", httpServerAddr))
 	e := gin.Default()

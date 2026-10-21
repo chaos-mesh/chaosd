@@ -43,7 +43,7 @@ type kafkaAttack struct{}
 
 var KafkaAttack AttackType = kafkaAttack{}
 
-func (j kafkaAttack) Attack(options core.AttackConfig, env Environment) (err error) {
+func (j kafkaAttack) Attack(options core.AttackConfig, _ Environment) (err error) {
 	attack := options.(*core.KafkaCommand)
 	switch attack.Action {
 	case core.KafkaFillAction:
@@ -385,7 +385,7 @@ func attackKafkaIO(attack *core.KafkaCommand) error {
 	return nil
 }
 
-func recoverKafkaIO(attack *core.KafkaCommand, env Environment) error {
+func recoverKafkaIO(attack *core.KafkaCommand, _ Environment) error {
 	for path, originMode := range attack.OriginModeOfFiles {
 		err := recoverIOPath(path, originMode, os.Chmod)
 		if err != nil {

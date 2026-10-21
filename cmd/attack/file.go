@@ -74,7 +74,7 @@ func NewFileModifyPrivilegeCommand(dep fx.Option, options *core.FileCommand) *co
 	cmd := &cobra.Command{
 		Use:   "modify",
 		Short: "modify file privilege",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.FileModifyPrivilegeAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonFileAttackFunc)).Run()
 		},
@@ -91,7 +91,7 @@ func NewFileDeleteCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 		Use:   "delete",
 		Short: "delete file",
 
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.FileDeleteAction
 			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonFileAttackFunc)).Run()
@@ -109,7 +109,7 @@ func NewFileRenameCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 		Use:   "rename",
 		Short: "rename file",
 
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.FileRenameAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonFileAttackFunc)).Run()
 		},
@@ -126,7 +126,7 @@ func NewFileAppendCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 		Use:   "append",
 		Short: "append file",
 
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.FileAppendAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonFileAttackFunc)).Run()
 		},
@@ -144,7 +144,7 @@ func NewFileReplaceCommand(dep fx.Option, options *core.FileCommand) *cobra.Comm
 		Use:   "replace",
 		Short: "replace data in file",
 
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.FileReplaceAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonFileAttackFunc)).Run()
 		},

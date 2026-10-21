@@ -27,6 +27,6 @@ func NewVersionCommand() *cobra.Command {
 	}
 }
 
-func versionCommandFunc(cmd *cobra.Command, args []string) {
+func versionCommandFunc(_ *cobra.Command, _ []string) {
 	version.PrintVersionInfo("Chaosd")
 }

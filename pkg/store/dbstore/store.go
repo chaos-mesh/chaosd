@@ -34,7 +34,7 @@ type DB struct {
 	*gorm.DB
 }
 
-// NewDBStore returns a new DB
+// NewDBStore opens chaosd.dat beside the executable.
 func NewDBStore() (*DB, error) {
 	dsn := path.Join(utils.GetProgramPath(), dataFile)
 

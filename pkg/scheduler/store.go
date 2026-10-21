@@ -16,20 +16,20 @@ package scheduler
 import cron "github.com/robfig/cron/v3"
 
 type CronStore interface {
-	Add(experimentId uint, cronEntryId cron.EntryID)
-	Remove(experimentId uint) cron.EntryID
+	Add(experimentID uint, cronEntryID cron.EntryID)
+	Remove(experimentID uint) cron.EntryID
 }
 
 type cronStore struct {
 	entry map[uint]cron.EntryID
 }
 
-func (cs *cronStore) Add(experimentId uint, cronEntryId cron.EntryID) {
-	cs.entry[experimentId] = cronEntryId
+func (cs *cronStore) Add(experimentID uint, cronEntryID cron.EntryID) {
+	cs.entry[experimentID] = cronEntryID
 }
 
-func (cs *cronStore) Remove(experimentId uint) cron.EntryID {
-	entryId := cs.entry[experimentId]
-	delete(cs.entry, experimentId)
-	return entryId
+func (cs *cronStore) Remove(experimentID uint) cron.EntryID {
+	entryID := cs.entry[experimentID]
+	delete(cs.entry, experimentID)
+	return entryID
 }

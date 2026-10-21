@@ -261,7 +261,7 @@ func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) 
 		Use:   "port",
 		Short: "attack network port",
 
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.NetworkPortOccupiedAction
 			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
@@ -277,7 +277,7 @@ func NewNetworkFloodCommand(dep fx.Option, options *core.NetworkCommand) *cobra.
 		Use:   "flood",
 		Short: "generate a mount of network traffic by using iperf client",
 
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.NetworkFloodAction
 			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()
@@ -298,7 +298,7 @@ func NewNICDownCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 		Use:   "down",
 		Short: "down network interface card",
 
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.NetworkNICDownAction
 			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonNetworkAttackFunc)).Run()

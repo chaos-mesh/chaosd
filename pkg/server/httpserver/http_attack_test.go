@@ -53,7 +53,7 @@ func TestHTTPAttackRoute(t *testing.T) {
 	router.Use(utils.MWHandleErrors())
 	server.handler(router)
 	var requests int32
-	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		atomic.AddInt32(&requests, 1)
 		w.WriteHeader(http.StatusOK)
 	}))

@@ -28,8 +28,8 @@ func PortOccupyTool() error {
 	var rootCmd = &cobra.Command{
 		Use:   "http server start",
 		Short: "http server start",
-		Run: func(cmd *cobra.Command, args []string) {
-			startHttp(Port)
+		Run: func(_ *cobra.Command, _ []string) {
+			startHTTP(Port)
 		},
 	}
 
@@ -41,16 +41,16 @@ func PortOccupyTool() error {
 	return nil
 }
 
-func generateHttpPort(port string) string {
+func generateHTTPPort(port string) string {
 	s := fmt.Sprintf(":%s", port)
 	return s
 }
 
-func startHttp(porttoOccupy string) {
+func startHTTP(porttoOccupy string) {
 
-	s := generateHttpPort(porttoOccupy)
+	s := generateHTTPPort(porttoOccupy)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		fmt.Fprintf(w, "Hello cmd!")
 	})
 	if err := http.ListenAndServe(s, nil); err != nil {

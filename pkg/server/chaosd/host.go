@@ -51,6 +51,6 @@ func (hostAttack) Attack(options core.AttackConfig, _ Environment) error {
 	return nil
 }
 
-func (hostAttack) Recover(exp core.Experiment, _ Environment) error {
+func (hostAttack) Recover(_ core.Experiment, _ Environment) error {
 	return core.ErrNonRecoverableAttack.New("host attack not supported to recover")
 }

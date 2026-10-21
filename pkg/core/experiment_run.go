@@ -34,7 +34,7 @@ type ExperimentRunStore interface {
 	LatestRun(ctx context.Context, id uint) (*ExperimentRun, error)
 
 	NewRun(ctx context.Context, expRun *ExperimentRun) error
-	Update(ctx context.Context, runUid string, status string, message string) error
+	Update(ctx context.Context, runUID string, status string, message string) error
 }
 
 // ExperimentRun represents a run of an experiment

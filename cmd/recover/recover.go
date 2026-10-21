@@ -45,8 +45,8 @@ func NewRecoverCommand() *cobra.Command {
 		Use:               "recover UID",
 		Short:             "Recover a chaos experiment",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: completeUid,
-		Run: func(cmd *cobra.Command, args []string) {
+		ValidArgsFunction: completeUID,
+		Run: func(_ *cobra.Command, args []string) {
 			if len(args) == 0 {
 				utils.ExitWithMsg(utils.ExitBadArgs, "UID is required")
 			}
@@ -66,7 +66,7 @@ func recoverCommandF(chaos *chaosd.Server, options *recoverCommand) {
 	utils.NormalExit(fmt.Sprintf("Recover %s successfully", options.uid))
 }
 
-func completeUid(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+func completeUID(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 	completionCtx := newCompletionCtx()
 	completionDep := fx.Options(
 		server.Module,
@@ -77,7 +77,7 @@ func completeUid(cmd *cobra.Command, args []string, toComplete string) ([]string
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go func() {
-		if err := utils.FxNewAppWithoutLog(completionDep, fx.Invoke(listUid)).Start(ctx); err != nil {
+		if err := utils.FxNewAppWithoutLog(completionDep, fx.Invoke(listUID)).Start(ctx); err != nil {
 			log.Error(errors.Wrap(err, "start application").Error())
 		}
 	}()

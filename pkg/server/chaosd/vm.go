@@ -28,7 +28,7 @@ type vmAttack struct{}
 
 var VMAttack AttackType = vmAttack{}
 
-func (vm vmAttack) Attack(options core.AttackConfig, env Environment) error {
+func (vm vmAttack) Attack(options core.AttackConfig, _ Environment) error {
 	vmOption, ok := options.(*core.VMOption)
 	if !ok {
 		return errors.New("the type is not VMOption")

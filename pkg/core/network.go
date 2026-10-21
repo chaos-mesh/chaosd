@@ -555,7 +555,7 @@ func (n *NetworkCommand) getAdditionalChain(ipset, device, direction, uid string
 		directionStr = "INPUT"
 		directionChain = pb.Chain_INPUT
 	} else {
-		return nil, errors.New(fmt.Sprintf("direction %s not supported", n.Direction))
+		return nil, errors.Errorf("direction %s not supported", n.Direction)
 	}
 
 	chains := make([]*pb.Chain, 0, 2)

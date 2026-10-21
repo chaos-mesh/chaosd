@@ -16,10 +16,12 @@ package utils
 import "fmt"
 
 // EncodeClkIds will convert array of clk ids into a mask
-func EncodeClkIds(clkIds []string) (uint64, error) {
+//
+//revive:disable-next-line:var-naming Preserve the public clock utility API.
+func EncodeClkIds(clkIDs []string) (uint64, error) {
 	mask := uint64(0)
 
-	for _, id := range clkIds {
+	for _, id := range clkIDs {
 		// refer to `uapi/linux/time.h`
 		switch id {
 		case "CLOCK_REALTIME":

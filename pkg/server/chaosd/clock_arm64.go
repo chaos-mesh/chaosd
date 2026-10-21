@@ -23,11 +23,11 @@ type clockAttack struct{}
 
 var ClockAttack AttackType = clockAttack{}
 
-func (c clockAttack) Attack(options core.AttackConfig, env Environment) error {
+func (c clockAttack) Attack(_ core.AttackConfig, _ Environment) error {
 	return fmt.Errorf("clock attack not supported")
 
 }
 
-func (c clockAttack) Recover(exp core.Experiment, env Environment) error {
+func (c clockAttack) Recover(_ core.Experiment, _ Environment) error {
 	return fmt.Errorf("clock recover not supported")
 }

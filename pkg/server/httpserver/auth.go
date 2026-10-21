@@ -47,7 +47,7 @@ func (s *HttpServer) serverMode() string {
 	return HTTPServer
 }
 
-func (s *HttpServer) startHttpsServer() (err error) {
+func (s *HttpServer) startHTTPSServer() (err error) {
 	mode := s.serverMode()
 	if mode == HTTPServer {
 		return nil

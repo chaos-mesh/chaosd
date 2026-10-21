@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package scheduler manages in-memory cron jobs and recovery timers that do not survive a restart.
 package scheduler
 
 import (
@@ -163,19 +164,21 @@ func (scheduler *Scheduler) Schedule(
 		attackFunc:  attackFunc,
 		recoverFunc: recoverFunc,
 	}
-	entryId, err := scheduler.AddJob(spec, &cj)
+	entryID, err := scheduler.AddJob(spec, &cj)
 	if err != nil {
 		return err
 	}
-	scheduler.cronStore.Add(exp.ID, entryId)
+	scheduler.cronStore.Add(exp.ID, entryID)
 	defer func() {
 		log.Info("Scheduled new attack cron", zap.String("expUid", exp.Uid), zap.String("cron", spec))
 	}()
 	return nil
 }
 
-func (scheduler Scheduler) Remove(expId uint) error {
-	scheduler.Cron.Remove(scheduler.cronStore.Remove(expId))
+// Remove cancels future invocations registered in this scheduler instance.
+// It does not stop an active run or its recovery timer.
+func (scheduler Scheduler) Remove(expID uint) error {
+	scheduler.Cron.Remove(scheduler.cronStore.Remove(expID))
 	return nil
 }
 

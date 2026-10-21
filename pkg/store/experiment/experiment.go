@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package experiment persists experiment configurations and execution runs.
 package experiment
 
 import (
@@ -116,6 +117,7 @@ func (e *experimentStore) ListByConditions(_ context.Context, conds *core.Search
 	return exps, nil
 }
 
+//revive:disable-next-line:var-naming Preserve the ExperimentStore interface.
 func (e *experimentStore) FindByUid(_ context.Context, uid string) (*core.Experiment, error) {
 	exps := make([]*core.Experiment, 0)
 	if err := e.db.

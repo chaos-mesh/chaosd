@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package chaosd executes fault injection and recovery and manages experiment state.
 package chaosd
 
 import (
@@ -25,17 +26,14 @@ import (
 )
 
 type Environment struct {
+	//revive:disable-next-line:var-naming Preserve the public attack environment field.
 	AttackUid string
 	Chaos     *Server
 }
 
 type AttackType interface {
-	// Attack execute attack with options and env.
-	// ExecuteAttack will store the options ahead of Attack be executed
-	// and will store options again after Attack be executed.
-	// We can also use env.Chaos.expStore to touch the storage of chaosd.
-	// But do not update it with your own uid ,
-	// because it will be covered after Attack executed with options.
+	// Attack may add PIDs or original state to options for recovery.
+	// For immediate attacks, ExecuteAttack persists the updated recovery data even if Attack returns an error.
 	Attack(options core.AttackConfig, env Environment) error
 	// Recover can get marshaled options data from experiment and recover it.
 	Recover(experiment core.Experiment, env Environment) error
@@ -48,10 +46,8 @@ func (s *Server) newEnvironment(uid string) Environment {
 	}
 }
 
-// ExecuteAttack creates a new Experiment record and may schedule/execute
-// an attack for the given attackType.
-// If options.Schedule isn't provided, then the attack is executed immediately.
-// Otherwise the attack is scheduled based on the provided schedule spec and duration.
+// ExecuteAttack creates an experiment and runs the attack immediately if options.Cron() is empty.
+// Otherwise, it schedules the attack using options.Cron().
 func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig, launchMode string) (uid string, err error) {
 	uid = options.GetUID()
 	if len(uid) == 0 {

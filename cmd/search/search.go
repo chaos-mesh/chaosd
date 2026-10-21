@@ -41,7 +41,7 @@ func NewSearchCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "search UID",
 		Short: "Search chaos attack, you can search attacks through the uid or the state of the attack",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			if len(args) > 0 {
 				options.UID = args[0]
 			}

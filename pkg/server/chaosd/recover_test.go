@@ -28,6 +28,7 @@ type recoveryStore struct {
 	updated bool
 }
 
+//revive:disable-next-line:var-naming Match the ExperimentStore interface.
 func (s *recoveryStore) FindByUid(context.Context, string) (*core.Experiment, error) {
 	return s.exp, nil
 }

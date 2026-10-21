@@ -74,7 +74,7 @@ func NewCommandRunner(name string, args []string) *CommandRunner {
 	return &CommandRunner{
 		Name:          name,
 		Args:          args,
-		outputHandler: func(bytes []byte, err error, c chan interface{}) {},
+		outputHandler: func(_ []byte, _ error, _ chan interface{}) {},
 		outputChanel:  nil,
 	}
 }

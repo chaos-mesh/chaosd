@@ -35,7 +35,7 @@ func (c *Client) CreateProcessAttack(attack *core.ProcessCommand) (*utils.Respon
 	}
 
 	url := fmt.Sprintf("%s/%s", c.cfg.Addr, processAttack)
-	data, apiErr, err := doRequest(c.client, url, http.MethodPost, withJsonBody(a))
+	data, apiErr, err := doRequest(c.client, url, http.MethodPost, withJSONBody(a))
 	if err != nil {
 		return nil, nil, errors.WithStack(err)
 	}

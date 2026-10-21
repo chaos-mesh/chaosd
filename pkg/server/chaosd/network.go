@@ -294,7 +294,7 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 	}
 
 	// match IP address, eg: 127.0.0.1
-	reIp, err := regexp.Compile(`^(\d{1,3})(\.\d{1,3}){3}`)
+	reIP, err := regexp.Compile(`^(\d{1,3})(\.\d{1,3}){3}`)
 	if err != nil {
 		return perrors.WithStack(err)
 	}
@@ -316,7 +316,7 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 	for _, line := range lines {
 		match := re.MatchString(line)
 		if match {
-			line = reIp.ReplaceAllString(line, attack.DNSIp)
+			line = reIP.ReplaceAllString(line, attack.DNSIp)
 			newFlag = false
 		}
 		line = line + "\n"
@@ -468,7 +468,7 @@ func (s *Server) updateDNSServer(attack *core.NetworkCommand) error {
 	return nil
 }
 
-func (s *Server) recoverDNSServer(attack *core.NetworkCommand) error {
+func (s *Server) recoverDNSServer(_ *core.NetworkCommand) error {
 	if _, err := s.svr.SetDNSServer(context.Background(), &pb.SetDNSServerRequest{
 		Enable:  false,
 		EnterNS: false,
@@ -536,7 +536,7 @@ func checkPortIsListened(port string) (bool, error) {
 	return true, nil
 }
 
-func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) error {
+func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, _ string) error {
 
 	proc, err := process.NewProcess(attack.PortPid)
 	if err != nil {
@@ -560,7 +560,7 @@ func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, uid string) er
 	return nil
 }
 
-func (s *Server) recoverEtcHosts(attack *core.NetworkCommand, uid string) error {
+func (s *Server) recoverEtcHosts(_ *core.NetworkCommand, uid string) error {
 	cmd := "mv /etc/hosts.chaosd." + uid + " /etc/hosts"
 	recoverCmd := exec.Command("/bin/bash", "-c", cmd) // #nosec
 	stdout, err := recoverCmd.CombinedOutput()

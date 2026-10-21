@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package core defines fault requests, validation, and persisted experiment models.
 package core
 
 import (
@@ -65,7 +66,8 @@ type ExperimentStore interface {
 
 // Experiment represents an experiment instance.
 type Experiment struct {
-	ID        uint      `gorm:"primary_key" json:"id"`
+	ID uint `gorm:"primary_key" json:"id"`
+	//revive:disable-next-line:var-naming Preserve the public experiment field.
 	Uid       string    `gorm:"index:uid" json:"uid"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

@@ -39,7 +39,7 @@ func TestCommand_Unmarshal(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(_ *testing.T) {
 			cmd := dc.Unmarshal(tt.d)
 			fmt.Println(cmd.String())
 		})

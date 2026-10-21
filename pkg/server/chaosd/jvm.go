@@ -37,7 +37,7 @@ var JVMAttack AttackType = jvmAttack{}
 const bmInstallCommand = "bminstall.sh -b -Dorg.jboss.byteman.transform.all -Dorg.jboss.byteman.verbose -Dorg.jboss.byteman.compileToBytecode -p %d %d"
 const bmSubmitCommand = "bmsubmit.sh -p %d -%s %s"
 
-func (j jvmAttack) Attack(options core.AttackConfig, env Environment) (err error) {
+func (j jvmAttack) Attack(options core.AttackConfig, _ Environment) (err error) {
 	// install agent
 	attack := options.(*core.JVMCommand)
 	bmInstallCmd := fmt.Sprintf(bmInstallCommand, attack.Port, attack.Pid)
@@ -130,7 +130,7 @@ func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 	return filename, nil
 }
 
-func (j jvmAttack) Recover(exp core.Experiment, env Environment) error {
+func (j jvmAttack) Recover(exp core.Experiment, _ Environment) error {
 	attack := &core.JVMCommand{}
 	if err := json.Unmarshal([]byte(exp.RecoverCommand), attack); err != nil {
 		return err

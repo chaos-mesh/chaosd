@@ -34,7 +34,7 @@ type experimentRunStore struct {
 	db *dbstore.DB
 }
 
-func (store *experimentRunStore) ListByExperimentID(ctx context.Context, id uint) ([]*core.ExperimentRun, error) {
+func (store *experimentRunStore) ListByExperimentID(_ context.Context, id uint) ([]*core.ExperimentRun, error) {
 	runs := make([]*core.ExperimentRun, 0)
 	if err := store.db.
 		Preload("Experiment").
@@ -47,7 +47,7 @@ func (store *experimentRunStore) ListByExperimentID(ctx context.Context, id uint
 	return runs, nil
 }
 
-func (store *experimentRunStore) ListByExperimentUID(ctx context.Context, uid string) ([]*core.ExperimentRun, error) {
+func (store *experimentRunStore) ListByExperimentUID(_ context.Context, uid string) ([]*core.ExperimentRun, error) {
 	runs := make([]*core.ExperimentRun, 0)
 	if err := store.db.
 		Joins("Experiment").
@@ -61,7 +61,7 @@ func (store *experimentRunStore) ListByExperimentUID(ctx context.Context, uid st
 	return runs, nil
 }
 
-func (store *experimentRunStore) LatestRun(ctx context.Context, id uint) (*core.ExperimentRun, error) {
+func (store *experimentRunStore) LatestRun(_ context.Context, id uint) (*core.ExperimentRun, error) {
 	run := &core.ExperimentRun{}
 	if err := store.db.
 		Preload("Experiment").
@@ -81,10 +81,10 @@ func (store *experimentRunStore) NewRun(_ context.Context, expRun *core.Experime
 	return store.db.Model(core.ExperimentRun{}).Save(expRun).Error
 }
 
-func (store *experimentRunStore) Update(_ context.Context, runUid string, status string, message string) error {
+func (store *experimentRunStore) Update(_ context.Context, runUID string, status string, message string) error {
 	return store.db.
 		Model(core.ExperimentRun{}).
-		Where("uid = ?", runUid).
+		Where("uid = ?", runUID).
 		Updates(core.Experiment{Status: status, Message: message}).
 		Error
 }

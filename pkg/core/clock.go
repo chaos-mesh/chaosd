@@ -40,10 +40,12 @@ type ClockOption struct {
 	SecDelta   int64
 	NsecDelta  int64
 
+	//revive:disable-next-line:var-naming Preserve the public clock configuration field.
 	ClockIdsSlice string `json:"clock-ids-slice,omitempty"`
 
 	Store ClockFuncStore
 
+	//revive:disable-next-line:var-naming Preserve the public field and persisted recovery JSON key.
 	ClockIdsMask uint64
 }
 
@@ -61,7 +63,7 @@ func NewClockOption() *ClockOption {
 }
 
 func (opt *ClockOption) PreProcess() error {
-	clkIds := strings.Split(opt.ClockIdsSlice, ",")
+	clkIDs := strings.Split(opt.ClockIdsSlice, ",")
 
 	offset, err := time.ParseDuration(opt.TimeOffset)
 	if err != nil {
@@ -70,16 +72,16 @@ func (opt *ClockOption) PreProcess() error {
 	opt.SecDelta = int64(offset / time.Second)
 	opt.NsecDelta = int64(offset % time.Second)
 
-	clockIdsMask, err := utils.EncodeClkIds(clkIds)
+	clockIDsMask, err := utils.EncodeClkIds(clkIDs)
 	if err != nil {
 		log.Error("error while converting clock ids to mask", zap.Error(err))
 		return err
 	}
-	if clockIdsMask == 0 {
+	if clockIDsMask == 0 {
 		log.Error("clock ids must not be empty")
 		return fmt.Errorf("clock ids must not be empty")
 	}
-	opt.ClockIdsMask = clockIdsMask
+	opt.ClockIdsMask = clockIDsMask
 
 	if uint64(opt.SecDelta) > 1<<31 {
 		log.Warn("Monotonic clock will be broken when sec delta is too large or too small.")

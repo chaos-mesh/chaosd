@@ -50,7 +50,7 @@ var conf = config.Config{
 	Runtime:  "docker",
 }
 
-func serverCommandFunc(cmd *cobra.Command, args []string) {
+func serverCommandFunc(_ *cobra.Command, _ []string) {
 	if err := conf.Validate(); err != nil {
 		utils.ExitWithError(utils.ExitBadArgs, err)
 	}

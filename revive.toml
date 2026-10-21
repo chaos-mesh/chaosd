@@ -1,50 +1,34 @@
-ignoreGeneratedHeader = false
+ignore-generated-header = false
 severity = "error"
 confidence = 0.8
-errorCode = 1
-warningCode = 0
+error-code = 1
+warning-code = 0
 
 [rule.blank-imports]
 [rule.context-as-argument]
+[rule.context-keys-type]
 [rule.dot-imports]
+[rule.empty-block]
+[rule.error-naming]
 [rule.error-return]
 [rule.error-strings]
-[rule.error-naming]
-[rule.if-return]
-[rule.package-comments]
-  severity = "warning"
+[rule.errorf]
+[rule.increment-decrement]
+[rule.indent-error-flow]
 [rule.range]
 [rule.receiver-naming]
-[rule.indent-error-flow]
-[rule.empty-block]
+[rule.redefines-builtin-id]
 [rule.superfluous-else]
-[rule.modifies-parameter]
+[rule.time-naming]
+[rule.unexported-return]
+[rule.unreachable-code]
+[rule.var-declaration]
+[rule.var-naming]
 
-# Add these once issues are fixed
-#[rule.var-naming]
-#  severity = "warning"
-#[rule.confusing-naming]
-#  severity = "warning"
-[rule.confusing-results]
-  severity = "warning"
-[rule.flag-parameter]
-  severity = "warning"
-#[rule.unused-parameter]
-#  severity = "warning"
+# Comments are reviewed for useful behavior contracts, not required on every symbol.
+[rule.exported]
+disabled = true
+[rule.package-comments]
+disabled = true
 
-# Decide whether we want these rules
-# [rule.exported]
-
-# Already checked by megacheck
-# [rule.unreachable-code]
-
-# Adding these will slow down the linter
-# They are already provided by megacheck
-# [rule.unexported-return]
-# [rule.time-naming]
-# [rule.errorf]
-
-# Adding these will slow down the linter
-# Not sure if they are already provided by megacheck
-# [rule.var-declaration]
-# [rule.context-keys-type]
+[rule.unused-parameter]

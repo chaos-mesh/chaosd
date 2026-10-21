@@ -32,7 +32,7 @@ func newCompletionCtx() *completionContext {
 	}
 }
 
-func listUid(ctx *completionContext, chaos *chaosd.Server) {
+func listUID(ctx *completionContext, chaos *chaosd.Server) {
 	exps, err := chaos.Search(&core.SearchCommand{Status: core.Success})
 	if err != nil {
 		ctx.err <- errors.Wrap(err, "list exp")

@@ -67,7 +67,7 @@ func TimeoutClientInterceptor(ctx context.Context, method string, req, reply int
 
 // TimeoutServerInterceptor ensures the context is intact before handling over the
 // request to application.
-func TimeoutServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
+func TimeoutServerInterceptor(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler) (interface{}, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()

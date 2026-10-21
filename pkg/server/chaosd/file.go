@@ -63,7 +63,7 @@ func (fileAttack) Attack(options core.AttackConfig, env Environment) (err error)
 	return nil
 }
 
-func (s *Server) createFile(attack *core.FileCommand, uid string) error {
+func (s *Server) createFile(attack *core.FileCommand, _ string) error {
 	var cmdStr string
 	if len(attack.DirName) > 0 {
 		cmdStr = fmt.Sprintf("FileTool create --dir-name %s", attack.DirName)
@@ -79,7 +79,7 @@ func (s *Server) createFile(attack *core.FileCommand, uid string) error {
 	return nil
 }
 
-func (s *Server) modifyFilePrivilege(attack *core.FileCommand, uid string) error {
+func (s *Server) modifyFilePrivilege(attack *core.FileCommand, _ string) error {
 	// get the privilege of file and save it, used for recover
 	cmdStr := "stat -c %a" + " " + attack.FileName
 	output, err := utils.ExecuteCmd(cmdStr)
@@ -118,7 +118,7 @@ func (s *Server) deleteFile(attack *core.FileCommand, uid string) error {
 	return renameFile(source, dest)
 }
 
-func (s *Server) renameFile(attack *core.FileCommand, uid string) error {
+func (s *Server) renameFile(attack *core.FileCommand, _ string) error {
 	return renameFile(attack.SourceFile, attack.DestFile)
 }
 
@@ -150,7 +150,7 @@ func (s *Server) appendFile(attack *core.FileCommand, uid string) error {
 	return nil
 }
 
-func (s *Server) replaceFile(attack *core.FileCommand, uid string) error {
+func (s *Server) replaceFile(attack *core.FileCommand, _ string) error {
 	cmdStr := fmt.Sprintf("FileTool replace --file-name %s --origin-string %s --dest-string %s --line %d", attack.FileName, attack.OriginStr, attack.DestStr, attack.Line)
 	_, err := utils.ExecuteCmd(cmdStr)
 	if err != nil {
@@ -258,7 +258,7 @@ func (s *Server) recoverAppendFile(attack *core.FileCommand, uid string) error {
 	return nil
 }
 
-func (s *Server) recoverReplaceFile(attack *core.FileCommand, uid string) error {
+func (s *Server) recoverReplaceFile(attack *core.FileCommand, _ string) error {
 	// TODO: this is not a good way to recover
 	// For example:
 	//	 The origin content is "test text", and replace "test" with "text", the result is "text text".

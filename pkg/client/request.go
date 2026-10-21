@@ -30,7 +30,7 @@ type bodyOption struct {
 	body        io.Reader
 }
 
-func withJsonBody(body []byte) BodyOption {
+func withJSONBody(body []byte) BodyOption {
 	return func(bo *bodyOption) {
 		bo.contentType = "application/json"
 		bo.body = bytes.NewBuffer(body)
@@ -41,7 +41,7 @@ func doRequest(
 	cli *http.Client,
 	url, method string,
 	opts ...BodyOption,
-) ([]byte, []byte, error) {
+) (responseBody, apiErrorBody []byte, err error) {
 	b := &bodyOption{}
 	for _, o := range opts {
 		o(b)
@@ -63,7 +63,7 @@ func doRequest(
 	return resp, apiErr, nil
 }
 
-func dial(cli *http.Client, req *http.Request) ([]byte, []byte, error) {
+func dial(cli *http.Client, req *http.Request) (responseBody, apiErrorBody []byte, err error) {
 	resp, err := cli.Do(req)
 	if err != nil {
 		return nil, nil, err
