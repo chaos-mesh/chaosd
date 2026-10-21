@@ -32,7 +32,7 @@ type diskAttack struct{}
 
 var DiskAttack AttackType = diskAttack{}
 
-func handleDiskAttackOutput(output []byte, err error, c chan interface{}) {
+func handleDiskAttackOutput(output []byte, err error, c chan any) {
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		log.Error(string(output), zap.Error(err))
 		c <- err
@@ -48,7 +48,7 @@ func (diskAttack) Attack(options core.AttackConfig, env Environment) error {
 	return nil
 }
 
-func handleOutputChannelError(c chan interface{}) error {
+func handleOutputChannelError(c chan any) error {
 	close(c)
 	var multiErrs error
 	for i := range c {
@@ -69,7 +69,7 @@ func ApplyDiskAttack(options core.AttackConfig, env Environment) error {
 		return fmt.Errorf("AttackConfig -> *DiskAttackConfig meet error")
 	}
 	poolSize := getPoolSize(attackConf)
-	outputChan := make(chan interface{}, poolSize+1)
+	outputChan := make(chan any, poolSize+1)
 	if attackConf.Action == core.DiskFillAction {
 		cmdPool := pkgUtils.NewCommandPools(context.Background(), nil, poolSize)
 		env.Chaos.CmdPools[env.AttackUid] = cmdPool

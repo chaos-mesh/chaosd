@@ -51,8 +51,6 @@ func (u *UserDefinedOption) RecoverData() string {
 
 func NewUserDefinedOption() *UserDefinedOption {
 	return &UserDefinedOption{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: UserDefinedAttack,
-		},
+		Kind: UserDefinedAttack,
 	}
 }

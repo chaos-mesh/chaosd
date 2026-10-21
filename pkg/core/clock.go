@@ -56,9 +56,7 @@ type ClockFuncStore struct {
 
 func NewClockOption() *ClockOption {
 	return &ClockOption{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: ClockAttack,
-		},
+		Kind: ClockAttack,
 	}
 }
 

@@ -55,7 +55,7 @@ func TestAttackDurationValidation(t *testing.T) {
 		{"100ms", "* * * * *", false},
 		{"invalid", "* * * * *", true},
 	} {
-		config := CommonAttackConfig{SchedulerConfig: SchedulerConfig{Duration: tc.duration, Schedule: tc.schedule}}
+		config := CommonAttackConfig{Duration: tc.duration, Schedule: tc.schedule}
 		if err := config.Validate(); (err != nil) != tc.invalid {
 			t.Errorf("duration=%q schedule=%q: %v", tc.duration, tc.schedule, err)
 		}

@@ -367,9 +367,8 @@ func convertUnitToBytes(nu string) (uint64, error) {
 	s := strings.ToLower(strings.TrimSpace(nu))
 
 	for i, u := range []string{"tbps", "gbps", "mbps", "kbps", "bps"} {
-		if strings.HasSuffix(s, u) {
-			ts := strings.TrimSuffix(s, u)
-			s := strings.TrimSpace(ts)
+		if before, ok := strings.CutSuffix(s, u); ok {
+			s := strings.TrimSpace(before)
 
 			n, err := strconv.ParseUint(s, 10, 64)
 

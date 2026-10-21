@@ -160,8 +160,6 @@ func (n FileCommand) RecoverData() string {
 
 func NewFileCommand() *FileCommand {
 	return &FileCommand{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: FileAttack,
-		},
+		Kind: FileAttack,
 	}
 }

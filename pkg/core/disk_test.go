@@ -23,10 +23,8 @@ import (
 
 func Test_initSize(t *testing.T) {
 	opt := DiskOption{
-		CommonAttackConfig: CommonAttackConfig{
-			Action: DiskFillAction,
-		},
-		Size: "1024M",
+		Action: DiskFillAction,
+		Size:   "1024M",
 	}
 	byteSize, err := initSize(&opt)
 	assert.NoError(t, err)
@@ -46,10 +44,8 @@ func Test_initSize(t *testing.T) {
 
 func Test_initPath(t *testing.T) {
 	opt := DiskOption{
-		CommonAttackConfig: CommonAttackConfig{
-			Action: DiskFillAction,
-		},
-		Path: "/1/12/1/2/1/21",
+		Action: DiskFillAction,
+		Path:   "/1/12/1/2/1/21",
 	}
 	_, err := initPath(&opt)
 	assert.Error(t, err)
@@ -67,10 +63,9 @@ func TestDiskAttackDurationValidation(t *testing.T) {
 		{"invalid", true},
 	} {
 		t.Run(tc.duration, func(t *testing.T) {
-			config := DiskAttackConfig{CommonAttackConfig: CommonAttackConfig{
-				Action:          DiskWritePayloadAction,
-				SchedulerConfig: SchedulerConfig{Duration: tc.duration},
-			}}
+			config := DiskAttackConfig{
+				Action:   DiskWritePayloadAction,
+				Duration: tc.duration}
 			if err := config.Validate(); (err != nil) != tc.invalid {
 				t.Errorf("duration=%q: %v", tc.duration, err)
 			}

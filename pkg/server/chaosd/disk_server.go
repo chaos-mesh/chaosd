@@ -32,7 +32,7 @@ type diskServerAttack struct{}
 
 var DiskServerAttack AttackType = diskServerAttack{}
 
-func handleDiskServerOutput(output []byte, err error, _ chan interface{}) {
+func handleDiskServerOutput(output []byte, err error, _ chan any) {
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		log.Error(string(output), zap.Error(err))
 	}
@@ -48,13 +48,13 @@ func (diskServerAttack) Attack(options core.AttackConfig, env Environment) error
 }
 
 type OutputHandler struct {
-	StdoutHandler func([]byte, error, chan interface{})
-	OutputChan    chan interface{}
+	StdoutHandler func([]byte, error, chan any)
+	OutputChan    chan any
 }
 
 func NewOutputHandler(
-	handler func([]byte, error, chan interface{}),
-	outputChan chan interface{}) *OutputHandler {
+	handler func([]byte, error, chan any),
+	outputChan chan any) *OutputHandler {
 	return &OutputHandler{
 		StdoutHandler: handler,
 		OutputChan:    outputChan,

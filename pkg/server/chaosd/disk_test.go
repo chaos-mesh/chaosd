@@ -25,9 +25,7 @@ import (
 
 func Test_diskAttack_Attack(t *testing.T) {
 	opt := core.DiskOption{
-		CommonAttackConfig: core.CommonAttackConfig{
-			Action: core.DiskFillAction,
-		},
+		Action:            core.DiskFillAction,
 		Size:              "10M",
 		Path:              "./a",
 		PayloadProcessNum: 1,

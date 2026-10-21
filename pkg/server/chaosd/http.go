@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os/exec"
@@ -170,7 +169,7 @@ func attackHTTPRequest(attackConf *core.HTTPAttackConfig) error {
 				return errors.Wrap(err, "HTTP request")
 			}
 			defer resp.Body.Close()
-			data, err := ioutil.ReadAll(resp.Body)
+			data, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return errors.Wrap(err, "read response body")
 			}
@@ -183,7 +182,7 @@ func attackHTTPRequest(attackConf *core.HTTPAttackConfig) error {
 				return errors.Wrap(err, "HTTP request")
 			}
 			defer resp.Body.Close()
-			data, err := ioutil.ReadAll(resp.Body)
+			data, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return errors.Wrap(err, "read response body")
 			}

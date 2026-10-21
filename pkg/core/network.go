@@ -607,9 +607,7 @@ func (n *NetworkCommand) NeedAdditionalChains() bool {
 
 func NewNetworkCommand() *NetworkCommand {
 	return &NetworkCommand{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: NetworkAttack,
-		},
+		Kind: NetworkAttack,
 		BandwidthSpec: &BandwidthSpec{
 			Peakrate: new(uint64),
 			Minburst: new(uint32),

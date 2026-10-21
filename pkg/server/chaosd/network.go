@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
@@ -276,7 +275,7 @@ func (s *Server) applyEtcHosts(attack *core.NetworkCommand, uid string, env Envi
 		return perrors.WithStack(err)
 	}
 
-	fileBytes, err := ioutil.ReadFile("/etc/hosts.chaosd." + uid) // #nosec
+	fileBytes, err := os.ReadFile("/etc/hosts.chaosd." + uid) // #nosec
 	if err != nil {
 		return perrors.WithStack(err)
 	}

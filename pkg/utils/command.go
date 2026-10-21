@@ -24,17 +24,17 @@ type Command struct {
 	Name string
 }
 
-func (c Command) Unmarshal(val interface{}) *exec.Cmd {
+func (c Command) Unmarshal(val any) *exec.Cmd {
 	name, args := c.GetCmdArgs(val)
 	return exec.Command(name, args...)
 }
 
-func (c Command) UnmarshalWithCtx(ctx context.Context, val interface{}) *exec.Cmd {
+func (c Command) UnmarshalWithCtx(ctx context.Context, val any) *exec.Cmd {
 	name, args := c.GetCmdArgs(val)
 	return exec.CommandContext(ctx, name, args...)
 }
 
-func (c Command) GetCmdArgs(val interface{}) (string, []string) {
+func (c Command) GetCmdArgs(val any) (string, []string) {
 	v := reflect.ValueOf(val)
 
 	var options []string

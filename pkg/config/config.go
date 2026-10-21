@@ -15,6 +15,7 @@ package config
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/pingcap/errors"
 	flag "github.com/spf13/pflag"
@@ -105,11 +106,5 @@ func checkPlatform(platform string) bool {
 var supportRuntimes = []string{"docker", "containerd"}
 
 func checkRuntime(runtime string) bool {
-	for _, r := range supportRuntimes {
-		if r == runtime {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(supportRuntimes, runtime)
 }

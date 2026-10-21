@@ -168,9 +168,7 @@ func (c *KafkaCommand) CompleteDefaults() {
 
 func NewKafkaCommand() *KafkaCommand {
 	return &KafkaCommand{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: KafkaAttack,
-		},
+		Kind:              KafkaAttack,
 		OriginModeOfFiles: make(map[string]uint32),
 	}
 }

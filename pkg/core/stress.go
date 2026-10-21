@@ -61,8 +61,6 @@ func (s StressCommand) RecoverData() string {
 
 func NewStressCommand() *StressCommand {
 	return &StressCommand{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: StressAttack,
-		},
+		Kind: StressAttack,
 	}
 }

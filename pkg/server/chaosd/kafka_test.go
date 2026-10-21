@@ -49,7 +49,7 @@ func (i *fakeFileInfo) IsDir() bool {
 	panic("unimplemented")
 }
 
-func (i *fakeFileInfo) Sys() interface{} {
+func (i *fakeFileInfo) Sys() any {
 	panic("unimplemented")
 }
 

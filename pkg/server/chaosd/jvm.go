@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -106,7 +105,7 @@ func (j jvmAttack) generateRuleFile(attack *core.JVMCommand) (string, error) {
 	}
 
 	if len(attack.RuleFile) > 0 {
-		data, err := ioutil.ReadFile(attack.RuleFile)
+		data, err := os.ReadFile(attack.RuleFile)
 		if err != nil {
 			return "", err
 		}
@@ -240,7 +239,7 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 }
 
 func writeDataIntoFile(data string, filename string) (string, error) {
-	tmpfile, err := ioutil.TempFile("", filename)
+	tmpfile, err := os.CreateTemp("", filename)
 	if err != nil {
 		return "", err
 	}

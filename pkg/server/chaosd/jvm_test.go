@@ -30,116 +30,86 @@ func TestGenerateRuleData(t *testing.T) {
 	}{
 		{
 			&core.JVMCommand{
-				Name: "test",
-				JVMCommonSpec: core.JVMCommonSpec{
-					Pid: 1234,
-				},
-				Action: core.JVMExceptionAction,
-				JVMClassMethodSpec: core.JVMClassMethodSpec{
-					Class:  "testClass",
-					Method: "testMethod",
-				},
+				Name:           "test",
+				Pid:            1234,
+				Action:         core.JVMExceptionAction,
+				Class:          "testClass",
+				Method:         "testMethod",
 				ThrowException: "java.io.IOException(\"BOOM\")",
 			},
 			"\nRULE test\nCLASS testClass\nMETHOD testMethod\nAT ENTRY\nIF true\nDO\n\tthrow new java.io.IOException(\"BOOM\");\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{
-				Name: "test",
-				JVMCommonSpec: core.JVMCommonSpec{
-					Pid: 1234,
-				},
-				Action: core.JVMReturnAction,
-				JVMClassMethodSpec: core.JVMClassMethodSpec{
-					Class:  "testClass",
-					Method: "testMethod",
-				},
+				Name:        "test",
+				Pid:         1234,
+				Action:      core.JVMReturnAction,
+				Class:       "testClass",
+				Method:      "testMethod",
 				ReturnValue: "\"test\"",
 			},
 			"\nRULE test\nCLASS testClass\nMETHOD testMethod\nAT ENTRY\nIF true\nDO\n\treturn \"test\";\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{
-				Name: "test",
-				JVMCommonSpec: core.JVMCommonSpec{
-					Pid: 1234,
-				},
-				Action: core.JVMLatencyAction,
-				JVMClassMethodSpec: core.JVMClassMethodSpec{
-					Class:  "testClass",
-					Method: "testMethod",
-				},
+				Name:            "test",
+				Pid:             1234,
+				Action:          core.JVMLatencyAction,
+				Class:           "testClass",
+				Method:          "testMethod",
 				LatencyDuration: 5000,
 			},
 			"\nRULE test\nCLASS testClass\nMETHOD testMethod\nAT ENTRY\nIF true\nDO\n\tThread.sleep(5000);\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{
-				Name: "test",
-				JVMCommonSpec: core.JVMCommonSpec{
-					Pid: 1234,
-				},
-				Action: core.JVMStressAction,
-				JVMStressSpec: core.JVMStressSpec{
-					CPUCount: 1,
-				},
+				Name:     "test",
+				Pid:      1234,
+				Action:   core.JVMStressAction,
+				CPUCount: 1,
 			},
 			"\nRULE test\nCLASS org.chaos_mesh.chaos_agent.TriggerThread\nMETHOD triggerFunc\nHELPER org.chaos_mesh.byteman.helper.StressHelper\nAT ENTRY\nBIND flag:boolean=true;\nIF true\nDO\n\tinjectCPUStress(\"test\", 1);\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{
-				Name: "test",
-				JVMCommonSpec: core.JVMCommonSpec{
-					Pid: 1234,
-				},
-				Action: core.JVMStressAction,
-				JVMStressSpec: core.JVMStressSpec{
-					MemoryType: "heap",
-				},
+				Name:       "test",
+				Pid:        1234,
+				Action:     core.JVMStressAction,
+				MemoryType: "heap",
 			},
 			"\nRULE test\nCLASS org.chaos_mesh.chaos_agent.TriggerThread\nMETHOD triggerFunc\nHELPER org.chaos_mesh.byteman.helper.StressHelper\nAT ENTRY\nBIND flag:boolean=true;\nIF true\nDO\n\tinjectMemStress(\"test\", \"heap\");\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{
-				Name: "test",
-				JVMCommonSpec: core.JVMCommonSpec{
-					Pid: 1234,
-				},
+				Name:   "test",
+				Pid:    1234,
 				Action: core.JVMGCAction,
 			},
 			"\nRULE test\nCLASS org.chaos_mesh.chaos_agent.TriggerThread\nMETHOD triggerFunc\nHELPER org.chaos_mesh.byteman.helper.GCHelper\nAT ENTRY\nBIND flag:boolean=true;\nIF true\nDO\n\tgc();\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{
-				Name: "test",
-				JVMCommonSpec: core.JVMCommonSpec{
-					Pid: 1234,
-				},
-				Action: core.JVMMySQLAction,
-				JVMMySQLSpec: core.JVMMySQLSpec{
-					MySQLConnectorVersion: "8",
-					Database:              "test",
-					Table:                 "t1",
-					SQLType:               "select",
-				},
-				ThrowException: "BOOM",
+				Name:                  "test",
+				Pid:                   1234,
+				Action:                core.JVMMySQLAction,
+				MySQLConnectorVersion: "8",
+				Database:              "test",
+				Table:                 "t1",
+				SQLType:               "select",
+				ThrowException:        "BOOM",
 			},
 			"\nRULE test\nCLASS com.mysql.cj.NativeSession\nMETHOD execSQL\nHELPER org.chaos_mesh.byteman.helper.SQLHelper\nAT ENTRY\nBIND flag:boolean=matchDBTable(\"\", $2, \"test\", \"t1\", \"select\");\nIF flag\nDO\n\tthrow new com.mysql.cj.exceptions.CJException(\"BOOM\");\nENDRULE\n",
 		},
 		{
 			&core.JVMCommand{
-				Name: "test",
-				JVMCommonSpec: core.JVMCommonSpec{
-					Pid: 1234,
-				},
-				Action: core.JVMMySQLAction,
-				JVMMySQLSpec: core.JVMMySQLSpec{
-					MySQLConnectorVersion: "8",
-					Database:              "test",
-					Table:                 "t1",
-					SQLType:               "select",
-				},
-				LatencyDuration: 5000,
+				Name:                  "test",
+				Pid:                   1234,
+				Action:                core.JVMMySQLAction,
+				MySQLConnectorVersion: "8",
+				Database:              "test",
+				Table:                 "t1",
+				SQLType:               "select",
+				LatencyDuration:       5000,
 			},
 			"\nRULE test\nCLASS com.mysql.cj.NativeSession\nMETHOD execSQL\nHELPER org.chaos_mesh.byteman.helper.SQLHelper\nAT ENTRY\nBIND flag:boolean=matchDBTable(\"\", $2, \"test\", \"t1\", \"select\");\nIF flag\nDO\n\tThread.sleep(5000);\nENDRULE\n",
 		},

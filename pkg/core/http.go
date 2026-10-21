@@ -83,9 +83,7 @@ type HTTPRequestConfig struct {
 
 func NewHTTPAttackOption() *HTTPAttackOption {
 	return &HTTPAttackOption{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: HTTPAttack,
-		},
+		Kind: HTTPAttack,
 	}
 }
 

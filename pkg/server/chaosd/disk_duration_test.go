@@ -43,7 +43,7 @@ func TestDiskPayloadDuration(t *testing.T) {
 					t.Fatal(err)
 				}
 				t.Setenv("PATH", dir+":"+os.Getenv("PATH"))
-				options := &core.DiskAttackConfig{CommonAttackConfig: core.CommonAttackConfig{Action: core.DiskReadPayloadAction, SchedulerConfig: core.SchedulerConfig{Duration: duration}}, DdOptions: &[]core.DdOption{{}}}
+				options := &core.DiskAttackConfig{Action: core.DiskReadPayloadAction, Duration: duration, DdOptions: &[]core.DdOption{{}}}
 				env := Environment{AttackUid: "duration-test", Chaos: &Server{CmdPools: map[string]*utils.CommandPools{}}}
 				start := time.Now()
 				var err error
@@ -96,8 +96,8 @@ func TestDiskDurationRemainsRecoverable(t *testing.T) {
 	store := experiment.NewStore(&dbstore.DB{DB: db})
 	server := NewServer(nil, store, nil, nil, nil, nil, nil, scheduler.Scheduler{})
 	options := &core.DiskAttackConfig{
-		CommonAttackConfig: core.CommonAttackConfig{Kind: core.DiskAttack, Action: core.DiskWritePayloadAction, SchedulerConfig: core.SchedulerConfig{Duration: "100ms"}},
-		Path:               file, DdOptions: &[]core.DdOption{{}},
+		Kind: core.DiskAttack, Action: core.DiskWritePayloadAction, Duration: "100ms",
+		Path: file, DdOptions: &[]core.DdOption{{}},
 	}
 	uid, err := server.ExecuteAttack(DiskAttack, options, core.CommandMode)
 	if err != nil {
@@ -128,7 +128,7 @@ func TestDiskPayloadReportsCommandFailure(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "dd"), []byte("#!/bin/sh\nexit 17\n"), 0700); err != nil {
 		t.Fatal(err)
 	}
-	options := &core.DiskAttackConfig{CommonAttackConfig: core.CommonAttackConfig{Action: core.DiskReadPayloadAction, SchedulerConfig: core.SchedulerConfig{Duration: "1s"}}, DdOptions: &[]core.DdOption{{}}}
+	options := &core.DiskAttackConfig{Action: core.DiskReadPayloadAction, Duration: "1s", DdOptions: &[]core.DdOption{{}}}
 	env := Environment{AttackUid: "failure-test", Chaos: &Server{CmdPools: map[string]*utils.CommandPools{}}}
 	if err := ApplyDiskAttack(options, env); err == nil {
 		t.Fatal("command failure was ignored")

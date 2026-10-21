@@ -83,8 +83,6 @@ func (r RedisCommand) RecoverData() string {
 
 func NewRedisCommand() *RedisCommand {
 	return &RedisCommand{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: RedisAttack,
-		},
+		Kind: RedisAttack,
 	}
 }

@@ -40,8 +40,6 @@ func (h HostCommand) RecoverData() string {
 
 func NewHostCommand() *HostCommand {
 	return &HostCommand{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: HostAttack,
-		},
+		Kind: HostAttack,
 	}
 }

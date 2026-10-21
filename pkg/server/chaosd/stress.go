@@ -50,18 +50,14 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 	if attack.Action == core.StressCPUAction {
 		stressorTool = CPUSTRESSORTOOL
 		stressors.CPUStressor = &v1alpha1.CPUStressor{
-			Stressor: v1alpha1.Stressor{
-				Workers: attack.Workers,
-			},
+			Workers: attack.Workers,
 			Load:    &attack.Load,
 			Options: attack.Options,
 		}
 	} else if attack.Action == core.StressMemAction {
 		stressorTool = MEMORYSTRESSORTOOL
 		stressors.MemoryStressor = &v1alpha1.MemoryStressor{
-			Stressor: v1alpha1.Stressor{
-				Workers: attack.Workers,
-			},
+			Workers: attack.Workers,
 			Size:    attack.Size,
 			Options: attack.Options,
 		}

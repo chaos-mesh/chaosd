@@ -29,9 +29,7 @@ type VMOption struct {
 
 func NewVMOption() *VMOption {
 	return &VMOption{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: VMAction,
-		},
+		Kind: VMAction,
 	}
 }
 

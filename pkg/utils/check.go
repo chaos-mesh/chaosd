@@ -24,8 +24,7 @@ func CheckPorts(p string) bool {
 		return true
 	}
 
-	ports := strings.Split(p, ",")
-	for _, p := range ports {
+	for p := range strings.SplitSeq(p, ",") {
 		if len(p) == 0 {
 			return false
 		}
@@ -57,8 +56,7 @@ func CheckIPs(i string) bool {
 		return true
 	}
 
-	ips := strings.Split(i, ",")
-	for _, ip := range ips {
+	for ip := range strings.SplitSeq(i, ",") {
 		if !strings.Contains(ip, "/") {
 			if net.ParseIP(ip) == nil {
 				return false

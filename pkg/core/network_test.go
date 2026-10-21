@@ -27,9 +27,7 @@ func TestPatitionChain(t *testing.T) {
 		}{
 			{
 				cmd: &NetworkCommand{
-					CommonAttackConfig: CommonAttackConfig{
-						Action: NetworkPartitionAction,
-					},
+					Action:     NetworkPartitionAction,
 					Direction:  "to",
 					IPProtocol: "tcp",
 				},
@@ -45,9 +43,7 @@ func TestPatitionChain(t *testing.T) {
 			},
 			{
 				cmd: &NetworkCommand{
-					CommonAttackConfig: CommonAttackConfig{
-						Action: NetworkPartitionAction,
-					},
+					Action:     NetworkPartitionAction,
 					Direction:  "from",
 					IPProtocol: "tcp",
 				},
@@ -63,9 +59,7 @@ func TestPatitionChain(t *testing.T) {
 			},
 			{
 				cmd: &NetworkCommand{
-					CommonAttackConfig: CommonAttackConfig{
-						Action: NetworkPartitionAction,
-					},
+					Action:     NetworkPartitionAction,
 					Direction:  "both",
 					IPProtocol: "tcp",
 				},
@@ -88,9 +82,7 @@ func TestPatitionChain(t *testing.T) {
 			},
 			{
 				cmd: &NetworkCommand{
-					CommonAttackConfig: CommonAttackConfig{
-						Action: NetworkPartitionAction,
-					},
+					Action:         NetworkPartitionAction,
 					Direction:      "both",
 					IPProtocol:     "tcp",
 					AcceptTCPFlags: "SYN,ACK SYN,ACK",
@@ -172,10 +164,8 @@ func TestNetworkDurationValidation(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := NetworkCommand{
-				CommonAttackConfig: CommonAttackConfig{
-					Action:          tc.action,
-					SchedulerConfig: SchedulerConfig{Duration: tc.duration, Schedule: tc.schedule},
-				},
+				Action:   tc.action,
+				Duration: tc.duration, Schedule: tc.schedule,
 				Device:        "eth0",
 				IPAddress:     "127.0.0.1",
 				Port:          "5001",

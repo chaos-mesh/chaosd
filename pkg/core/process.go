@@ -63,8 +63,6 @@ func (p ProcessCommand) RecoverData() string {
 
 func NewProcessCommand() *ProcessCommand {
 	return &ProcessCommand{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: ProcessAttack,
-		},
+		Kind: ProcessAttack,
 	}
 }

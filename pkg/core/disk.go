@@ -91,9 +91,7 @@ type DiskOption struct {
 
 func NewDiskOption() *DiskOption {
 	return &DiskOption{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: DiskAttack,
-		},
+		Kind:              DiskAttack,
 		PayloadProcessNum: 1,
 		FillByFallocate:   true,
 	}
@@ -101,9 +99,7 @@ func NewDiskOption() *DiskOption {
 
 func NewDiskOptionForServer() *DiskOption {
 	return &DiskOption{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: DiskServerAttack,
-		},
+		Kind:              DiskServerAttack,
 		PayloadProcessNum: 1,
 		FillByFallocate:   true,
 	}

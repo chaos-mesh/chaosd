@@ -42,7 +42,7 @@ func TestRuleListsNewestFirst(t *testing.T) {
 	tcs := NewTCRuleStore(storage)
 	for _, sec := range []int64{1, 3, 2} {
 		model := gorm.Model{CreatedAt: time.Unix(sec, 0)}
-		for _, row := range []interface{}{
+		for _, row := range []any{
 			&core.IPSetRule{Model: model, Experiment: "target"},
 			&core.IptablesRule{Model: model, Experiment: "target"},
 			&core.TCRule{Model: model, Experiment: "target"},

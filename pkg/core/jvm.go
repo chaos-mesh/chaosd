@@ -241,8 +241,6 @@ func (j *JVMCommand) CompleteDefaults() {
 
 func NewJVMCommand() *JVMCommand {
 	return &JVMCommand{
-		CommonAttackConfig: CommonAttackConfig{
-			Kind: JVMAttack,
-		},
+		Kind: JVMAttack,
 	}
 }

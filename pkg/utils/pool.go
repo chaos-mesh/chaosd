@@ -43,7 +43,7 @@ func NewCommandPools(ctx context.Context, deadline *time.Time, size int) *Comman
 	}
 	return &CommandPools{
 		cancel: cancel,
-		pools: tunny.NewFunc(size, func(payload interface{}) interface{} {
+		pools: tunny.NewFunc(size, func(payload any) any {
 			cmdPayload, ok := payload.(lo.Tuple2[string, []string])
 			if !ok {
 				return mo.Err[[]byte](fmt.Errorf("payload is not CommandPayload"))
@@ -66,22 +66,22 @@ type CommandRunner struct {
 	Name string
 	Args []string
 
-	outputHandler func([]byte, error, chan interface{})
-	outputChanel  chan interface{}
+	outputHandler func([]byte, error, chan any)
+	outputChanel  chan any
 }
 
 func NewCommandRunner(name string, args []string) *CommandRunner {
 	return &CommandRunner{
 		Name:          name,
 		Args:          args,
-		outputHandler: func(_ []byte, _ error, _ chan interface{}) {},
+		outputHandler: func(_ []byte, _ error, _ chan any) {},
 		outputChanel:  nil,
 	}
 }
 
 func (r *CommandRunner) WithOutputHandler(
-	handler func([]byte, error, chan interface{}),
-	outputChanel chan interface{},
+	handler func([]byte, error, chan any),
+	outputChanel chan any,
 ) *CommandRunner {
 	r.outputHandler = handler
 	r.outputChanel = outputChanel
@@ -101,12 +101,10 @@ func (p *CommandPools) Process(name string, args []string) ([]byte, error) {
 
 // Start command async.
 func (p *CommandPools) Start(runner *CommandRunner) {
-	p.wg.Add(1)
-	go func() {
+	p.wg.Go(func() {
 		output, err := p.Process(runner.Name, runner.Args)
 		runner.outputHandler(output, err, runner.outputChanel)
-		p.wg.Done()
-	}()
+	})
 }
 
 func (p *CommandPools) Wait() {
