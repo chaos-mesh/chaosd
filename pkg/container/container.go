@@ -26,7 +26,6 @@ import (
 	dockerclient "github.com/moby/moby/client"
 
 	"github.com/chaos-mesh/chaosd/pkg/config"
-	"github.com/chaos-mesh/chaosd/pkg/mock"
 )
 
 const (
@@ -151,17 +150,7 @@ func (c ContainerdClient) GetPidFromContainerID(ctx context.Context, containerID
 	return task.Pid(), nil
 }
 
-// newDockerclient returns a dockerclient.NewClient with mock points
 func newDockerClient(host string, version string, client *http.Client, httpHeaders map[string]string) (DockerClientInterface, error) {
-	// Mock point to return error or mock client in unit test
-	if err := mock.On("NewDockerClientError"); err != nil {
-		return nil, err.(error)
-	}
-	if client := mock.On("MockDockerClient"); client != nil {
-		return client.(DockerClientInterface), nil
-	}
-
-	// The real logic
 	opts := []dockerclient.Opt{dockerclient.WithHost(host), dockerclient.WithHTTPHeaders(httpHeaders)}
 	if version != "" {
 		opts = append(opts, dockerclient.WithAPIVersion(version))
@@ -195,17 +184,7 @@ func (c *mobyDockerClient) ContainerKill(ctx context.Context, id, signal string)
 	return err
 }
 
-// newContainerdClient returns a containerd.New with mock points
 func newContainerdClient(address string, opts ...containerd.ClientOpt) (ContainerdClientInterface, error) {
-	// Mock point to return error in unit test
-	if err := mock.On("NewContainerdClientError"); err != nil {
-		return nil, err.(error)
-	}
-	if client := mock.On("MockContainerdClient"); client != nil {
-		return client.(ContainerdClientInterface), nil
-	}
-
-	// The real logic
 	return containerd.New(address, opts...)
 }
 

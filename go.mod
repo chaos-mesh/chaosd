@@ -19,7 +19,6 @@ require (
 	github.com/olekukonko/tablewriter v1.1.5
 	github.com/onsi/gomega v1.44.0
 	github.com/pingcap/errors v0.11.5-0.20190809092503-95897b64e011
-	github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b
 	github.com/pingcap/log v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.25.0
@@ -153,6 +152,7 @@ require (
 	github.com/opencontainers/selinux v1.15.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.33 // indirect
+	github.com/pingcap/failpoint v0.0.0-20260811232634-55ac33a48e3b // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20260916203055-22a1a467d9f0 // indirect
 	github.com/prometheus/client_model v0.6.3 // indirect
