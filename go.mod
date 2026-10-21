@@ -18,8 +18,8 @@ require (
 	github.com/moby/moby/client v0.6.2
 	github.com/olekukonko/tablewriter v1.1.5
 	github.com/onsi/gomega v1.44.0
-	github.com/pingcap/errors v0.11.5-0.20190809092503-95897b64e011
-	github.com/pingcap/log v1.1.0
+	github.com/pingcap/errors v0.11.5-0.20260523003111-3697ad564b43
+	github.com/pingcap/log v1.1.1-0.20261007233122-0034994d1a22
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.25.0
 	github.com/redis/go-redis/v9 v9.23.0
