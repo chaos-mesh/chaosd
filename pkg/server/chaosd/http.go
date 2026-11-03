@@ -119,7 +119,7 @@ func (attackHTTP) Recover(exp core.Experiment, _ Environment) error {
 
 	proc, err := process.NewProcess(int32(attack.ProxyPID))
 	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
+		if errors.Is(err, process.ErrorProcessNotRunning) || errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
 
