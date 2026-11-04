@@ -77,6 +77,7 @@ func NewStressMemCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 		},
 	}
 
+	cmd.Flags().IntVarP(&options.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "", "Size specifies N bytes consumed per vm worker, default is the total available memory. One can specify the size as % of total available memory or in units of B, KB/KiB, MB/MiB, GB/GiB, TB/TiB..")
 	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "extend stress-ng options.")
 
