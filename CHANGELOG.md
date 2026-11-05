@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Enable file fault creation through the HTTP API for PhysicalMachineChaos. ([#294](https://github.com/chaos-mesh/chaosd/pull/294))
+
 ## [1.5.0] - 2026-10-20
 
 ### Changed
