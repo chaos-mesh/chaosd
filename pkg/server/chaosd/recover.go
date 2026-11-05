@@ -34,6 +34,10 @@ func (s *Server) RecoverAttack(uid string) error {
 		return perr.Errorf("experiment %s not found", uid)
 	}
 
+	if exp.Status == core.Destroyed {
+		return nil
+	}
+
 	if exp.Status != core.Success && exp.Status != core.Scheduled {
 		return perr.Errorf("can not recover %s experiment", exp.Status)
 	}
