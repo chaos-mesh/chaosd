@@ -44,8 +44,8 @@ type KafkaCommand struct {
 	CommonAttackConfig
 
 	// global options
-	Action KafkaAttackAction
-	Topic  string `json:"topic,omitempty"`
+	Action KafkaAttackAction `json:"action"`
+	Topic  string            `json:"topic,omitempty"`
 
 	// options for fill and flood attack
 	Host          string `json:"host,omitempty"`
@@ -155,6 +155,10 @@ func (c *KafkaCommand) validateIOAction() error {
 		return errors.New("at least one of non-readable or non-writable is required")
 	}
 	return nil
+}
+
+func (c KafkaCommand) String() string {
+	return string(c.Action)
 }
 
 func (c *KafkaCommand) RecoverData() string {
