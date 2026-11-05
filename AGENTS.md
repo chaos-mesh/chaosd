@@ -131,6 +131,10 @@ Pass the selected shared cache paths to any delegated work.
 Clean up only this task's unused temporary outputs, containers, and mounts.
 Do not clear shared caches, remove source or recovery backups, or run global Docker prune commands.
 
+## Sign off commits
+
+Use `git commit -s` to add a `Signed-off-by` line to commits.
+
 ## Write changelog entries
 
 Keep the changelog focused on core changes that matter to users: major capabilities, significant behavior fixes, and necessary upgrade or compatibility information.

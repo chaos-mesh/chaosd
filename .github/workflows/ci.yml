@@ -25,6 +25,7 @@ concurrency:
 
 jobs:
   pull:
+    name: ${{ matrix.job }} (${{ matrix.arch }})
     strategy:
       fail-fast: false
       matrix:

@@ -17,6 +17,7 @@ on:
 
 jobs:
   pull:
+    name: ${{ matrix.job }} (${{ matrix.arch }})
     strategy:
       matrix:
         arch: [amd64, arm64]
