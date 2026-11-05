@@ -37,19 +37,17 @@ func NewClockAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "clock attack",
-		Short: "clock skew",
+		Short: "Shift a process clock (Linux amd64 only)",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.ClockAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processClockAttack)).Run()
 		},
 	}
 
-	cmd.Flags().IntVarP(&options.Pid, "pid", "p", 0, "Pid of target program.")
-	cmd.Flags().StringVarP(&options.TimeOffset, "time-offset", "t", "", "Specifies the length of time offset.")
+	cmd.Flags().IntVarP(&options.Pid, "pid", "p", 0, "Target process ID")
+	cmd.Flags().StringVarP(&options.TimeOffset, "time-offset", "t", "", "Signed time offset, such as 500ms, -5s, or 1h30m")
 	cmd.Flags().StringVarP(&options.ClockIdsSlice, "clock-ids-slice", "c", "CLOCK_REALTIME",
-		"The identifier of the particular clock on which to act."+
-			"More clock description in linux kernel can be found in man page of clock_getres, clock_gettime, clock_settime."+
-			"Muti clock ids should be split with \",\"")
+		"Comma-separated clock IDs without spaces, such as CLOCK_REALTIME,CLOCK_MONOTONIC")
 	return cmd
 }
 

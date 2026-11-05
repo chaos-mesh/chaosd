@@ -43,7 +43,7 @@ func NewRecoverCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:               "recover UID",
-		Short:             "Recover a chaos experiment",
+		Short:             "Run recovery for an experiment by UID",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: completeUID,
 		Run: func(_ *cobra.Command, args []string) {

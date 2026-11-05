@@ -39,7 +39,7 @@ func NewProcessAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "process <subcommand>",
-		Short: "Process attack related commands",
+		Short: "Send signals to processes",
 	}
 
 	cmd.AddCommand(
@@ -53,16 +53,16 @@ func NewProcessAttackCommand(uid *string) *cobra.Command {
 func NewProcessKillCommand(dep fx.Option, options *core.ProcessCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kill",
-		Short: "kill process, default signal 9",
+		Short: "Send a signal to processes (SIGKILL by default)",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.ProcessKillAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processAttackF)).Run()
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Process, "process", "p", "", "The process name or the process ID")
-	cmd.Flags().IntVarP(&options.Signal, "signal", "s", 9, "The signal number to send")
-	cmd.Flags().StringVarP(&options.RecoverCmd, "recover-cmd", "r", "", "The command to be run when recovering experiment")
+	cmd.Flags().StringVarP(&options.Process, "process", "p", "", "Process ID or exact process name (selects all matching processes)")
+	cmd.Flags().IntVarP(&options.Signal, "signal", "s", 9, "Signal number to send")
+	cmd.Flags().StringVarP(&options.RecoverCmd, "recover-cmd", "r", "", "Bash command to start on recovery (needed to recover signals other than SIGSTOP)")
 
 	return cmd
 }
@@ -70,7 +70,7 @@ func NewProcessKillCommand(dep fx.Option, options *core.ProcessCommand) *cobra.C
 func NewProcessStopCommand(dep fx.Option, options *core.ProcessCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stop",
-		Short: "stop process, this action will stop the process with SIGSTOP",
+		Short: "Pause processes with SIGSTOP",
 		Run: func(*cobra.Command, []string) {
 			options.Signal = int(syscall.SIGSTOP)
 			options.Action = core.ProcessStopAction
@@ -78,7 +78,7 @@ func NewProcessStopCommand(dep fx.Option, options *core.ProcessCommand) *cobra.C
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Process, "process", "p", "", "The process name or the process ID")
+	cmd.Flags().StringVarP(&options.Process, "process", "p", "", "Process ID or exact process name (selects all matching processes)")
 
 	return cmd
 }
