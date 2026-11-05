@@ -59,17 +59,15 @@ jobs:
         if: matrix.job == 'integration-test'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ipset iptables iproute2 net-tools iperf stress-ng
-      - name: Install verification prerequisites
-        if: matrix.job == 'verify'
+          sudo apt-get install -y ipset iptables iproute2 net-tools iperf
+      - name: Common checks
+        if: matrix.job == 'verify' && matrix.arch == 'amd64'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python-is-python3
-      - name: Verify
-        if: matrix.job == 'verify'
-        run: |
-          make check
+          make fmt boilerplate tidy
           git diff --exit-code
+      - name: Vet and lint
+        if: matrix.job == 'verify'
+        run: make vet lint
       - name: Build and verify runtime image
         if: matrix.job == 'build'
         run: |

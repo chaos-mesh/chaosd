@@ -70,8 +70,10 @@ make chaos-tools
 ```
 
 `make check` runs formatting, vet, boilerplate, lint, and tidy checks.
-It reports formatting and module drift without rewriting files.
-Use `make fmt` and `go mod tidy` explicitly to apply changes.
+CI runs formatting, boilerplate, and tidy checks once on amd64, and runs vet and lint on both amd64 and arm64.
+Formatting rewrites files, and CI rejects drift with `git diff --exit-code` after verification.
+Use `make fmt` to format locally.
+The tidy check reports module drift without rewriting files. Use `go mod tidy` to apply module changes.
 `make chaosd` builds `bin/chaosd` with cgo enabled.
 `make chaos-tools` builds helpers and downloads pinned Linux tools into `bin/tools`.
 `make binary` includes the main binary and tools.

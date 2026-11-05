@@ -36,7 +36,6 @@ jobs:
         run: make build
       - name: Validate release binaries and runner tools
         run: |
-          python3 --version
           aws --version
           ./bin/chaosd --help
           ./bin/chaosd version

@@ -210,7 +210,9 @@ The current run relies on its existing recovery timer.
 
 Run `make check` for formatting, vet, license headers, lint, and module consistency.
 The license checker requires Python 3.
-`make check` reports formatting and module drift without changing files. Use `make fmt` or `go mod tidy` to apply the corresponding changes.
+`make check` formats files in place, and CI rejects drift with `git diff --exit-code` after the checks.
+Use `make fmt` to format locally.
+The tidy check reports module drift without changing files. Use `go mod tidy` to apply module changes.
 Inspect the resulting diff before committing.
 Run `make chaosd` to build the main binary, or `make binary` to include helper tools.
 Use `SWAGGER=1 make chaosd` to generate and include the optional Swagger UI.
