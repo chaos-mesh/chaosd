@@ -1,9 +1,11 @@
 module github.com/chaos-mesh/chaosd
 
+go 1.27.2
+
 require (
 	github.com/Jeffail/tunny v0.1.4
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b
-	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20261016030316-e020a2df5a69
+	github.com/chaos-mesh/chaos-mesh v0.9.1-0.20261028035606-bed3ddc33560
 	github.com/chaos-mesh/chaos-mesh/api v0.0.0
 	github.com/containerd/containerd v1.7.36
 	github.com/docker/docker v28.5.2+incompatible
@@ -212,7 +214,7 @@ require (
 	k8s.io/client-go v0.37.1 // indirect
 	k8s.io/cri-api v0.37.1 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
-	k8s.io/kube-openapi v0.0.0-20261014044854-ca3452a79603 // indirect
+	k8s.io/kube-openapi v0.0.0-20260721132016-d427ff9ee9ad // indirect
 	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3 // indirect
 	sigs.k8s.io/json v0.0.0-20260909141634-11ed52e25bc5 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
@@ -220,18 +222,15 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-go 1.27.2
-
 tool github.com/swaggo/swag/cmd/swag
 
 replace (
 	// Chaos Mesh requires an API version that is not published as a module tag.
-	github.com/chaos-mesh/chaos-mesh/api => github.com/chaos-mesh/chaos-mesh/api v0.0.0-20261016030316-e020a2df5a69
+	github.com/chaos-mesh/chaos-mesh/api => github.com/chaos-mesh/chaos-mesh/api v0.0.0-20261028035606-bed3ddc33560
 	// The Chaos Mesh daemon still uses containerd 1.7 and its sandbox protocol.
-	github.com/containerd/containerd/api => github.com/containerd/containerd/api v1.8.0
+	github.com/containerd/containerd/api => github.com/containerd/containerd/api v1.11.1
 	// Upstream selects the obsolete v2 tag instead of the maintained v1 driver.
 	github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.52
+	// containerd 1.7 expects LinuxPids.Limit to be an int64.
 	github.com/opencontainers/runtime-spec => github.com/opencontainers/runtime-spec v1.2.0
-	// Kubernetes 0.37 uses structured-merge-diff v6 rather than v7.
-	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20260721132016-d427ff9ee9ad
 )
