@@ -95,6 +95,14 @@ Do not hand-edit generated files in `docs`.
 Keep `docs/placeholder.go`, which allows builds without generated documentation.
 Review generated output separately from the default build and check the `swagger_server` build tag.
 
+## Keep tests focused
+
+- Test critical behavior, meaningful regressions, and important boundaries. Do not add tests merely because a file or function changed.
+- Choose representative cases for distinct behavior. Do not repeat shared validation or unchanged execution paths for every field, action, or adapter.
+- Assert observable outcomes and only the fields needed to establish the contract. Avoid whole-structure comparisons that tie tests to implementation details.
+- Keep fixtures small and reuse setup where it removes duplication. Do not introduce a test framework or elaborate helpers for a narrow change.
+- When simplifying tests, retain checks that catch broken key behavior. Optimize for clarity and useful coverage, not test counts, coverage percentages, or line counts.
+
 ## Preserve operational state
 
 The database is `chaosd.dat` beside the executable, not beside the source or current directory.
