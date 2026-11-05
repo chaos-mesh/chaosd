@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - Enable file and host fault creation through the HTTP API. [#294](https://github.com/chaos-mesh/chaosd/pull/294)
+- Restore Kafka fault creation through the HTTP API and record the requested action in experiment metadata. [#296](https://github.com/chaos-mesh/chaosd/pull/296)
+- Return success for repeated recovery requests after an experiment is already destroyed. [#298](https://github.com/chaos-mesh/chaosd/pull/298)
 - Restore the `--workers` (`-w`) flag for `chaosd attack stress mem`.
 
 ## [1.5.0] - 2026-10-20
