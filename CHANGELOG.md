@@ -6,13 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-05
+
 ### Changed
 
+- Update the embedded Chaos Mesh modules to v2.8.7 and refresh dependency compatibility pins.
 - Stop publishing rolling `chaosd-latest-linux-*` archives from `main`. Versioned release archives remain available.
 
 ### Fixed
 
 - Enable file and host fault creation through the HTTP API. [#294](https://github.com/chaos-mesh/chaosd/pull/294)
+- Restore Kafka fault creation through the HTTP API and record the requested action in experiment metadata. [#296](https://github.com/chaos-mesh/chaosd/pull/296)
+- Return success for repeated recovery requests after an experiment is already destroyed. [#298](https://github.com/chaos-mesh/chaosd/pull/298)
 - Restore the `--workers` (`-w`) flag for `chaosd attack stress mem`.
 
 ## [1.5.0] - 2026-10-20
@@ -30,5 +35,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Accept valid Redis key expiration options and percentage-based cache limits. [#280](https://github.com/chaos-mesh/chaosd/pull/280)
 - Report recovery failures for non-recoverable faults instead of returning success. [#280](https://github.com/chaos-mesh/chaosd/pull/280)
 
-[Unreleased]: https://github.com/chaos-mesh/chaosd/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/chaos-mesh/chaosd/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/chaos-mesh/chaosd/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/chaos-mesh/chaosd/compare/v1.4.1...v1.5.0
