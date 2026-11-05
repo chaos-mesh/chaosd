@@ -37,7 +37,6 @@ Update validation and defaults at the input adapters with any request change.
 Check both dispatch paths in `pkg/server/chaosd` and the kind mapping in `pkg/core/experiment.go`.
 HTTP route registration in `pkg/server/httpserver/server.go` determines availability.
 An annotated handler alone does not expose a route.
-File and host faults have CLI commands and registered HTTP creation routes.
 
 Keep serialized recovery fields compatible with existing experiments.
 Implementations can add captured PIDs, original permissions, or other recovery data before the final store update.
@@ -97,11 +96,9 @@ Review generated output separately from the default build and check the `swagger
 
 ## Keep tests focused
 
-- Test critical behavior, meaningful regressions, and important boundaries. Do not add tests merely because a file or function changed.
-- Choose representative cases for distinct behavior. Do not repeat shared validation or unchanged execution paths for every field, action, or adapter.
-- Assert observable outcomes and only the fields needed to establish the contract. Avoid whole-structure comparisons that tie tests to implementation details.
-- Keep fixtures small and reuse setup where it removes duplication. Do not introduce a test framework or elaborate helpers for a narrow change.
-- When simplifying tests, retain checks that catch broken key behavior. Optimize for clarity and useful coverage, not test counts, coverage percentages, or line counts.
+- Test critical behavior, regressions, and important boundaries with representative cases. Avoid repeating shared validation or unchanged paths.
+- Assert observable outcomes. Keep fixtures, setup, and helpers small and simple.
+- Preserve checks that catch key failures when simplifying tests. Prioritize useful coverage over test counts or coverage percentages.
 
 ## Preserve operational state
 
