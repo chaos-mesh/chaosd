@@ -93,6 +93,7 @@ func (s *HttpServer) handler(engine *gin.Engine) {
 		attack.POST("/network", s.createNetworkAttack)
 		attack.POST("/disk", s.createDiskAttack)
 		attack.POST("/file", s.createFileAttack)
+		attack.POST("/host", s.createHostAttack)
 		attack.POST("/clock", s.createClockAttack)
 		attack.POST("/http", s.createHTTPAttack)
 		attack.POST("/jvm", s.createJVMAttack)
@@ -274,6 +275,39 @@ func (s *HttpServer) createFileAttack(c *gin.Context) {
 	}
 
 	uid, err := s.chaos.ExecuteAttack(chaosd.FileAttack, attack, core.ServerMode)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, utils.AttackSuccessResponse(uid))
+}
+
+// @Summary Create host attack.
+// @Description Shut down or reboot the host. These actions cannot be recovered.
+// @Tags attack
+// @Produce json
+// @Param request body core.HostCommand true "Request body"
+// @Success 200 {object} utils.Response
+// @Failure 400 {object} utils.APIError
+// @Failure 500 {object} utils.APIError
+// @Router /api/attack/host [post]
+func (s *HttpServer) createHostAttack(c *gin.Context) {
+	attack := core.NewHostCommand()
+	if err := c.ShouldBindJSON(attack); err != nil {
+		_ = c.AbortWithError(http.StatusBadRequest, utils.ErrInternalServer.WrapWithNoMessage(err))
+		return
+	}
+
+	attack.Kind = core.HostAttack
+	attack.CompleteDefaults()
+	if err := attack.Validate(); err != nil {
+		err = core.ErrAttackConfigValidation.Wrap(err, "attack config validation failed")
+		handleError(c, err)
+		return
+	}
+
+	uid, err := s.chaos.ExecuteAttack(chaosd.HostAttack, attack, core.ServerMode)
 	if err != nil {
 		handleError(c, err)
 		return

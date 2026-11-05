@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- Enable file fault creation through the HTTP API for PhysicalMachineChaos. ([#294](https://github.com/chaos-mesh/chaosd/pull/294))
+- Enable file and host fault creation through the HTTP API, including file faults for PhysicalMachineChaos. Host shutdown and reboot cannot be recovered. ([#294](https://github.com/chaos-mesh/chaosd/pull/294))
 
 ## [1.5.0] - 2026-10-20
 
