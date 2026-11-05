@@ -36,12 +36,12 @@ var logLevel string
 // CommandFlags are flags that used in all Commands
 var rootCmd = &cobra.Command{
 	Use:   "chaosd",
-	Short: "A command line client to run chaos experiment",
+	Short: "Inject and recover faults on a Linux host",
 }
 
 func init() {
 	cobra.OnInitialize(setLog)
-	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", "", "the log level of chaosd. The value can be 'debug', 'info', 'warn' and 'error'")
+	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", "", "Log level: debug, info, warn, or error")
 
 	rootCmd.AddCommand(
 		server.NewServerCommand(),

@@ -26,21 +26,21 @@ import (
 func NewServerCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server <option>",
-		Short: "Run Chaosd Server",
+		Short: "Run the chaosd HTTP API server",
 		Run:   serverCommandFunc,
 	}
 
-	cmd.Flags().IntVarP(&conf.ListenPort, "port", "p", 31767, "listen port of the Chaosd http Server")
-	cmd.Flags().IntVar(&conf.ListenHttpsPort, "https-port", 31768, "listen port of the Chaosd https Server")
-	cmd.Flags().StringVarP(&conf.ListenHost, "host", "a", "0.0.0.0", "listen host of the Chaosd Server")
-	cmd.Flags().StringVar(&conf.SSLCertFile, "cert", "", "path to a PEM encoded certificate file")
-	cmd.Flags().StringVar(&conf.SSLKeyFile, "key", "", "path to a PEM encoded private key file")
-	cmd.Flags().StringVar(&conf.SSLClientCAFile, "CA", "", "path to a PEM encoded CA's certificate file")
-	cmd.Flags().StringVar(&conf.ServerName, "server-name", "chaosd.chaos-mesh.org", "server name is used to verify the hostname on the returned certificates")
-	cmd.Flags().StringVarP(&conf.Runtime, "runtime", "r", "docker", "current container runtime")
-	cmd.Flags().BoolVar(&conf.EnablePprof, "enable-pprof", true, "enable pprof")
-	cmd.Flags().IntVar(&conf.PprofPort, "pprof-port", 31766, "listen port of the pprof server")
-	cmd.Flags().StringVarP(&conf.Platform, "platform", "f", "local", "platform to deploy, default: local, supported platform: local, kubernetes")
+	cmd.Flags().IntVarP(&conf.ListenPort, "port", "p", 31767, "HTTP API listening port")
+	cmd.Flags().IntVar(&conf.ListenHttpsPort, "https-port", 31768, "HTTPS API listening port; requires --cert and --key")
+	cmd.Flags().StringVarP(&conf.ListenHost, "host", "a", "0.0.0.0", "Address to bind the API server to")
+	cmd.Flags().StringVar(&conf.SSLCertFile, "cert", "", "Path to the PEM server certificate; requires --key")
+	cmd.Flags().StringVar(&conf.SSLKeyFile, "key", "", "Path to the PEM server private key; requires --cert")
+	cmd.Flags().StringVar(&conf.SSLClientCAFile, "CA", "", "Path to PEM CA certificates for verifying client certificates; requires HTTPS")
+	cmd.Flags().StringVar(&conf.ServerName, "server-name", "chaosd.chaos-mesh.org", "TLS server name setting; not used to verify client certificate hostnames")
+	cmd.Flags().StringVarP(&conf.Runtime, "runtime", "r", "docker", "Container runtime setting: docker or containerd")
+	cmd.Flags().BoolVar(&conf.EnablePprof, "enable-pprof", true, "Enable the pprof HTTP profiling server")
+	cmd.Flags().IntVar(&conf.PprofPort, "pprof-port", 31766, "pprof HTTP listening port")
+	cmd.Flags().StringVarP(&conf.Platform, "platform", "f", "local", "Deployment platform: local or kubernetes; the API server starts only in local mode")
 
 	return cmd
 }

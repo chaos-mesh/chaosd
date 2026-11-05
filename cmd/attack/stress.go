@@ -37,7 +37,7 @@ func NewStressAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "stress <subcommand>",
-		Short: "Stress attack related commands",
+		Short: "Generate CPU or memory stress",
 	}
 
 	cmd.AddCommand(
@@ -51,7 +51,7 @@ func NewStressAttackCommand(uid *string) *cobra.Command {
 func NewStressCPUCommand(dep fx.Option, options *core.StressCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cpu [options]",
-		Short: "continuously stress CPU out",
+		Short: "Generate continuous CPU load",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.StressCPUAction
 			options.CompleteDefaults()
@@ -59,9 +59,9 @@ func NewStressCPUCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 		},
 	}
 
-	cmd.Flags().IntVarP(&options.Load, "load", "l", 10, "Load specifies P percent loading per CPU worker. 0 is effectively a sleep (no load) and 100 is full loading.")
-	cmd.Flags().IntVarP(&options.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
-	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "extend stress-ng options.")
+	cmd.Flags().IntVarP(&options.Load, "load", "l", 10, "CPU load percentage per worker, from 0 to 100")
+	cmd.Flags().IntVarP(&options.Workers, "workers", "w", 1, "Number of stress workers")
+	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "Additional stress-ng options, separated by commas")
 
 	return cmd
 }
@@ -69,7 +69,7 @@ func NewStressCPUCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 func NewStressMemCommand(dep fx.Option, options *core.StressCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mem [options]",
-		Short: "continuously stress virtual memory out",
+		Short: "Allocate and hold memory",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.StressMemAction
 			options.CompleteDefaults()
@@ -77,9 +77,9 @@ func NewStressMemCommand(dep fx.Option, options *core.StressCommand) *cobra.Comm
 		},
 	}
 
-	cmd.Flags().IntVarP(&options.Workers, "workers", "w", 1, "Workers specifies N workers to apply the stressor.")
-	cmd.Flags().StringVarP(&options.Size, "size", "s", "", "Size specifies N bytes consumed per vm worker, default is the total available memory. One can specify the size as % of total available memory or in units of B, KB/KiB, MB/MiB, GB/GiB, TB/TiB..")
-	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "extend stress-ng options.")
+	cmd.Flags().IntVarP(&options.Workers, "workers", "w", 1, "Number of stress workers")
+	cmd.Flags().StringVarP(&options.Size, "size", "s", "", "Total memory to allocate across workers, e.g. 100MiB or 25% of total memory")
+	cmd.Flags().StringSliceVarP(&options.Options, "options", "o", []string{}, "Additional memStress options, separated by commas")
 
 	return cmd
 }

@@ -37,11 +37,11 @@ func NewJVMAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "jvm <subcommand>",
-		Short: "JVM attack related commands",
+		Short: "Inject faults into a JVM",
 	}
 
-	cmd.PersistentFlags().IntVarP(&options.Port, "port", "", 9288, "the port of agent server")
-	cmd.PersistentFlags().IntVarP(&options.Pid, "pid", "", 0, "the pid of Java process which need to attach")
+	cmd.PersistentFlags().IntVarP(&options.Port, "port", "", 9288, "Byteman agent port")
+	cmd.PersistentFlags().IntVarP(&options.Pid, "pid", "", 0, "PID of the Java process to attach to")
 
 	cmd.AddCommand(
 		NewJVMLatencyCommand(dep, options),
@@ -59,7 +59,7 @@ func NewJVMAttackCommand(uid *string) *cobra.Command {
 func NewJVMLatencyCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "latency [options]",
-		Short: "inject latency to specified method",
+		Short: "Delay calls to a Java method",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMLatencyAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
@@ -67,8 +67,8 @@ func NewJVMLatencyCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comman
 	}
 
 	cmd.Flags().StringVarP(&options.Class, "class", "c", "", "Java class name")
-	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "the method name in Java class")
-	cmd.Flags().IntVarP(&options.LatencyDuration, "latency", "", 0, "the latency duration, unit ms")
+	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "Java method name")
+	cmd.Flags().IntVarP(&options.LatencyDuration, "latency", "", 0, "Delay in milliseconds")
 
 	return cmd
 }
@@ -76,7 +76,7 @@ func NewJVMLatencyCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comman
 func NewJVMReturnCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "return [options]",
-		Short: "return specified value for specified method",
+		Short: "Override the return value of a Java method",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMReturnAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
@@ -84,8 +84,8 @@ func NewJVMReturnCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 	}
 
 	cmd.Flags().StringVarP(&options.Class, "class", "c", "", "Java class name")
-	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "the method name in Java class")
-	cmd.Flags().StringVarP(&options.ReturnValue, "value", "", "", "the return value for action 'return'. Only supports number and string types.")
+	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "Java method name")
+	cmd.Flags().StringVarP(&options.ReturnValue, "value", "", "", "Return value as a Byteman expression")
 
 	return cmd
 }
@@ -93,7 +93,7 @@ func NewJVMReturnCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 func NewJVMExceptionCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exception [options]",
-		Short: "throw specified exception for specified method",
+		Short: "Throw an exception from a Java method",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMExceptionAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
@@ -101,8 +101,8 @@ func NewJVMExceptionCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comm
 	}
 
 	cmd.Flags().StringVarP(&options.Class, "class", "c", "", "Java class name")
-	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "the method name in Java class")
-	cmd.Flags().StringVarP(&options.ThrowException, "exception", "", "", "the exception which needs to throw for action 'exception'")
+	cmd.Flags().StringVarP(&options.Method, "method", "m", "", "Java method name")
+	cmd.Flags().StringVarP(&options.ThrowException, "exception", "", "", "Exception constructor with arguments, such as java.lang.RuntimeException(\"error\")")
 
 	return cmd
 }
@@ -110,15 +110,15 @@ func NewJVMExceptionCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comm
 func NewJVMStressCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stress [options]",
-		Short: "inject stress to JVM",
+		Short: "Stress JVM CPU or memory",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMStressAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
 
-	cmd.Flags().IntVarP(&options.CPUCount, "cpu-count", "", 0, "the CPU core number")
-	cmd.Flags().StringVarP(&options.MemoryType, "mem-type", "", "", "the memory type to be allocated. The value can be 'stack' or 'heap'")
+	cmd.Flags().IntVarP(&options.CPUCount, "cpu-count", "", 0, "Number of CPU stress threads")
+	cmd.Flags().StringVarP(&options.MemoryType, "mem-type", "", "", "Memory type to stress: stack or heap")
 
 	return cmd
 }
@@ -126,7 +126,7 @@ func NewJVMStressCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command
 func NewJVMGCCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gc",
-		Short: "trigger GC for JVM",
+		Short: "Trigger JVM garbage collection",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMGCAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
@@ -139,14 +139,14 @@ func NewJVMGCCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 func NewJVMRuleFileCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rule-file [options]",
-		Short: "inject fault with configured byteman rule file",
+		Short: "Inject faults from a Byteman rule file",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMRuleFileAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.RuleFile, "path", "p", "", "the path of configured byteman rule file")
+	cmd.Flags().StringVarP(&options.RuleFile, "path", "p", "", "Path to the Byteman rule file")
 
 	return cmd
 }
@@ -154,19 +154,19 @@ func NewJVMRuleFileCommand(dep fx.Option, options *core.JVMCommand) *cobra.Comma
 func NewJVMMySQLCommand(dep fx.Option, options *core.JVMCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mysql [options]",
-		Short: "inject fault into MySQL client",
+		Short: "Inject faults into a Java MySQL client",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.JVMMySQLAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(jvmCommandFunc)).Run()
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.SQLType, "sql-type", "", "", "the match sql type")
-	cmd.Flags().StringVarP(&options.Database, "database", "d", "", "the match database")
-	cmd.Flags().StringVarP(&options.Table, "table", "t", "", "the match table")
-	cmd.Flags().StringVarP(&options.MySQLConnectorVersion, "mysql-connector-version", "v", "8", "the version of mysql-connector-java, only support 5.X.X(set to 5) and 8.X.X(set to 8)")
-	cmd.Flags().StringVarP(&options.ThrowException, "exception", "", "", "the exception message needs to throw")
-	cmd.Flags().IntVarP(&options.LatencyDuration, "latency", "", 0, "the latency duration, unit ms")
+	cmd.Flags().StringVarP(&options.SQLType, "sql-type", "", "", "SQL statement type to match, or empty for all types")
+	cmd.Flags().StringVarP(&options.Database, "database", "d", "", "Database name in SQL to match, or empty for all databases")
+	cmd.Flags().StringVarP(&options.Table, "table", "t", "", "Table name to match, or empty for all tables")
+	cmd.Flags().StringVarP(&options.MySQLConnectorVersion, "mysql-connector-version", "v", "8", "MySQL Connector/J major version: 5 or 8")
+	cmd.Flags().StringVarP(&options.ThrowException, "exception", "", "", "Exception message to throw instead of adding latency")
+	cmd.Flags().IntVarP(&options.LatencyDuration, "latency", "", 0, "Delay in milliseconds when --exception is empty")
 
 	return cmd
 }

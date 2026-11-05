@@ -37,7 +37,7 @@ func NewFileAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "file <subcommand>",
-		Short: "File attack related commands",
+		Short: "Inject file and directory faults",
 	}
 
 	cmd.AddCommand(
@@ -55,7 +55,7 @@ func NewFileAttackCommand(uid *string) *cobra.Command {
 func NewFileCreateCommand(dep fx.Option, options *core.FileCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "create file",
+		Short: "Create a file or directory",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.FileCreateAction
@@ -64,8 +64,8 @@ func NewFileCreateCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "the name of file to be created")
-	cmd.Flags().StringVarP(&options.DirName, "dir-name", "d", "", "the name of directory to be created")
+	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "File path to create (truncates an existing file)")
+	cmd.Flags().StringVarP(&options.DirName, "dir-name", "d", "", "Directory path to create (takes precedence over --file-name)")
 
 	return cmd
 }
@@ -73,15 +73,15 @@ func NewFileCreateCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 func NewFileModifyPrivilegeCommand(dep fx.Option, options *core.FileCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "modify",
-		Short: "modify file privilege",
+		Short: "Change file permissions",
 		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.FileModifyPrivilegeAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(commonFileAttackFunc)).Run()
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "file to be change privilege")
-	cmd.Flags().Uint32VarP(&options.Privilege, "privilege", "p", 0, "privilege to be update")
+	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "File path whose permissions to change")
+	cmd.Flags().Uint32VarP(&options.Privilege, "privilege", "p", 0, "Permission digits without a leading zero, such as 644 or 755")
 
 	return cmd
 }
@@ -89,7 +89,7 @@ func NewFileModifyPrivilegeCommand(dep fx.Option, options *core.FileCommand) *co
 func NewFileDeleteCommand(dep fx.Option, options *core.FileCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "delete file",
+		Short: "Make a file or directory unavailable by renaming it",
 
 		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.FileDeleteAction
@@ -98,8 +98,8 @@ func NewFileDeleteCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "the file to be deleted")
-	cmd.Flags().StringVarP(&options.DirName, "dir-name", "d", "", "the directory to be deleted")
+	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "File path to remove from its original location")
+	cmd.Flags().StringVarP(&options.DirName, "dir-name", "d", "", "Directory path to remove when --file-name is omitted")
 
 	return cmd
 }
@@ -107,7 +107,7 @@ func NewFileDeleteCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 func NewFileRenameCommand(dep fx.Option, options *core.FileCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rename",
-		Short: "rename file",
+		Short: "Rename a file or directory",
 
 		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.FileRenameAction
@@ -115,8 +115,8 @@ func NewFileRenameCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.SourceFile, "source-file", "s", "", "the source file/dir of rename")
-	cmd.Flags().StringVarP(&options.DestFile, "dest-file", "d", "", "the destination file/dir of rename")
+	cmd.Flags().StringVarP(&options.SourceFile, "source-file", "s", "", "Current path of the file or directory")
+	cmd.Flags().StringVarP(&options.DestFile, "dest-file", "d", "", "New path of the file or directory")
 
 	return cmd
 }
@@ -124,7 +124,7 @@ func NewFileRenameCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 func NewFileAppendCommand(dep fx.Option, options *core.FileCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "append",
-		Short: "append file",
+		Short: "Append data to a file",
 
 		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.FileAppendAction
@@ -132,9 +132,9 @@ func NewFileAppendCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "append data to the file")
-	cmd.Flags().StringVarP(&options.Data, "data", "d", "", "append data")
-	cmd.Flags().IntVarP(&options.Count, "count", "c", 1, "append count with default value is 1")
+	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "Existing file path to append to")
+	cmd.Flags().StringVarP(&options.Data, "data", "d", "", "Data to append, followed by a newline")
+	cmd.Flags().IntVarP(&options.Count, "count", "c", 1, "Number of times to append the data")
 
 	return cmd
 }
@@ -142,7 +142,7 @@ func NewFileAppendCommand(dep fx.Option, options *core.FileCommand) *cobra.Comma
 func NewFileReplaceCommand(dep fx.Option, options *core.FileCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "replace",
-		Short: "replace data in file",
+		Short: "Replace matching text in a file",
 
 		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.FileReplaceAction
@@ -150,10 +150,10 @@ func NewFileReplaceCommand(dep fx.Option, options *core.FileCommand) *cobra.Comm
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "replace data in the file")
-	cmd.Flags().StringVarP(&options.OriginStr, "origin-string", "o", "", "the origin string to be replaced")
-	cmd.Flags().StringVarP(&options.DestStr, "dest-string", "d", "", "the destination string to replace the origin string")
-	cmd.Flags().IntVarP(&options.Line, "line", "l", 0, "the line number to replace, default is 0, means replace all lines")
+	cmd.Flags().StringVarP(&options.FileName, "file-name", "f", "", "File path to modify")
+	cmd.Flags().StringVarP(&options.OriginStr, "origin-string", "o", "", "sed basic regular expression to replace")
+	cmd.Flags().StringVarP(&options.DestStr, "dest-string", "d", "", "Replacement text using sed replacement syntax")
+	cmd.Flags().IntVarP(&options.Line, "line", "l", 0, "Line number to modify, starting at 1 (0 selects all lines)")
 
 	return cmd
 }
