@@ -1,98 +1,58 @@
 # Work on Chaosd
 
-Chaosd is a Linux host fault injector with Cobra CLI commands and a Gin HTTP service.
-Both call the same attack service and persist experiments and recovery configuration in SQLite.
-The root Go module builds the application and release helpers, including `tools/file`.
-Root `go test ./...` covers the file helper with the same dependencies used by release builds.
+Chaosd is a Linux host fault injector. Its Cobra CLI and Gin HTTP service share the attack service and SQLite stores.
+The root Go module includes the application and release helpers, including `tools/file`.
 
 ## Find the implementation
 
 | Location | Responsibility |
 | --- | --- |
-| `cmd/main.go` | Root commands, logging, and runtime helper environment. |
-| `cmd/attack`, `cmd/recover`, `cmd/search`, `cmd/server` | CLI flags, input preparation, and service startup. |
-| `pkg/core` | Fault kinds, actions, request types, validation, defaults, and recovery JSON. |
-| `pkg/server/chaosd` | Experiment lifecycle, execution dispatch, recovery dispatch, and fault implementations. |
-| `pkg/server/httpserver` | Registered routes, JSON binding, TLS, client certificates, and system endpoints. |
+| `cmd` | CLI input, logging, runtime environment, and startup. |
+| `pkg/core` | Fault kinds, request validation, defaults, and recovery JSON. |
+| `pkg/server/chaosd` | Experiment lifecycle, fault execution, and recovery. |
+| `pkg/server/httpserver` | HTTP routes, JSON binding, and TLS. |
 | `pkg/server/server.go`, `cmd/server/module.go` | Fx providers and application wiring. |
-| `pkg/crclient` | Host PID adapter for the in-process Chaos Mesh daemon. |
-| `pkg/container` | Docker and containerd client adapter with its own public API. |
-| `pkg/scheduler` | Live UTC cron jobs and recovery timers. |
-| `pkg/store` | SQLite stores for experiments, runs, and network rules. |
-| `pkg/utils` | Commands, process pools, runtime paths, and shared helpers, including public gRPC helpers. |
-| `tools` | `PortOccupyTool` and the file-operation helper. |
-| `Makefile`, `images`, `.github/workflows` | Builds, helper downloads, container packaging, CI, and releases. |
-| `hack/generate_swagger_spec.sh`, `pkg/swaggerserver`, `docs` | Swagger generation and optional UI. |
-| `test/integration_test` | Shell tests that inject real faults. |
+| `pkg/scheduler`, `pkg/store` | In-memory scheduling and persistent experiment data. |
+| `pkg/crclient`, `pkg/container`, `pkg/utils` | Runtime adapters and shared helpers. |
+| `Makefile`, `Dockerfile`, `hack`, `.github/workflows`, `tools` | Builds, dependencies, packaging, and CI. |
 
-The active daemon uses `NodeCRClient` and the Chaosd process PID to operate on the host.
-`pkg/container` is not part of that active wiring. Preserve its exported interfaces when updating runtime clients unless the task explicitly changes their API.
-Preserve the public gRPC helpers in `pkg/utils` unless the task explicitly changes their API.
+The active daemon uses `pkg/crclient.NodeCRClient` with the Chaosd process PID to operate on the host.
+`pkg/container` is not part of that wiring. Preserve its exported interfaces and the public gRPC helpers in `pkg/utils` unless the task explicitly changes their APIs.
 
-## Change fault behavior across its callers
+## Change fault behavior
 
-Start with the request and recovery types in `pkg/core`.
-Follow CLI construction, HTTP binding, execution, persisted configuration, and recovery for the affected kind.
-Update validation and defaults at the input adapters with any request change.
-Check both dispatch paths in `pkg/server/chaosd` and the kind mapping in `pkg/core/experiment.go`.
-HTTP route registration in `pkg/server/httpserver/server.go` determines availability.
-An annotated handler alone does not expose a route.
+Follow the affected kind through `pkg/core`, CLI construction, HTTP binding, execution, persisted configuration, and recovery.
+Update input validation and defaults, both dispatch paths in `pkg/server/chaosd`, and the kind mapping in `pkg/core/experiment.go` as needed.
+HTTP availability depends on route registration in `pkg/server/httpserver/server.go`, not handler annotations alone.
 
 Keep serialized recovery fields compatible with existing experiments.
-Implementations can add captured PIDs, original permissions, or other recovery data before the final store update.
-Do not discard those updates when refactoring request or lifecycle code.
-Preserve the distinction between disk CLI configuration and disk service configuration.
+Preserve data captured during execution, such as PIDs and original permissions, through the final store update.
+Keep disk CLI configuration distinct from disk service configuration.
 
-Chaos Mesh main and API modules form a compatibility set.
-Network code uses their protobufs and daemon methods. Stress code uses their validators and process manager.
-Clock code uses their ptrace helpers. HTTP recovery stores their tproxy configuration.
-Check packaged helper compatibility when any of these types change.
-Review effective versions and root replacements when changing dependencies.
-The root `go.mod` replaces the Chaos Mesh API module, gRPC, and Kubernetes modules.
-Check the upstream requirement behind each replacement before removing or changing it.
-The file helper shares the root module and its dependency versions.
+Treat the Chaos Mesh main and API modules, their daemon interfaces, and packaged helpers as a compatibility set.
+Before changing dependencies or root `go.mod` replacements, check effective versions and the upstream requirements behind each replacement.
+The file helper shares the root module and dependency versions, and is covered by root `go test ./...`.
 
-## Build and check
+## Validate safely
 
-Read `go.mod` and `.github/workflows/ci.yml` before choosing a Go toolchain.
-SQLite requires cgo and a C compiler. The license checker requires a `python3` command in `PATH`.
-Build and runtime validation need Linux facilities. Clock injection is unsupported on arm64.
-Do not treat a cross-compilation result as proof that a fault works on the target architecture.
+See [README.md](README.md#contributing) for build and check targets.
+Read `go.mod` and `.github/workflows/ci.yml` before selecting a toolchain.
+SQLite requires cgo and a C compiler. The license checker requires `python3` in `PATH`.
 
-Use the repository targets for the relevant change.
+`make check` formats files in place. Inspect the diff afterward, as CI rejects formatting drift.
+Use `make fmt` for formatting. The tidy check reports drift without rewriting files. Use `go mod tidy` to apply module changes.
+Cross-compiling the binary proves neither fault execution nor a complete helper bundle for the target architecture.
+Clock injection is unsupported on arm64.
 
-```bash
-make check
-make chaosd
-make unit-test
-make chaos-tools
-```
-
-`make check` runs formatting, vet, boilerplate, lint, and tidy checks.
-CI runs formatting, boilerplate, and tidy checks once on amd64, and runs vet and lint on both amd64 and arm64.
-Formatting rewrites files, and CI rejects drift with `git diff --exit-code` after verification.
-Use `make fmt` to format locally.
-The tidy check reports module drift without rewriting files. Use `go mod tidy` to apply module changes.
-`make chaosd` builds `bin/chaosd` with cgo enabled.
-`make chaos-tools` builds helpers and downloads pinned Linux tools into `bin/tools`.
-`make binary` includes the main binary and tools.
-The Makefile selects downloaded helpers from the effective target GOOS and GOARCH.
-Cross-compiling the Go binary alone does not produce a complete tool bundle for another architecture.
-
-Help and version are suitable smoke checks without creating experiment state.
-Search and server startup can create `chaosd.dat` beside the executable.
-For routine validation, select tests that only validate inputs or use mocks.
-Tests can run subprocesses and create files.
-Run the full unit-test suite and `make integration-test` only in a disposable Linux environment.
-Never inject real host faults on a workstation as part of routine validation.
+For routine validation, select input-validation tests or mocks.
+The full `make unit-test` suite and `make integration-test` require a disposable Linux environment because they can operate on disks, run subprocesses, or inject real faults.
+Never inject real host faults on a workstation for routine validation.
+Help and version are suitable smoke checks without experiment state. Search and server startup can create `chaosd.dat`.
 Report whether validation covered static checks, builds, selected tests, or actual fault execution.
 
-Swagger annotations live in the HTTP handlers and reference types in `pkg/core`.
-The optional Swagger UI uses the `swagger_server` build tag and generated files in `docs`.
-Use `SWAGGER=1 make chaosd` to generate from `cmd/main.go` before the tagged build.
-Do not hand-edit generated files in `docs`.
-Keep `docs/placeholder.go`, which allows builds without generated documentation.
-Review generated output separately from the default build and check the `swagger_server` build tag.
+For Swagger changes, update HTTP handler annotations and their `pkg/core` types, then run `SWAGGER=1 make chaosd`.
+Review generated output and the `swagger_server` build separately from the default build.
+Do not hand-edit generated files in `docs` or remove `docs/placeholder.go`, which supports builds without generated documentation.
 
 ## Keep tests focused
 
@@ -100,53 +60,39 @@ Review generated output separately from the default build and check the `swagger
 - Assert observable outcomes. Keep fixtures, setup, and helpers small and simple.
 - Preserve checks that catch key failures when simplifying tests. Prioritize useful coverage over test counts or coverage percentages.
 
+Use a fresh experiment UID unless testing duplicates.
+
 ## Preserve operational state
 
-The database is `chaosd.dat` beside the executable, not beside the source or current directory.
-Keep it, its serialized recovery configuration, and fault-created backups during maintenance and cleanup.
-Do not delete runtime state to make a test or dependency change pass.
-Moving a binary changes the database and adjacent helper paths.
-Keep `tools` beside deployed executables, or verify the configured external helper paths.
+The database is `chaosd.dat` beside the executable, not in the working directory.
+Preserve it, serialized recovery configuration, and fault-created backups during maintenance and cleanup.
+Do not delete runtime state to make checks pass. Moving the binary changes the database and adjacent helper paths.
+Keep `tools` beside deployed executables, or verify configured external helper paths.
 
-Cron jobs, recovery timers, and disk process pools are in memory.
-They do not resume from SQLite after restart.
-Cancel a schedule through the same running service that owns its cron entry.
-CLI recovery creates a separate scheduler and cannot remove jobs in another process, even when both share the database.
-An active scheduled run relies on its existing recovery timer.
-Do not imply universal recovery. Host faults, killed processes, and file replacement have specific limits.
-Use a fresh experiment UID unless a test explicitly exercises duplicate UID behavior.
+Cron jobs, recovery timers, and disk process pools are in memory and do not resume from SQLite after restart.
+Cancel schedules through the same running service that owns them. CLI recovery uses a separate scheduler and cannot cancel another process's jobs.
+Cancellation does not stop the current run, which relies on its existing recovery timer.
+Do not imply universal recovery. Host faults, killed processes, and file replacement have specific limits described in [README.md](README.md#preserve-experiment-state).
 
 ## Reuse development caches
 
-Before installing dependencies or building, inspect project conventions and the effective tool cache paths.
-Reuse fixed project caches or the tool's default shared caches.
-For Go, inspect `go env GOCACHE GOMODCACHE GOPATH` and reuse those paths.
-Use `go test -count=1` to rerun tests. Do not clear or copy caches for a fresh run.
-Do not create dependency caches per task, branch, worktree, agent, or review snapshot, including under `/tmp`.
-Isolate source, runtime state, and test output when needed, while sharing dependency downloads.
-`hack/dependency-versions.sh` owns pinned external helper and JVM test dependency versions.
-`hack/install-tools.sh` owns helper installation and architecture mapping.
-It reuses versioned shared archives and matching `bin/tools` outputs.
-The JVM integration test uses the same archive cache for TiDB.
-Integration CI persists these downloads and the Maven repository with `actions/cache`.
-It passes `CHAOSD_TOOLS_CACHE` and `MAVEN_REPO_LOCAL` through `sudo` so tests use the restored runner caches.
-For container builds, reuse project BuildKit cache mounts or fixed cache volumes.
-Keep cache IDs tied to compatible platforms and toolchains, not tasks or dates.
-If a shared cache is unwritable, use an existing writable shared cache or the available permission process.
-Record the reason, path, and cleanup plan for a necessary temporary cache exception.
-Pass the selected shared cache paths to any delegated work.
-Clean up only this task's unused temporary outputs, containers, and mounts.
+Before installing or building, inspect project cache conventions and effective paths, including `go env GOCACHE GOMODCACHE GOPATH`.
+Reuse fixed project or default shared caches. Isolate source, test output, and runtime state, not dependency downloads.
+Do not create caches per task, branch, worktree, agent, or review snapshot, including under `/tmp`.
+Use `go test -count=1` to rerun tests without clearing or copying caches.
+
+`hack/dependency-versions.sh` owns pinned helper versions. `hack/install-tools.sh` owns installation and architecture mapping.
+Reuse its versioned archives and matching `bin/tools` outputs. Reuse project BuildKit cache mounts or fixed volumes, with IDs tied to compatible platforms and toolchains.
+If a cache is unwritable, use an existing writable shared cache or request permission for the required directory.
+A temporary cache exception requires a reason, path, and cleanup plan, and is limited to unavailable or corrupted shared caches or explicit cold-cache validation.
+Pass selected cache paths to delegated work.
+Clean up only this task's unused temporary outputs, exceptional caches, containers, and mounts.
 Do not clear shared caches, remove source or recovery backups, or run global Docker prune commands.
 
-## Sign off commits
+## Prepare changes for delivery
 
-Use `git commit -s` to add a `Signed-off-by` line to commits.
-
-## Write changelog entries
-
-Keep the changelog focused on core changes that matter to users: major capabilities, significant behavior fixes, and necessary upgrade or compatibility information.
-Summarize related work by its user-visible result. Do not turn commit or PR lists into changelog entries.
-For changes merged through pull requests, end each changelog item with links to the corresponding PRs.
-Omit routine documentation, CI, cache, test fixture, and internal implementation changes unless they materially affect users.
-For dependency upgrades, summarize the major upgrade rather than listing every package and version.
-Use Keep a Changelog categories and keep unreleased work under `Unreleased` until a release is selected.
+Use `git commit -s` to sign off commits.
+Keep changelog entries under `Unreleased` with Keep a Changelog categories until a release is selected.
+Describe major capabilities, significant behavior fixes, and necessary upgrade or compatibility information by their user-visible result.
+Summarize dependency upgrades together. Omit routine documentation, CI, cache, fixture, and internal changes unless they materially affect users.
+For work merged through pull requests, end each item with links to the corresponding PRs.
