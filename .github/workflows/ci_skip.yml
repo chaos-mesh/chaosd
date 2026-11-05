@@ -16,7 +16,7 @@ on:
       - "**.go"
 
 jobs:
-  pull:
+  checks:
     name: ${{ matrix.job }} (${{ matrix.arch }})
     strategy:
       matrix:
@@ -29,4 +29,4 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - run: echo "Not required to run pull jobs."
+      - run: echo "No CI checks required for these changes."
