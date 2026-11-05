@@ -68,8 +68,9 @@ func requestAttack(t *testing.T, router *gin.Engine, method, path, body string, 
 }
 
 type fileRouteAttack struct {
-	delivered core.FileCommand
-	recovered core.FileCommand
+	delivered    core.FileCommand
+	recovered    core.FileCommand
+	recoverCalls int
 }
 
 func (f *fileRouteAttack) Attack(options core.AttackConfig, _ chaosd.Environment) error {
@@ -82,7 +83,36 @@ func (f *fileRouteAttack) Attack(options core.AttackConfig, _ chaosd.Environment
 }
 
 func (f *fileRouteAttack) Recover(exp core.Experiment, _ chaosd.Environment) error {
+	f.recoverCalls++
 	return json.Unmarshal([]byte(exp.RecoverCommand), &f.recovered)
+}
+
+func TestRecoverAttackRouteRepeated(t *testing.T) {
+	original := chaosd.FileAttack
+	attack := &fileRouteAttack{}
+	chaosd.FileAttack = attack
+	t.Cleanup(func() { chaosd.FileAttack = original })
+	router, store := newAttackRouter(t)
+
+	requestAttack(t, router, http.MethodPost, "/api/attack/file",
+		`{"uid":"file-repeat","action":"modify","file-name":"modified","privilege":600}`, http.StatusOK)
+	for range 2 {
+		response := requestAttack(t, router, http.MethodDelete, "/api/attack/file-repeat", "", http.StatusOK)
+		var result utils.Response
+		if err := json.Unmarshal(response.Body.Bytes(), &result); err != nil {
+			t.Fatal(err)
+		}
+		if result != *utils.RecoverSuccessResponse("file-repeat") {
+			t.Fatalf("unexpected recovery response: %+v", result)
+		}
+		exp, err := store.FindByUid(context.Background(), "file-repeat")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if exp.Status != core.Destroyed || attack.recoverCalls != 1 {
+			t.Fatalf("status = %q, recovery calls = %d", exp.Status, attack.recoverCalls)
+		}
+	}
 }
 
 func TestFileAttackRoute(t *testing.T) {
