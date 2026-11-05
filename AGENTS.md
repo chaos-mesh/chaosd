@@ -37,7 +37,6 @@ Update validation and defaults at the input adapters with any request change.
 Check both dispatch paths in `pkg/server/chaosd` and the kind mapping in `pkg/core/experiment.go`.
 HTTP route registration in `pkg/server/httpserver/server.go` determines availability.
 An annotated handler alone does not expose a route.
-Host and file faults have CLI commands but no registered HTTP creation routes.
 
 Keep serialized recovery fields compatible with existing experiments.
 Implementations can add captured PIDs, original permissions, or other recovery data before the final store update.
@@ -94,6 +93,12 @@ Use `SWAGGER=1 make chaosd` to generate from `cmd/main.go` before the tagged bui
 Do not hand-edit generated files in `docs`.
 Keep `docs/placeholder.go`, which allows builds without generated documentation.
 Review generated output separately from the default build and check the `swagger_server` build tag.
+
+## Keep tests focused
+
+- Test critical behavior, regressions, and important boundaries with representative cases. Avoid repeating shared validation or unchanged paths.
+- Assert observable outcomes. Keep fixtures, setup, and helpers small and simple.
+- Preserve checks that catch key failures when simplifying tests. Prioritize useful coverage over test counts or coverage percentages.
 
 ## Preserve operational state
 

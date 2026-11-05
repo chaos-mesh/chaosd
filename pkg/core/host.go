@@ -15,6 +15,8 @@ package core
 
 import (
 	"encoding/json"
+
+	"github.com/pingcap/errors"
 )
 
 const (
@@ -29,7 +31,15 @@ type HostCommand struct {
 var _ AttackConfig = &HostCommand{}
 
 func (h *HostCommand) Validate() error {
-	return h.CommonAttackConfig.Validate()
+	if err := h.CommonAttackConfig.Validate(); err != nil {
+		return err
+	}
+	switch h.Action {
+	case HostShutdownAction, HostRebootAction:
+		return nil
+	default:
+		return errors.Errorf("host action %s not supported", h.Action)
+	}
 }
 
 func (h HostCommand) RecoverData() string {
