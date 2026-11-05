@@ -5,7 +5,6 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/release_latest.yml
       - .github/workflows/release_tag.yml
   push:
     tags:
@@ -39,7 +38,6 @@ jobs:
           aws --version
           ./bin/chaosd --help
           ./bin/chaosd version
-          readelf --version-info bin/chaosd bin/tools/FileTool bin/tools/PortOccupyTool
       - name: Upload files
         if: github.event_name == 'push'
         env:
