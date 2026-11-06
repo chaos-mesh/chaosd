@@ -34,6 +34,8 @@ var ProcessAttack AttackType = processAttack{}
 
 func (processAttack) Attack(options core.AttackConfig, _ Environment) error {
 	attack := options.(*core.ProcessCommand)
+	// Scheduled runs reuse options, so record only the processes signaled by this run.
+	attack.PIDs = nil
 
 	processes, err := process.Processes()
 	if err != nil {

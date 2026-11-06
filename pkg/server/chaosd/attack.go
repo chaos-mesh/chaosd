@@ -16,6 +16,7 @@ package chaosd
 
 import (
 	"context"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/pingcap/log"
@@ -34,6 +35,7 @@ type Environment struct {
 type AttackType interface {
 	// Attack may add PIDs or original state to options for recovery.
 	// For immediate attacks, ExecuteAttack persists the updated recovery data even if Attack returns an error.
+	// For scheduled attacks, recovery uses the data from the latest completed Attack call.
 	Attack(options core.AttackConfig, env Environment) error
 	// Recover can get marshaled options data from experiment and recover it.
 	Recover(experiment core.Experiment, env Environment) error
@@ -88,12 +90,8 @@ func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig,
 
 	env := s.newEnvironment(uid)
 	if len(options.Cron()) > 0 {
-		if err = s.Cron.Schedule(
-			exp,
-			options.Cron(),
-			func() error { return attackType.Attack(options, env) },
-			func() error { return attackType.Recover(*exp, env) },
-		); err != nil {
+		attackFunc, recoverFunc := scheduledRunFuncs(attackType, options, exp, env)
+		if err = s.Cron.Schedule(exp, options.Cron(), attackFunc, recoverFunc); err != nil {
 			err = perr.WithStack(err)
 			return
 		}
@@ -104,4 +102,45 @@ func (s *Server) ExecuteAttack(attackType AttackType, options core.AttackConfig,
 		}
 	}
 	return
+}
+
+// scheduledRunFuncs returns the attack and recovery functions for each scheduled run.
+// Attack may add PIDs or original state to options, so the recovery function uses
+// the data captured after the latest completed attack instead of the data stored
+// when the experiment was created.
+func scheduledRunFuncs(attackType AttackType, options core.AttackConfig, exp *core.Experiment, env Environment) (func() error, func() error) {
+	var (
+		lock        sync.Mutex
+		recoverData = exp.RecoverCommand
+	)
+
+	attackFunc := func() error {
+		err := attackType.Attack(options, env)
+		lock.Lock()
+		recoverData = options.RecoverData()
+		lock.Unlock()
+		return err
+	}
+
+	recoverFunc := func() error {
+		lock.Lock()
+		data := recoverData
+		lock.Unlock()
+
+		// Build a new experiment because exp caches the request command decoded from its creation data.
+		return attackType.Recover(core.Experiment{
+			ID:             exp.ID,
+			Uid:            exp.Uid,
+			CreatedAt:      exp.CreatedAt,
+			UpdatedAt:      exp.UpdatedAt,
+			Status:         exp.Status,
+			Message:        exp.Message,
+			Kind:           exp.Kind,
+			Action:         exp.Action,
+			RecoverCommand: data,
+			LaunchMode:     exp.LaunchMode,
+		}, env)
+	}
+
+	return attackFunc, recoverFunc
 }
