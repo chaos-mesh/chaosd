@@ -120,9 +120,9 @@ func NewHTTPRequestCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.HTTPRequestConfig.URL, "url", "", "", "URL to request")
-	cmd.Flags().IntVarP(&o.HTTPRequestConfig.Count, "count", "c", 1, "Number of requests to send")
-	cmd.Flags().BoolVarP(&o.HTTPRequestConfig.EnableConnPool, "enable-conn-pool", "p", false, "Reuse HTTP connections between requests")
+	cmd.Flags().StringVarP(&o.URL, "url", "", "", "URL to request")
+	cmd.Flags().IntVarP(&o.Count, "count", "c", 1, "Number of requests to send")
+	cmd.Flags().BoolVarP(&o.EnableConnPool, "enable-conn-pool", "p", false, "Reuse HTTP connections between requests")
 	return cmd
 }
 

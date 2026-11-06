@@ -145,11 +145,14 @@ Unit tests include disk operations and subprocesses. Integration tests inject re
 
 | Target | Purpose |
 | --- | --- |
-| `make check` | Formatting, vet, license headers, lint, and module consistency. Requires Python 3. |
+| `make check` | Format Go files and check lint and module consistency. |
+| `make fmt` | Apply Go formatting and import grouping. |
 | `make chaosd` | Build the main binary. Use `make binary` to include helpers. |
 | `SWAGGER=1 make chaosd` | Generate and include the optional Swagger UI. |
 | `make unit-test` | Run the full Go test suite. |
 | `make integration-test` | Build tools and run fault injection tests. |
+
+Pull-request CI requires an Apache License 2.0 declaration in each newly added Go or shell file.
 
 See [AGENTS.md](AGENTS.md) for maintenance constraints and safe validation guidance.
 Report bugs and contribute changes through the [Chaosd repository](https://github.com/chaos-mesh/chaosd).

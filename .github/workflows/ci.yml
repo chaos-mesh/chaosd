@@ -8,6 +8,7 @@ on:
     paths:
       - .github/workflows/ci.yml
       - .github/workflows/ci_skip.yml
+      - .golangci.yml
       - Makefile
       - Dockerfile
       - .dockerignore
@@ -63,11 +64,11 @@ jobs:
       - name: Common checks
         if: matrix.job == 'verify' && matrix.arch == 'amd64'
         run: |
-          make fmt boilerplate tidy
+          make fmt tidy
           git diff --exit-code
-      - name: Vet and lint
+      - name: Lint
         if: matrix.job == 'verify'
-        run: make vet lint
+        run: make lint
       - name: Build and verify runtime image
         if: matrix.job == 'build'
         run: |

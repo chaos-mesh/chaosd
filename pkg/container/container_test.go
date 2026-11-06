@@ -23,7 +23,6 @@ import (
 	"strings"
 	"testing"
 
-	dockertypes "github.com/docker/docker/api/types"
 	dockercontainer "github.com/docker/docker/api/types/container"
 )
 
@@ -33,10 +32,10 @@ type dockerStub struct {
 	err                       error
 }
 
-func (s *dockerStub) ContainerInspect(_ context.Context, id string) (dockertypes.ContainerJSON, error) {
+func (s *dockerStub) ContainerInspect(_ context.Context, id string) (dockercontainer.InspectResponse, error) {
 	s.inspectID = id
 	s.calls++
-	return dockertypes.ContainerJSON{ContainerJSONBase: &dockertypes.ContainerJSONBase{State: &dockercontainer.State{Pid: 4321}}}, s.err
+	return dockercontainer.InspectResponse{ContainerJSONBase: &dockercontainer.ContainerJSONBase{State: &dockercontainer.State{Pid: 4321}}}, s.err
 }
 
 func (s *dockerStub) ContainerKill(_ context.Context, id, signal string) error {
@@ -102,7 +101,7 @@ func TestDockerSDKCompatibility(t *testing.T) {
 			"Ports":{"80/tcp":[{"HostIp":"127.0.0.1","HostPort":"8080"}]},
 			"Networks":{"bridge":{"NetworkID":"net1","IPAddress":"172.17.0.2"}}}
 	}`
-	var expected dockertypes.ContainerJSON
+	var expected dockercontainer.InspectResponse
 	if err := json.Unmarshal([]byte(fixture), &expected); err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +149,7 @@ func TestDockerSDKCompatibility(t *testing.T) {
 			if !reflect.DeepEqual(actual, expected) {
 				t.Fatalf("inspect response=%+v, want %+v", actual, expected)
 			}
-			if actual.NetworkSettings.Bridge != "docker0" || actual.NetworkSettings.IPAddress != "172.17.0.2" || actual.HostConfig.KernelMemory != 1048576 {
+			if actual.NetworkSettings.Bridge != "docker0" || actual.NetworkSettings.Networks["bridge"].IPAddress != "172.17.0.2" || actual.HostConfig.KernelMemory != 1048576 {
 				t.Fatal("inspect lost legacy response fields")
 			}
 			if err := client.ContainerKill(context.Background(), "abc123", "SIGTERM"); err != nil {

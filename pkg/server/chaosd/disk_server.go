@@ -87,7 +87,6 @@ func fillDisk(
 			WithOutputHandler(outputHandler.StdoutHandler, outputHandler.OutputChan)
 		cmdPool.Start(runner)
 	}
-	return
 }
 
 func getDeadline(options core.AttackConfig) *time.Time {

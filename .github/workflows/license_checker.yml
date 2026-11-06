@@ -1,0 +1,43 @@
+name: License checker
+
+on:
+  pull_request:
+    branches:
+      - main
+      - release-*
+    paths-ignore:
+      - '**.md'
+      - '**.yml'
+      - '**.c'
+      - .dockerignore
+      - .gitignore
+      - Dockerfile
+      - LICENSE
+      - Makefile
+      - go.*
+
+permissions:
+  contents: read
+
+jobs:
+  license:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v47
+        with:
+          files: |
+            **/*.go
+            **/*.sh
+      - name: Check added Go and shell files
+        env:
+          ADDED_FILES: ${{ steps.changed-files.outputs.added_files }}
+        run: |
+          for file in ${ADDED_FILES}; do
+            if ! grep -Fq 'Licensed under the Apache License, Version 2.0' "$file"; then
+              echo "License header is missing in $file."
+              exit 1
+            fi
+          done

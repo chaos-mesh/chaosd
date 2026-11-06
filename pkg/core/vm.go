@@ -33,9 +33,7 @@ func NewVMOption() *VMOption {
 	}
 }
 
-func (opt *VMOption) CompleteDefaults() {
-	return
-}
+func (opt *VMOption) CompleteDefaults() {}
 
 func (opt VMOption) RecoverData() string {
 	data, _ := json.Marshal(opt)

@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - .github/workflows/ci.yml
       - .github/workflows/ci_skip.yml
+      - .golangci.yml
       - Makefile
       - Dockerfile
       - .dockerignore

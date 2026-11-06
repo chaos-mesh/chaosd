@@ -16,15 +16,15 @@ package container_test
 import (
 	"context"
 
-	"github.com/docker/docker/api/types"
+	dockercontainer "github.com/docker/docker/api/types/container"
 
 	"github.com/chaos-mesh/chaosd/pkg/container"
 )
 
 type existingClient struct{}
 
-func (existingClient) ContainerInspect(context.Context, string) (types.ContainerJSON, error) {
-	return types.ContainerJSON{}, nil
+func (existingClient) ContainerInspect(context.Context, string) (dockercontainer.InspectResponse, error) {
+	return dockercontainer.InspectResponse{}, nil
 }
 func (existingClient) ContainerKill(context.Context, string, string) error { return nil }
 
