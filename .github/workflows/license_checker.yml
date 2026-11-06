@@ -6,7 +6,6 @@ on:
       - main
       - release-*
     paths-ignore:
-      - '.github/**'
       - '**.md'
       - '**.yml'
       - '**.c'
