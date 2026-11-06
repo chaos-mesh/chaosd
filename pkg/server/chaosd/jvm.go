@@ -196,15 +196,16 @@ func generateRuleData(attack *core.JVMCommand) (string, error) {
 		// TODO: get the database information and fill it in matchDBTable function
 		bytemanTemplateSpec.Bind = fmt.Sprintf("flag:boolean=matchDBTable(\"\", $2, \"%s\", \"%s\", \"%s\")", attack.Database, attack.Table, attack.SQLType)
 		bytemanTemplateSpec.Condition = "flag"
-		if attack.MySQLConnectorVersion == "5" {
+		switch attack.MySQLConnectorVersion {
+		case "5":
 			bytemanTemplateSpec.Class = core.MySQL5InjectClass
 			bytemanTemplateSpec.Method = core.MySQL5InjectMethod
 			mysqlException = core.MySQL5Exception
-		} else if attack.MySQLConnectorVersion == "8" {
+		case "8":
 			bytemanTemplateSpec.Class = core.MySQL8InjectClass
 			bytemanTemplateSpec.Method = core.MySQL8InjectMethod
 			mysqlException = core.MySQL8Exception
-		} else {
+		default:
 			return "", errors.Errorf("mysql connector version %s is not supported", attack.MySQLConnectorVersion)
 		}
 

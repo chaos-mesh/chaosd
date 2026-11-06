@@ -37,7 +37,7 @@ func NewHTTPAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "http <subcommand>",
-		Short: "HTTP attack related commands",
+		Short: "Inject HTTP faults or send HTTP requests",
 	}
 
 	cmd.AddCommand(
@@ -53,7 +53,7 @@ func NewHTTPAttackCommand(uid *string) *cobra.Command {
 func NewHTTPAbortCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "abort",
-		Short: "abort selected HTTP connection",
+		Short: "Abort matching HTTP requests or responses",
 		Run: func(*cobra.Command, []string) {
 			o.Action = core.HTTPAbortAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
@@ -68,7 +68,7 @@ func NewHTTPAbortCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command
 func NewHTTPDelayCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delay",
-		Short: "delay selected HTTP Package",
+		Short: "Delay matching HTTP requests or responses",
 		Run: func(*cobra.Command, []string) {
 			o.Action = core.HTTPDelayAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
@@ -78,52 +78,51 @@ func NewHTTPDelayCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command
 	setTarget(cmd, o)
 	setSelector(cmd, o)
 
-	cmd.Flags().StringVarP(&o.Delay, "delay-time", "d", "", "Delay represents the delay of the target request/response.")
+	cmd.Flags().StringVarP(&o.Delay, "delay-time", "d", "", "Delay duration, e.g. 500ms or 2s")
 	return cmd
 }
 
 func setTarget(cmd *cobra.Command, o *core.HTTPAttackOption) {
 	cmd.Flags().UintSliceVarP(&o.ProxyPorts, "proxy-ports", "p", nil,
-		"composed with one of the port of HTTP connection, "+
-			"we will only attack HTTP connection with port inside proxy_ports")
+		"Required comma-separated list of TCP ports whose HTTP traffic is intercepted")
 	cmd.Flags().StringVarP(&o.Target, "target", "t", "",
-		"HTTP target: Request or Response")
+		"Required HTTP target: Request or Response")
 }
 
 func setSelector(cmd *cobra.Command, c *core.HTTPAttackOption) {
-	cmd.Flags().Int32Var(&c.Port, "port", 0, "The TCP port that the target service listens on.")
+	cmd.Flags().Int32Var(&c.Port, "port", 0, "Match the destination TCP port")
 	cmd.Flags().StringVar(&c.Path, "path", "",
-		"Match path of Uri with wildcard matches.")
-	cmd.Flags().StringVarP(&c.Method, "method", "m", "", "HTTP method")
-	cmd.Flags().StringVarP(&c.Code, "code", "c", "", "Code is a rule to select target by http status code in response.")
+		"Match the request URI path; supports wildcards")
+	cmd.Flags().StringVarP(&c.Method, "method", "m", "", "Match the HTTP method, e.g. GET or POST")
+	cmd.Flags().StringVarP(&c.Code, "code", "c", "", "Match the HTTP response status code, e.g. 200 or 503")
 }
 
 func NewHTTPConfigCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "attack with config file",
+		Short: "Apply HTTP fault rules from a JSON configuration file",
 		Run: func(*cobra.Command, []string) {
 			o.Action = core.HTTPConfigAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
 		},
 	}
-	cmd.Flags().StringVarP(&o.FilePath, "file-path", "p", "", "Config file path.")
+	cmd.Flags().StringVarP(&o.FilePath, "file-path", "p", "", "Path to the JSON HTTP fault configuration")
 	return cmd
 }
 
 func NewHTTPRequestCommand(dep fx.Option, o *core.HTTPAttackOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "request",
-		Short: "request specific URL, only support GET",
+		Short: "Send HTTP GET requests to a URL",
 		Run: func(*cobra.Command, []string) {
 			o.Action = core.HTTPRequestAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processHTTPAttack)).Run()
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.HTTPRequestConfig.URL, "url", "", "", "Request to send")
-	cmd.Flags().IntVarP(&o.HTTPRequestConfig.Count, "count", "c", 1, "Number of requests to send")
-	cmd.Flags().BoolVarP(&o.HTTPRequestConfig.EnableConnPool, "enable-conn-pool", "p", false, "Enable connection pool")
+	cmd.Flags().StringVarP(&o.URL, "url", "", "", "URL to request")
+	cmd.Flags().IntVarP(&o.Count, "count", "c", 1, "Number of requests to send")
+	cmd.Flags().BoolVarP(&o.EnableConnPool, "enable-conn-pool", "p", false, "Reuse HTTP connections between requests")
 	return cmd
 }
 

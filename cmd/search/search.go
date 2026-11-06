@@ -40,7 +40,7 @@ func NewSearchCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "search UID",
-		Short: "Search chaos attack, you can search attacks through the uid or the state of the attack",
+		Short: "Find experiments by UID, status, or kind",
 		Run: func(_ *cobra.Command, args []string) {
 			if len(args) > 0 {
 				options.UID = args[0]
@@ -49,15 +49,12 @@ func NewSearchCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&options.All, "all", "A", false, "list all chaos attacks")
-	cmd.Flags().StringVarP(&options.Status, "status", "s", "", "attack status, "+
-		"supported value: created, success, error, scheduled, destroyed, revoked")
-	cmd.Flags().StringVarP(&options.Kind, "kind", "k", "", "attack kind, "+
-		"supported value: network, process, stress, disk, disk-server, host, jvm, clock, kafka, redis, file, http, vm, userDefined")
-	cmd.Flags().Uint32VarP(&options.Offset, "offset", "o", 0, "starting to search attacks from offset")
-	cmd.Flags().Uint32VarP(&options.Limit, "limit", "l", 0, "limit the count of attacks")
-	cmd.Flags().BoolVar(&options.Asc, "asc", false, "order by CreateTime, "+
-		"default value is false that means order by CreateTime desc")
+	cmd.Flags().BoolVarP(&options.All, "all", "A", false, "List experiments without filtering by status or kind")
+	cmd.Flags().StringVarP(&options.Status, "status", "s", "", "Filter by status: created, success, error, scheduled, destroyed, or revoked")
+	cmd.Flags().StringVarP(&options.Kind, "kind", "k", "", "Filter by kind: network, process, stress, disk, disk-server, host, jvm, clock, kafka, redis, file, http, vm, or userDefined")
+	cmd.Flags().Uint32VarP(&options.Offset, "offset", "o", 0, "Number of matching experiments to skip")
+	cmd.Flags().Uint32VarP(&options.Limit, "limit", "l", 0, "Maximum number of experiments to return; 0 means no limit")
+	cmd.Flags().BoolVar(&options.Asc, "asc", false, "List oldest experiments first instead of newest first")
 
 	return cmd
 }

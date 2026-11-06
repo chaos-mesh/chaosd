@@ -37,14 +37,14 @@ func NewVMAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "vm attack",
-		Short: "vm attack by using virsh",
+		Short: "Force-stop a virtual machine with virsh destroy",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.VMAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(vmAttack)).Run()
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.VMName, "vm-name", "v", "", "The name of the vm to be destoryed")
+	cmd.Flags().StringVarP(&options.VMName, "vm-name", "v", "", "Name of the virtual machine to stop")
 	return cmd
 }
 

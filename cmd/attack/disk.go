@@ -37,7 +37,7 @@ func NewDiskAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "disk <subcommand>",
-		Short: "disk attack related command",
+		Short: "Inject disk load or fill disk space",
 	}
 	cmd.AddCommand(
 		NewDiskPayloadCommand(dep, options),
@@ -49,7 +49,7 @@ func NewDiskAttackCommand(uid *string) *cobra.Command {
 func NewDiskPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-payload <subcommand>",
-		Short: "add disk payload",
+		Short: "Generate disk I/O load",
 	}
 
 	cmd.AddCommand(
@@ -63,7 +63,7 @@ func NewDiskPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.Comma
 func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "write",
-		Short: "write payload",
+		Short: "Generate disk write load",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.DiskWritePayloadAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processDiskAttack)).Run()
@@ -71,15 +71,11 @@ func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.
 	}
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
-		"'size' specifies how many units of data will write into the file path."+
-			"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
-			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES"+
-			"example : 1M | 512kB")
+		"Total data to write across workers, such as 1024c, 1MiB, or 1MB (bare numbers use MiB)")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
-		"'path' specifies the location to fill data in."+
-			"If path not provided, payload will write into a temp file, temp file will be deleted after writing")
+		"New file path or existing directory for output (defaults to the current directory)")
 	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
-		"'process-num' specifies the number of process work on writing , default 1, only 1-255 is valid value")
+		"Number of write workers, from 1 to 255")
 	SetScheduleFlags(cmd, &options.SchedulerConfig)
 	return cmd
 }
@@ -87,7 +83,7 @@ func NewDiskWritePayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.
 func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "read",
-		Short: "read payload",
+		Short: "Generate disk read load",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.DiskReadPayloadAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processDiskAttack)).Run()
@@ -95,15 +91,11 @@ func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.C
 	}
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
-		"'size' specifies how many units of data will read from the file path."+
-			"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
-			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES"+
-			"example : 1M | 512kB")
+		"Total data to read across workers, such as 1024c, 1MiB, or 1MB (bare numbers use MiB)")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
-		"'path' specifies the location to read data."+
-			"If path not provided, payload will read from disk mount on \"/\"")
+		"File or device to read (defaults to the device mounted at /)")
 	cmd.Flags().Uint8VarP(&options.PayloadProcessNum, "process-num", "n", 1,
-		"'process-num' specifies the number of process work on reading , default 1, only 1-255 is valid value")
+		"Number of read workers, from 1 to 255")
 	SetScheduleFlags(cmd, &options.SchedulerConfig)
 	return cmd
 }
@@ -111,7 +103,7 @@ func NewDiskReadPayloadCommand(dep fx.Option, options *core.DiskOption) *cobra.C
 func NewDiskFillCommand(dep fx.Option, options *core.DiskOption) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fill",
-		Short: "fill disk",
+		Short: "Fill disk space",
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.DiskFillAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(processDiskAttack)).Run()
@@ -119,16 +111,12 @@ func NewDiskFillCommand(dep fx.Option, options *core.DiskOption) *cobra.Command 
 	}
 
 	cmd.Flags().StringVarP(&options.Size, "size", "s", "",
-		"'size' specifies how many units of data will fill in the file path."+
-			"'unit' specifies the unit of data, support c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000,"+
-			"M=1024*1024, , GB=1000*1000*1000, G=1024*1024*1024 BYTES"+
-			"example : 1M | 512kB")
+		"Data size to allocate or write, such as 1024c, 1MiB, or 1MB (bare numbers use MiB)")
 	cmd.Flags().StringVarP(&options.Path, "path", "p", "",
-		"'path' specifies the location to fill data in."+
-			"If path not provided, a temp file will be generated and deleted immediately after data filled in or allocated")
+		"New file path or existing directory to fill (defaults to the current directory)")
 	cmd.Flags().StringVarP(&options.Percent, "percent", "c", "",
-		"'percent' how many percent data of disk will fill in the file path")
-	cmd.Flags().BoolVarP(&options.FillByFallocate, "fallocate", "f", true, "fill disk by fallocate instead of dd")
+		"Percentage of total filesystem capacity to fill when --size is omitted")
+	cmd.Flags().BoolVarP(&options.FillByFallocate, "fallocate", "f", true, "Allocate disk space with fallocate instead of writing zeros with dd")
 	return cmd
 }
 

@@ -548,13 +548,14 @@ func (n *NetworkCommand) AdditionalChain(ipset, device, uid string) ([]*pb.Chain
 func (n *NetworkCommand) getAdditionalChain(ipset, device, direction, uid string) ([]*pb.Chain, error) {
 	var directionStr string
 	var directionChain pb.Chain_Direction
-	if direction == "to" {
+	switch direction {
+	case "to":
 		directionStr = "OUTPUT"
 		directionChain = pb.Chain_OUTPUT
-	} else if direction == "from" {
+	case "from":
 		directionStr = "INPUT"
 		directionChain = pb.Chain_INPUT
-	} else {
+	default:
 		return nil, errors.Errorf("direction %s not supported", n.Direction)
 	}
 

@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - .github/workflows/ci.yml
       - .github/workflows/ci_skip.yml
+      - .golangci.yml
       - Makefile
       - Dockerfile
       - .dockerignore
@@ -16,7 +17,8 @@ on:
       - "**.go"
 
 jobs:
-  pull:
+  checks:
+    name: ${{ matrix.job }} (${{ matrix.arch }})
     strategy:
       matrix:
         arch: [amd64, arm64]
@@ -28,4 +30,4 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - run: echo "Not required to run pull jobs."
+      - run: echo "No CI checks required for these changes."

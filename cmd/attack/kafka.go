@@ -37,7 +37,7 @@ func NewKafkaAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "kafka <subcommand>",
-		Short: "Kafka attack related commands",
+		Short: "Inject faults into Kafka",
 	}
 
 	cmd.AddCommand(
@@ -46,7 +46,7 @@ func NewKafkaAttackCommand(uid *string) *cobra.Command {
 		NewKafkaIOCommand(dep, options),
 	)
 
-	cmd.PersistentFlags().StringVarP(&options.Topic, "topic", "T", "", "the topic to attack")
+	cmd.PersistentFlags().StringVarP(&options.Topic, "topic", "T", "", "Kafka topic to attack")
 	_ = cmd.MarkPersistentFlagRequired("topic")
 
 	return cmd
@@ -55,7 +55,7 @@ func NewKafkaAttackCommand(uid *string) *cobra.Command {
 func NewKafkaFillCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "fill [options]",
-		Short:             "Fill kafka cluster with messages",
+		Short:             "Fill a Kafka topic with messages",
 		ValidArgsFunction: cobra.NoFileCompletions,
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.KafkaFillAction
@@ -63,41 +63,41 @@ func NewKafkaFillCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka server")
-	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka server")
-	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "the username of kafka client")
-	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "the password of kafka client")
-	cmd.Flags().StringVarP(&options.AuthMechanism, "auth-mechanism", "a", "sasl/plain", "the authentication mechanism of kafka, supported value: sasl/plain, sasl/scram-sha-256, sasl/scram-sha-512")
-	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 4*1024, "the size of each message")
-	cmd.Flags().Uint64VarP(&options.MaxBytes, "max-bytes", "m", 1<<34, "the max bytes to fill")
-	cmd.Flags().StringVarP(&options.ReloadCommand, "reload-cmd", "r", "", "the command to reload kafka config")
+	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "Kafka broker host")
+	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "Kafka broker port")
+	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "SASL username, or empty to disable authentication")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "SASL password")
+	cmd.Flags().StringVarP(&options.AuthMechanism, "auth-mechanism", "a", "sasl/plain", "SASL mechanism: sasl/plain, sasl/scram-sha-256, or sasl/scram-sha-512")
+	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 4*1024, "Message payload size in bytes")
+	cmd.Flags().Uint64VarP(&options.MaxBytes, "max-bytes", "m", 1<<34, "Target total bytes to write")
+	cmd.Flags().StringVarP(&options.ReloadCommand, "reload-cmd", "r", "", "Shell command to reload Kafka configuration")
 	return cmd
 }
 
 func NewKafkaFloodCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "flood [options]",
-		Short:             "Flood kafka cluster with messages",
+		Short:             "Continuously send messages to a Kafka topic",
 		ValidArgsFunction: cobra.NoFileCompletions,
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.KafkaFloodAction
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(kafkaCommandFunc)).Run()
 		},
 	}
-	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka server")
-	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka server")
-	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "the username of kafka client")
-	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "the password of kafka client")
-	cmd.Flags().StringVarP(&options.AuthMechanism, "auth-mechanism", "a", "sasl/plain", "the authentication mechanism of kafka, supported value: sasl/plain, sasl/scram-sha-256, sasl/scram-sha-512")
-	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 1024, "the size of each message")
-	cmd.Flags().UintVarP(&options.Threads, "threads", "t", 100, "the numbers of worker threads")
+	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "Kafka broker host")
+	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "Kafka broker port")
+	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "SASL username, or empty to disable authentication")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "SASL password")
+	cmd.Flags().StringVarP(&options.AuthMechanism, "auth-mechanism", "a", "sasl/plain", "SASL mechanism: sasl/plain, sasl/scram-sha-256, or sasl/scram-sha-512")
+	cmd.Flags().UintVarP(&options.MessageSize, "size", "s", 1024, "Message payload size in bytes")
+	cmd.Flags().UintVarP(&options.Threads, "threads", "t", 100, "Number of concurrent message producers")
 	return cmd
 }
 
 func NewKafkaIOCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "io [options]",
-		Short:             "Make kafka cluster non-writable/non-readable",
+		Short:             "Remove read or write permissions from local Kafka topic files",
 		ValidArgsFunction: cobra.NoFileCompletions,
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.KafkaIOAction
@@ -105,14 +105,14 @@ func NewKafkaIOCommand(dep fx.Option, options *core.KafkaCommand) *cobra.Command
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "the host of kafka server")
-	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "the port of kafka server")
-	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "the username of kafka client")
-	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "the password of kafka client")
-	cmd.Flags().StringVarP(&options.AuthMechanism, "auth-mechanism", "a", "sasl/plain", "the authentication mechanism of kafka, supported value: sasl/plain, sasl/scram-sha-256, sasl/scram-sha-512")
-	cmd.Flags().StringVarP(&options.ConfigFile, "config", "c", "/etc/kafka/server.properties", "the path of server config")
-	cmd.Flags().BoolVarP(&options.NonReadable, "non-readable", "r", false, "make kafka cluster non-readable")
-	cmd.Flags().BoolVarP(&options.NonWritable, "non-writable", "w", false, "make kafka cluster non-writable")
+	cmd.Flags().StringVarP(&options.Host, "host", "H", "localhost", "Kafka broker host")
+	cmd.Flags().Uint16VarP(&options.Port, "port", "P", 9092, "Kafka broker port")
+	cmd.Flags().StringVarP(&options.Username, "username", "u", "", "SASL username, or empty to disable authentication")
+	cmd.Flags().StringVarP(&options.Password, "password", "p", "", "SASL password")
+	cmd.Flags().StringVarP(&options.AuthMechanism, "auth-mechanism", "a", "sasl/plain", "SASL mechanism: sasl/plain, sasl/scram-sha-256, or sasl/scram-sha-512")
+	cmd.Flags().StringVarP(&options.ConfigFile, "config", "c", "/etc/kafka/server.properties", "Path to the local Kafka server configuration file")
+	cmd.Flags().BoolVarP(&options.NonReadable, "non-readable", "r", false, "Remove read permissions from local topic files")
+	cmd.Flags().BoolVarP(&options.NonWritable, "non-writable", "w", false, "Remove write permissions from local topic files")
 	return cmd
 }
 

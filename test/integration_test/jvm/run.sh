@@ -15,6 +15,14 @@
 
 set -eu
 
+check_contains() {
+    if ! grep -Fq "$1" "$2"; then
+        echo "TEST FAILED: $2 DOES NOT CONTAIN '$1'"
+        cat "$2"
+        exit 1
+    fi
+}
+
 cur=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "$cur/../../../hack/dependency-versions.sh"
 cd $cur
