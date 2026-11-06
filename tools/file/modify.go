@@ -14,8 +14,8 @@
 package main
 
 import (
-	"fmt"
 	"os/exec"
+	"strconv"
 
 	"github.com/pingcap/errors"
 	"github.com/pingcap/log"
@@ -43,8 +43,7 @@ func NewFileModifyPrivilegeCommand() *cobra.Command {
 }
 
 func modifyFilePrivilege(fileName string, privilege uint32) error {
-	cmdStr := fmt.Sprintf("chmod %d %s", privilege, fileName)
-	cmd := exec.Command("bash", "-c", cmdStr)
+	cmd := exec.Command("chmod", strconv.FormatUint(uint64(privilege), 10), fileName)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Error(string(output), zap.Error(err))

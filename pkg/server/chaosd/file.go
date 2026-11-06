@@ -64,14 +64,14 @@ func (fileAttack) Attack(options core.AttackConfig, env Environment) (err error)
 }
 
 func (s *Server) createFile(attack *core.FileCommand, _ string) error {
-	var cmdStr string
+	var args []string
 	if len(attack.DirName) > 0 {
-		cmdStr = fmt.Sprintf("FileTool create --dir-name %s", attack.DirName)
+		args = []string{"create", "--dir-name", attack.DirName}
 	} else {
-		cmdStr = fmt.Sprintf("FileTool create --file-name %s", attack.FileName)
+		args = []string{"create", "--file-name", attack.FileName}
 	}
 
-	_, err := utils.ExecuteCmd(cmdStr)
+	_, err := utils.ExecuteCmdArgs("FileTool", args...)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -81,8 +81,7 @@ func (s *Server) createFile(attack *core.FileCommand, _ string) error {
 
 func (s *Server) modifyFilePrivilege(attack *core.FileCommand, _ string) error {
 	// get the privilege of file and save it, used for recover
-	cmdStr := "stat -c %a" + " " + attack.FileName
-	output, err := utils.ExecuteCmd(cmdStr)
+	output, err := utils.ExecuteCmdArgs("stat", "-c", "%a", attack.FileName)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -95,8 +94,7 @@ func (s *Server) modifyFilePrivilege(attack *core.FileCommand, _ string) error {
 	}
 
 	// modify the file privilege
-	cmdStr = fmt.Sprintf("FileTool modify --file-name %s --privilege %d", attack.FileName, attack.Privilege)
-	_, err = utils.ExecuteCmd(cmdStr)
+	_, err = utils.ExecuteCmdArgs("FileTool", "modify", "--file-name", attack.FileName, "--privilege", strconv.FormatUint(uint64(attack.Privilege), 10))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -123,8 +121,7 @@ func (s *Server) renameFile(attack *core.FileCommand, _ string) error {
 }
 
 func renameFile(source, dest string) error {
-	cmdStr := fmt.Sprintf("FileTool rename --old-name %s --new-name %s", source, dest)
-	_, err := utils.ExecuteCmd(cmdStr)
+	_, err := utils.ExecuteCmdArgs("FileTool", "rename", "--old-name", source, "--new-name", dest)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -135,14 +132,12 @@ func renameFile(source, dest string) error {
 func (s *Server) appendFile(attack *core.FileCommand, uid string) error {
 	// first backup the file
 	backupName := getBackupName(attack.FileName, uid)
-	cmdStr := fmt.Sprintf("FileTool copy --file-name %s --copy-file-name %s", attack.FileName, backupName)
-	_, err := utils.ExecuteCmd(cmdStr)
+	_, err := utils.ExecuteCmdArgs("FileTool", "copy", "--file-name", attack.FileName, "--copy-file-name", backupName)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	cmdStr = fmt.Sprintf("FileTool append --count %d --data %s --file-name %s", attack.Count, attack.Data, attack.FileName)
-	_, err = utils.ExecuteCmd(cmdStr)
+	_, err = utils.ExecuteCmdArgs("FileTool", "append", "--count", strconv.Itoa(attack.Count), "--data", attack.Data, "--file-name", attack.FileName)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -151,8 +146,7 @@ func (s *Server) appendFile(attack *core.FileCommand, uid string) error {
 }
 
 func (s *Server) replaceFile(attack *core.FileCommand, _ string) error {
-	cmdStr := fmt.Sprintf("FileTool replace --file-name %s --origin-string %s --dest-string %s --line %d", attack.FileName, attack.OriginStr, attack.DestStr, attack.Line)
-	_, err := utils.ExecuteCmd(cmdStr)
+	_, err := utils.ExecuteCmdArgs("FileTool", "replace", "--file-name", attack.FileName, "--origin-string", attack.OriginStr, "--dest-string", attack.DestStr, "--line", strconv.Itoa(attack.Line))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -204,8 +198,7 @@ func (s *Server) recoverCreateFile(attack *core.FileCommand) error {
 		fileName = attack.DirName
 	}
 
-	cmdStr := fmt.Sprintf("FileTool delete --file-name %s", fileName)
-	_, err := utils.ExecuteCmd(cmdStr)
+	_, err := utils.ExecuteCmdArgs("FileTool", "delete", "--file-name", fileName)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -214,8 +207,7 @@ func (s *Server) recoverCreateFile(attack *core.FileCommand) error {
 }
 
 func (s *Server) recoverModifyPrivilege(attack *core.FileCommand) error {
-	cmdStr := fmt.Sprintf("FileTool modify --file-name %s --privilege %d", attack.FileName, attack.OriginPrivilege)
-	_, err := utils.ExecuteCmd(cmdStr)
+	_, err := utils.ExecuteCmdArgs("FileTool", "modify", "--file-name", attack.FileName, "--privilege", strconv.Itoa(attack.OriginPrivilege))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -249,8 +241,7 @@ func (s *Server) recoverRenameFile(attack *core.FileCommand) error {
 
 func (s *Server) recoverAppendFile(attack *core.FileCommand, uid string) error {
 	backupName := getBackupName(attack.FileName, uid)
-	cmdStr := fmt.Sprintf("FileTool rename --old-name %s --new-name %s", backupName, attack.FileName)
-	_, err := utils.ExecuteCmd(cmdStr)
+	_, err := utils.ExecuteCmdArgs("FileTool", "rename", "--old-name", backupName, "--new-name", attack.FileName)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -263,8 +254,7 @@ func (s *Server) recoverReplaceFile(attack *core.FileCommand, _ string) error {
 	// For example:
 	//	 The origin content is "test text", and replace "test" with "text", the result is "text text".
 	//   After recover, the file content is "test test", not equal to the origin content.
-	cmdStr := fmt.Sprintf("FileTool replace --file-name %s --origin-string %s --dest-string %s --line %d", attack.FileName, attack.DestStr, attack.OriginStr, attack.Line)
-	_, err := utils.ExecuteCmd(cmdStr)
+	_, err := utils.ExecuteCmdArgs("FileTool", "replace", "--file-name", attack.FileName, "--origin-string", attack.DestStr, "--dest-string", attack.OriginStr, "--line", strconv.Itoa(attack.Line))
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -47,3 +47,19 @@ func ExecuteCmd(cmdStr string) (string, error) {
 
 	return string(output), nil
 }
+
+// ExecuteCmdArgs runs name with args without a shell, so each argument is passed unchanged.
+func ExecuteCmdArgs(name string, args ...string) (string, error) {
+	cmd := exec.Command(name, args...)
+	log.Info("execute cmd", zap.String("cmd", cmd.String()))
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Error(string(output), zap.Error(err))
+		return "", err
+	}
+	if len(output) > 0 {
+		log.Info("command output: "+string(output), zap.String("command", cmd.String()))
+	}
+
+	return string(output), nil
+}
