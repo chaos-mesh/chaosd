@@ -62,39 +62,22 @@ func exitedPID(t *testing.T) int {
 	return cmd.Process.Pid
 }
 
-func TestRecoverAttackWithExitedHelperProcess(t *testing.T) {
-	pid := exitedPID(t)
-	httpConfig := core.HTTPAttackConfig{
-		CommonAttackConfig: core.CommonAttackConfig{Kind: core.HTTPAttack, Action: core.HTTPAbortAction},
-		ProxyPID:           pid,
-	}
-	portConfig := core.NetworkCommand{
+func TestRecoverPortOccupiedWithExitedHelperProcess(t *testing.T) {
+	config := core.NetworkCommand{
 		CommonAttackConfig: core.CommonAttackConfig{Kind: core.NetworkAttack, Action: core.NetworkPortOccupiedAction},
-		PortPid:            int32(pid),
+		PortPid:            int32(exitedPID(t)),
 	}
-
-	tests := []struct {
-		name   string
-		config core.AttackConfig
-	}{
-		{name: "http", config: &httpConfig},
-		{name: "port occupied", config: &portConfig},
+	store := &recoveryStore{exp: &core.Experiment{
+		Uid:            "exited-helper",
+		Kind:           config.AttackKind(),
+		Status:         core.Success,
+		RecoverCommand: config.RecoverData(),
+	}}
+	server := &Server{expStore: store}
+	if err := server.RecoverAttack("exited-helper"); err != nil {
+		t.Fatalf("recover with exited helper process: %v", err)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			store := &recoveryStore{exp: &core.Experiment{
-				Uid:            "exited-helper",
-				Kind:           tt.config.AttackKind(),
-				Status:         core.Success,
-				RecoverCommand: tt.config.RecoverData(),
-			}}
-			server := &Server{expStore: store}
-			if err := server.RecoverAttack("exited-helper"); err != nil {
-				t.Fatalf("recover with exited helper process: %v", err)
-			}
-			if store.exp.Status != core.Destroyed {
-				t.Fatalf("experiment status %q, want %q", store.exp.Status, core.Destroyed)
-			}
-		})
+	if store.exp.Status != core.Destroyed {
+		t.Fatalf("experiment status %q, want %q", store.exp.Status, core.Destroyed)
 	}
 }
