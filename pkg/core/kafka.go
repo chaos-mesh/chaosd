@@ -25,17 +25,17 @@ type KafkaAttackAction string
 const (
 	// Kafka actions
 	KafkaFillAction  KafkaAttackAction = "fill"
-	KafkaFloodAction                   = "flood"
-	KafkaIOAction                      = "io"
+	KafkaFloodAction KafkaAttackAction = "flood"
+	KafkaIOAction    KafkaAttackAction = "io"
 )
 
 type KafkaAuthMechanism string
 
 const (
 	SaslPlain          KafkaAuthMechanism = "sasl/plain"
-	SaslScream256                         = "sasl/scram-sha-256"
-	SaslScram512                          = "sasl/scram-sha-512"
-	AuthMechanismEmpty                    = ""
+	SaslScream256      KafkaAuthMechanism = "sasl/scram-sha-256"
+	SaslScram512       KafkaAuthMechanism = "sasl/scram-sha-512"
+	AuthMechanismEmpty KafkaAuthMechanism = ""
 )
 
 var _ AttackConfig = &KafkaCommand{}
