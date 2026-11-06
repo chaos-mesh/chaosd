@@ -211,7 +211,7 @@ func (c clockAttack) Attack(options core.AttackConfig, env Environment) error {
 	return err
 }
 
-func (c clockAttack) Recover(exp core.Experiment, env Environment) error {
+func (c clockAttack) Recover(exp core.Experiment, _ Environment) error {
 	options, err := exp.GetRequestCommand()
 	if err != nil {
 		return err
