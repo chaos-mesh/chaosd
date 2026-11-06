@@ -34,8 +34,9 @@ func (s *recoveryStore) FindByUid(context.Context, string) (*core.Experiment, er
 	return s.exp, nil
 }
 
-func (s *recoveryStore) Update(context.Context, string, string, string, string) error {
+func (s *recoveryStore) Update(_ context.Context, _, status, _, _ string) error {
 	s.updated = true
+	s.exp.Status = status
 	return nil
 }
 
@@ -74,17 +75,16 @@ func TestRecoverAttackWithExitedHelperProcess(t *testing.T) {
 
 	tests := []struct {
 		name   string
-		kind   string
 		config core.AttackConfig
 	}{
-		{name: "http", kind: core.HTTPAttack, config: &httpConfig},
-		{name: "port occupied", kind: core.NetworkAttack, config: &portConfig},
+		{name: "http", config: &httpConfig},
+		{name: "port occupied", config: &portConfig},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			store := &recoveryStore{exp: &core.Experiment{
 				Uid:            "exited-helper",
-				Kind:           tt.kind,
+				Kind:           tt.config.AttackKind(),
 				Status:         core.Success,
 				RecoverCommand: tt.config.RecoverData(),
 			}}
@@ -92,8 +92,8 @@ func TestRecoverAttackWithExitedHelperProcess(t *testing.T) {
 			if err := server.RecoverAttack("exited-helper"); err != nil {
 				t.Fatalf("recover with exited helper process: %v", err)
 			}
-			if !store.updated {
-				t.Fatal("recovery did not mark the experiment as destroyed")
+			if store.exp.Status != core.Destroyed {
+				t.Fatalf("experiment status %q, want %q", store.exp.Status, core.Destroyed)
 			}
 		})
 	}
