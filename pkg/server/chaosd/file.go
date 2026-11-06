@@ -87,7 +87,7 @@ func (s *Server) modifyFilePrivilege(attack *core.FileCommand, _ string) error {
 		return errors.WithStack(err)
 	}
 
-	fileModeStr := strings.Replace(output, "\n", "", -1)
+	fileModeStr := strings.ReplaceAll(output, "\n", "")
 	attack.OriginPrivilege, err = strconv.Atoi(string(fileModeStr))
 	if err != nil {
 		log.Error("transform string to int failed", zap.String("string", fileModeStr), zap.Error(err))

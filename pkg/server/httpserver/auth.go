@@ -57,7 +57,8 @@ func (s *HttpServer) startHTTPSServer() (err error) {
 	e := gin.Default()
 	e.Use(utils.MWHandleErrors())
 
-	if mode == MTLSServer {
+	switch mode {
+	case MTLSServer:
 		log.Info("starting HTTPS server with Client Auth", zap.String("address", httpsServerAddr))
 
 		caCert, ioErr := os.ReadFile(s.conf.SSLClientCAFile)
@@ -84,7 +85,7 @@ func (s *HttpServer) startHTTPSServer() (err error) {
 		}
 
 		err = server.ListenAndServeTLS(s.conf.SSLCertFile, s.conf.SSLKeyFile)
-	} else if mode == TLSServer {
+	case TLSServer:
 		log.Info("starting HTTPS server", zap.String("address", httpsServerAddr))
 		s.handler(e)
 		err = e.RunTLS(httpsServerAddr, s.conf.SSLCertFile, s.conf.SSLKeyFile)

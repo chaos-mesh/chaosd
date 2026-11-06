@@ -37,7 +37,7 @@ func NewNetworkAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "network <subcommand>",
-		Short: "Network attack related commands",
+		Short: "Inject network faults",
 	}
 
 	cmd.AddCommand(
@@ -59,7 +59,7 @@ func NewNetworkAttackCommand(uid *string) *cobra.Command {
 func NewNetworkDelayCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delay",
-		Short: "delay network",
+		Short: "Delay outgoing network packets",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkDelayAction
@@ -69,22 +69,22 @@ func NewNetworkDelayCommand(dep fx.Option, options *core.NetworkCommand) *cobra.
 	}
 
 	cmd.Flags().StringVarP(&options.Latency, "latency", "l", "",
-		"delay egress time, time units: ns, us (or µs), ms, s, m, h.")
+		"Outgoing packet delay, e.g. 100ms or 1s (required)")
 	cmd.Flags().StringVarP(&options.Jitter, "jitter", "j", "",
-		"jitter time, time units: ns, us (or µs), ms, s, m, h.")
-	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
-	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+		"Variation in packet delay, e.g. 10ms")
+	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "Delay correlation as a percentage, from 0 to 100")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "Network interface to affect (required)")
 	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
-		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
-			"It can only be used in conjunction with -p tcp or -p udp")
+		"Filter outgoing traffic by destination ports, e.g. 80,8001:8010; "+
+			"requires --protocol tcp or udp")
 	cmd.Flags().StringVarP(&options.SourcePort, "source-port", "s", "",
-		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
-			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
-	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+		"Filter outgoing traffic by source ports, e.g. 80,8001:8010; "+
+			"requires --protocol tcp or udp")
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "Filter traffic by comma-separated IP addresses or CIDR ranges")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "Filter traffic by comma-separated hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
-		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	cmd.Flags().StringVarP(&options.AcceptTCPFlags, "accept-tcp-flags", "", "", "only the packet which match the tcp flag can be accepted, others will be dropped. only set when the protocol is tcp.")
+		"Filter traffic by IP protocol: tcp, udp, icmp, or all")
+	cmd.Flags().StringVarP(&options.AcceptTCPFlags, "accept-tcp-flags", "", "", "Currently unused for delay; requires --protocol tcp if set")
 
 	return cmd
 }
@@ -92,7 +92,7 @@ func NewNetworkDelayCommand(dep fx.Option, options *core.NetworkCommand) *cobra.
 func NewNetworkLossCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "loss",
-		Short: "loss network packet",
+		Short: "Drop outgoing network packets",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkLossAction
@@ -101,19 +101,19 @@ func NewNetworkLossCommand(dep fx.Option, options *core.NetworkCommand) *cobra.C
 		},
 	}
 
-	cmd.Flags().StringVar(&options.Percent, "percent", "1", "percentage of packets to drop (10 is 10%)")
-	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
-	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVar(&options.Percent, "percent", "1", "Percentage of packets to drop, from 0 to 100")
+	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "Packet loss correlation as a percentage, from 0 to 100")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "Network interface to affect (required)")
 	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
-		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
-			"It can only be used in conjunction with -p tcp or -p udp")
+		"Filter outgoing traffic by destination ports, e.g. 80,8001:8010; "+
+			"requires --protocol tcp or udp")
 	cmd.Flags().StringVarP(&options.SourcePort, "source-port", "s", "",
-		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
-			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
-	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+		"Filter outgoing traffic by source ports, e.g. 80,8001:8010; "+
+			"requires --protocol tcp or udp")
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "Filter traffic by comma-separated IP addresses or CIDR ranges")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "Filter traffic by comma-separated hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
-		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+		"Filter traffic by IP protocol: tcp, udp, icmp, or all")
 
 	return cmd
 }
@@ -121,7 +121,7 @@ func NewNetworkLossCommand(dep fx.Option, options *core.NetworkCommand) *cobra.C
 func NewNetworkCorruptCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "corrupt",
-		Short: "corrupt network packet",
+		Short: "Corrupt outgoing network packets",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkCorruptAction
@@ -130,19 +130,19 @@ func NewNetworkCorruptCommand(dep fx.Option, options *core.NetworkCommand) *cobr
 		},
 	}
 
-	cmd.Flags().StringVar(&options.Percent, "percent", "1", "percentage of packets to corrupt (10 is 10%)")
-	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
-	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVar(&options.Percent, "percent", "1", "Percentage of packets to corrupt, from 0 to 100")
+	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "Packet corruption correlation as a percentage, from 0 to 100")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "Network interface to affect (required)")
 	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
-		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
-			"It can only be used in conjunction with -p tcp or -p udp")
+		"Filter outgoing traffic by destination ports, e.g. 80,8001:8010; "+
+			"requires --protocol tcp or udp")
 	cmd.Flags().StringVarP(&options.SourcePort, "source-port", "s", "",
-		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
-			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
-	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+		"Filter outgoing traffic by source ports, e.g. 80,8001:8010; "+
+			"requires --protocol tcp or udp")
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "Filter traffic by comma-separated IP addresses or CIDR ranges")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "Filter traffic by comma-separated hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
-		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+		"Filter traffic by IP protocol: tcp, udp, icmp, or all")
 
 	return cmd
 }
@@ -150,7 +150,7 @@ func NewNetworkCorruptCommand(dep fx.Option, options *core.NetworkCommand) *cobr
 func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "duplicate",
-		Short: "duplicate network packet",
+		Short: "Duplicate outgoing network packets",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkDuplicateAction
@@ -159,19 +159,19 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 		},
 	}
 
-	cmd.Flags().StringVar(&options.Percent, "percent", "1", "percentage of packets to duplicate (10 is 10%)")
-	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "correlation is percentage (10 is 10%)")
-	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVar(&options.Percent, "percent", "1", "Percentage of packets to duplicate, from 0 to 100")
+	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "Packet duplication correlation as a percentage, from 0 to 100")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "Network interface to affect (required)")
 	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
-		"only impact egress traffic to these destination ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
-			"It can only be used in conjunction with -p tcp or -p udp")
+		"Filter outgoing traffic by destination ports, e.g. 80,8001:8010; "+
+			"requires --protocol tcp or udp")
 	cmd.Flags().StringVarP(&options.SourcePort, "source-port", "s", "",
-		"only impact egress traffic from these source ports, use a ',' to separate or to indicate the range, such as 80, 8001:8010. "+
-			"It can only be used in conjunction with -p tcp or -p udp")
-	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
-	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+		"Filter outgoing traffic by source ports, e.g. 80,8001:8010; "+
+			"requires --protocol tcp or udp")
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "Filter traffic by comma-separated IP addresses or CIDR ranges")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "Filter traffic by comma-separated hostnames")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
-		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
+		"Filter traffic by IP protocol: tcp, udp, icmp, or all")
 
 	return cmd
 }
@@ -179,7 +179,7 @@ func NetworkDuplicateCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 func NetworkPartitionCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "partition",
-		Short: "partition",
+		Short: "Block network traffic to or from selected destinations",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkPartitionAction
@@ -188,13 +188,13 @@ func NetworkPartitionCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
-	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
-	cmd.Flags().StringVarP(&options.Direction, "direction", "", "both", "specifies the partition direction, values can be 'to', 'from' or 'both'. 'from' means packets coming from the 'IPAddress' or 'Hostname' and going to your server, 'to' means packets originating from your server and going to the 'IPAddress' or 'Hostname'.")
-	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "Filter traffic by comma-separated IP addresses or CIDR ranges")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "Filter traffic by comma-separated hostnames")
+	cmd.Flags().StringVarP(&options.Direction, "direction", "", "both", "Choose which traffic to block: to selected destinations, from them, or both")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "Network interface to affect (required)")
 	cmd.Flags().StringVarP(&options.IPProtocol, "protocol", "p", "",
-		"only impact traffic using this IP protocol, supported: tcp, udp, icmp, all")
-	cmd.Flags().StringVarP(&options.AcceptTCPFlags, "accept-tcp-flags", "", "", "only the packet which match the tcp flag can be accepted, others will be dropped. only set when the protocol is tcp.")
+		"Filter traffic by IP protocol: tcp, udp, icmp, or all")
+	cmd.Flags().StringVarP(&options.AcceptTCPFlags, "accept-tcp-flags", "", "", "Allow TCP packets matching an iptables --tcp-flags expression, e.g. \"SYN,ACK SYN\"; requires --protocol tcp")
 
 	return cmd
 }
@@ -202,7 +202,7 @@ func NetworkPartitionCommand(dep fx.Option, options *core.NetworkCommand) *cobra
 func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dns",
-		Short: "attack DNS server or map specified host to specified IP",
+		Short: "Change DNS servers and optionally override hostname resolution",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkDNSAction
@@ -212,9 +212,9 @@ func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 	}
 
 	cmd.Flags().StringVarP(&options.DNSServer, "dns-server", "", "123.123.123.123",
-		"update the DNS server in /etc/resolv.conf with this value")
-	cmd.Flags().StringVarP(&options.DNSDomainName, "dns-domain-name", "d", "", "map this host to specified IP")
-	cmd.Flags().StringVarP(&options.DNSIp, "dns-ip", "i", "", "map specified host to this IP address")
+		"DNS server address in /etc/resolv.conf")
+	cmd.Flags().StringVarP(&options.DNSDomainName, "dns-domain-name", "d", "", "Hostname to override in /etc/hosts; requires --dns-ip")
+	cmd.Flags().StringVarP(&options.DNSIp, "dns-ip", "i", "", "IP address for --dns-domain-name in /etc/hosts")
 
 	return cmd
 }
@@ -222,7 +222,7 @@ func NetworkDNSCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 func NewNetworkBandwidthCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "bandwidth",
-		Short: "limit network bandwidth",
+		Short: "Limit outgoing network bandwidth",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.NetworkBandwidthAction
@@ -231,14 +231,14 @@ func NewNetworkBandwidthCommand(dep fx.Option, options *core.NetworkCommand) *co
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Rate, "rate", "r", "", "the speed knob, allows bps, kbps, mbps, gbps, tbps unit. bps means bytes per second")
-	cmd.Flags().Uint32VarP(&options.Limit, "limit", "l", 0, "the number of bytes that can be queued waiting for tokens to become available")
-	cmd.Flags().Uint32VarP(&options.Buffer, "buffer", "b", 0, "the maximum amount of bytes that tokens can be available for instantaneously")
-	cmd.Flags().Uint64VarP(options.Peakrate, "peakrate", "", 0, "the maximum depletion rate of the bucket")
-	cmd.Flags().Uint32VarP(options.Minburst, "minburst", "m", 0, "specifies the size of the peakrate bucket")
-	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
-	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "only impact egress traffic to these IP addresses")
-	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "only impact traffic to these hostnames")
+	cmd.Flags().StringVarP(&options.Rate, "rate", "r", "", "Bandwidth limit in bytes per second with a bps, kbps, mbps, gbps, or tbps suffix (required)")
+	cmd.Flags().Uint32VarP(&options.Limit, "limit", "l", 0, "Maximum queued data in bytes (required, greater than 0)")
+	cmd.Flags().Uint32VarP(&options.Buffer, "buffer", "b", 0, "Maximum burst size in bytes (required, greater than 0)")
+	cmd.Flags().Uint64VarP(options.Peakrate, "peakrate", "", 0, "Optional peak transmission rate in bits per second; use with --minburst")
+	cmd.Flags().Uint32VarP(options.Minburst, "minburst", "m", 0, "Peak-rate burst size in bytes; use with --peakrate")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "Network interface to affect")
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "Filter traffic by comma-separated IP addresses or CIDR ranges")
+	cmd.Flags().StringVarP(&options.Hostname, "hostname", "H", "", "Filter traffic by comma-separated hostnames")
 
 	return cmd
 }
@@ -259,7 +259,7 @@ func commonNetworkAttackFunc(options *core.NetworkCommand, chaos *chaosd.Server)
 func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "port",
-		Short: "attack network port",
+		Short: "Occupy a TCP port with an HTTP server",
 
 		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.NetworkPortOccupiedAction
@@ -268,14 +268,14 @@ func NewNetworkPortOccupiedCommand(dep fx.Option, options *core.NetworkCommand) 
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "this specified port is to occupied")
+	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "TCP port to occupy (required)")
 	return cmd
 }
 
 func NewNetworkFloodCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "flood",
-		Short: "generate a mount of network traffic by using iperf client",
+		Short: "Generate UDP traffic with an iperf client",
 
 		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.NetworkFloodAction
@@ -284,11 +284,11 @@ func NewNetworkFloodCommand(dep fx.Option, options *core.NetworkCommand) *cobra.
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Rate, "rate", "r", "", "the speed of network traffic, allows bps, kbps, mbps, gbps, tbps unit. bps means bytes per second")
-	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "generate traffic to this IP address")
-	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "generate traffic to this port on the IP address")
-	cmd.Flags().Int32VarP(&options.Parallel, "parallel", "", 1, "number of iperf parallel client threads to run")
-	cmd.Flags().StringVarP(&options.Duration, "duration", "", "99999999", "number of seconds to run the iperf test")
+	cmd.Flags().StringVarP(&options.Rate, "rate", "r", "", "UDP traffic rate using iperf syntax, e.g. 10M for 10 Mbit/s (required)")
+	cmd.Flags().StringVarP(&options.IPAddress, "ip", "i", "", "Destination iperf server IP address (required)")
+	cmd.Flags().StringVarP(&options.Port, "port", "p", "", "Destination iperf server port (required)")
+	cmd.Flags().Int32VarP(&options.Parallel, "parallel", "", 1, "Number of parallel iperf client streams")
+	cmd.Flags().StringVarP(&options.Duration, "duration", "", "99999999", "How long to generate traffic, in seconds")
 
 	return cmd
 }
@@ -296,7 +296,7 @@ func NewNetworkFloodCommand(dep fx.Option, options *core.NetworkCommand) *cobra.
 func NewNICDownCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "down",
-		Short: "down network interface card",
+		Short: "Bring a network interface down",
 
 		Run: func(_ *cobra.Command, _ []string) {
 			options.Action = core.NetworkNICDownAction
@@ -305,7 +305,7 @@ func NewNICDownCommand(dep fx.Option, options *core.NetworkCommand) *cobra.Comma
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "the network interface to impact")
+	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "Network interface to affect (required)")
 	SetScheduleFlags(cmd, &options.SchedulerConfig)
 	return cmd
 }

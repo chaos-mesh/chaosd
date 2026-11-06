@@ -350,7 +350,7 @@ func (s *Server) applyFlood(attack *core.NetworkCommand) error {
 
 	// Build will set SysProcAttr.Pdeathsig = syscall.SIGTERM, and so iperf will exit while chaosd exit
 	// so reset it here
-	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
 
 	zapLogger, err := zap.NewDevelopment()
 	if err != nil {
@@ -442,6 +442,9 @@ func (s *Server) recoverTC(uid string, device string) error {
 	}
 
 	tcRules, err := s.tcRule.FindByDevice(context.Background(), device)
+	if err != nil {
+		return perrors.WithStack(err)
+	}
 
 	tcs, err := core.TCRuleList(tcRules).ToTCs()
 	if err != nil {
@@ -499,7 +502,7 @@ func (s *Server) applyPortOccupied(attack *core.NetworkCommand) error {
 	args := fmt.Sprintf("-p=%s", attack.Port)
 	cmd := bpm.DefaultProcessBuilder("PortOccupyTool", args).Build(context.Background())
 
-	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
 	zapLogger, err := zap.NewDevelopment()
 	if err != nil {
 		return err

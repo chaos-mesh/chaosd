@@ -37,15 +37,15 @@ func NewUserDefinedCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "user-defined <subcommand>",
-		Short: "user defined attack related commands",
+		Short: "Run custom attack and recovery commands",
 		Run: func(*cobra.Command, []string) {
 			options.CompleteDefaults()
 			utils.FxNewAppWithoutLog(dep, fx.Invoke(userDefinedAttackFunc)).Run()
 		},
 	}
 
-	cmd.Flags().StringVarP(&options.AttackCmd, "attack-cmd", "a", "", "the command to be executed when attack")
-	cmd.Flags().StringVarP(&options.RecoverCmd, "recover-cmd", "r", "", "the command to be executed when recover")
+	cmd.Flags().StringVarP(&options.AttackCmd, "attack-cmd", "a", "", "Bash command to run for the attack (required)")
+	cmd.Flags().StringVarP(&options.RecoverCmd, "recover-cmd", "r", "", "Bash command to run on recovery (required)")
 
 	return cmd
 }

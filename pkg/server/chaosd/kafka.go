@@ -206,7 +206,7 @@ func attackKafkaFill(ctx context.Context, attack *core.KafkaCommand) (err error)
 				newWritten := humanize.Bytes(bytes)
 				if newWritten != written {
 					written = newWritten
-					log.Info(fmt.Sprintf("write %s in %s", written, time.Now().Sub(start)))
+					log.Info(fmt.Sprintf("write %s in %s", written, time.Since(start)))
 				}
 				if bytes >= attack.MaxBytes {
 					return nil
@@ -275,7 +275,7 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error
 	msg := make([]byte, attack.MessageSize)
 	wg := new(sync.WaitGroup)
 	for i := 0; i < int(attack.Threads); i++ {
-		logger := log.With(zap.String("thread", fmt.Sprintf("thread-%d", i)))
+		logger := log.L().With(zap.String("thread", fmt.Sprintf("thread-%d", i)))
 		wg.Go(func() {
 			conn, err := dialPartition(ctx, attack, 0)
 			if err != nil {
@@ -291,7 +291,7 @@ func attackKafkaFlood(ctx context.Context, attack *core.KafkaCommand) (err error
 					start := time.Now()
 					succeeded := 0
 					failed := 0
-					for time.Now().Sub(start) < time.Second {
+					for time.Since(start) < time.Second {
 						_, err = conn.WriteMessages(client.Message{Value: msg})
 						if err != nil {
 							failed++

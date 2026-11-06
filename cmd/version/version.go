@@ -22,7 +22,7 @@ import (
 func NewVersionCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
-		Short: "Prints the version of chaosd",
+		Short: "Print the chaosd version",
 		Run:   versionCommandFunc,
 	}
 }

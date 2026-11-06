@@ -22,11 +22,11 @@ import (
 func NewAttackCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "attack <subcommand>",
-		Short: "Attack related commands",
+		Short: "Inject faults into the host or its services",
 	}
 
 	var uid string
-	cmd.PersistentFlags().StringVarP(&uid, "uid", "", "", "the experiment ID")
+	cmd.PersistentFlags().StringVarP(&uid, "uid", "", "", "Experiment UID; generated automatically if omitted")
 
 	cmd.AddCommand(
 		NewProcessAttackCommand(&uid),
@@ -49,5 +49,5 @@ func NewAttackCommand() *cobra.Command {
 
 func SetScheduleFlags(cmd *cobra.Command, conf *core.SchedulerConfig) {
 	cmd.Flags().StringVar(&conf.Duration, "duration", "",
-		`Work duration of attacks.A duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix, such as "300ms", "1.5h" or "2h45m".Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
+		"Fault duration, e.g. 30s or 5m")
 }

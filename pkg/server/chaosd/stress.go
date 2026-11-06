@@ -47,14 +47,15 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 	stressors := &v1alpha1.Stressors{}
 	var stressorTool string
 
-	if attack.Action == core.StressCPUAction {
+	switch attack.Action {
+	case core.StressCPUAction:
 		stressorTool = CPUSTRESSORTOOL
 		stressors.CPUStressor = &v1alpha1.CPUStressor{
 			Workers: attack.Workers,
 			Load:    &attack.Load,
 			Options: attack.Options,
 		}
-	} else if attack.Action == core.StressMemAction {
+	case core.StressMemAction:
 		stressorTool = MEMORYSTRESSORTOOL
 		stressors.MemoryStressor = &v1alpha1.MemoryStressor{
 			Workers: attack.Workers,
@@ -64,12 +65,13 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 	}
 
 	var stressorsStr string
-	if attack.Action == core.StressCPUAction {
+	switch attack.Action {
+	case core.StressCPUAction:
 		stressorsStr, _, err = stressors.Normalize()
 		if err != nil {
 			return
 		}
-	} else if attack.Action == core.StressMemAction {
+	case core.StressMemAction:
 		_, stressorsStr, err = stressors.Normalize()
 		if err != nil {
 			return
@@ -88,7 +90,7 @@ func (stressAttack) Attack(options core.AttackConfig, _ Environment) (err error)
 
 	// Build will set SysProcAttr.Pdeathsig = syscall.SIGTERM, and so stress-ng will exit while chaosd exit
 	// so reset it here
-	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{}
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
 
 	zapLogger, err := zap.NewDevelopment()
 	if err != nil {

@@ -20,6 +20,7 @@ import (
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -48,12 +49,14 @@ func CreateGrpcConnection(ctx context.Context, c client.Client, pod *v1.Pod, por
 		return nil, err
 	}
 
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", node.Status.Addresses[0].Address, port),
-		grpc.WithInsecure(),
+	conn, err := grpc.NewClient(fmt.Sprintf("passthrough:///%s:%d", node.Status.Addresses[0].Address, port),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithLocalDNSResolution(),
 		grpc.WithUnaryInterceptor(TimeoutClientInterceptor))
 	if err != nil {
 		return nil, err
 	}
+	conn.Connect()
 	return conn, nil
 }
 

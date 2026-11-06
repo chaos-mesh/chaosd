@@ -196,7 +196,7 @@ func (j *JVMCommand) Validate() error {
 			return errors.New("class not provided")
 		}
 
-		if len(j.JVMClassMethodSpec.Method) == 0 {
+		if len(j.Method) == 0 {
 			return errors.New("method not provided")
 		}
 	case JVMRuleFileAction:

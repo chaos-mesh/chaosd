@@ -1,0 +1,30 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - govet
+    - revive
+    - staticcheck
+  settings:
+    revive:
+      enable-default-rules: true
+      severity: error
+      rules:
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
+  exclusions:
+    generated: disable
+
+formatters:
+  enable:
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/chaos-mesh/chaosd
+  exclusions:
+    generated: disable
+

@@ -37,7 +37,7 @@ func NewHostAttackCommand(uid *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "host <subcommand>",
-		Short: "Host attack related commands",
+		Short: "Shut down or reboot the host",
 	}
 
 	cmd.AddCommand(NewHostShutdownCommand(dep, options))
@@ -49,7 +49,7 @@ func NewHostAttackCommand(uid *string) *cobra.Command {
 func NewHostShutdownCommand(dep fx.Option, options *core.HostCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shutdown",
-		Short: "shutdowns system, this action will trigger shutdown of the host machine",
+		Short: "Request a host shutdown",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.HostShutdownAction
@@ -63,7 +63,7 @@ func NewHostShutdownCommand(dep fx.Option, options *core.HostCommand) *cobra.Com
 func NewHostRebootCommand(dep fx.Option, options *core.HostCommand) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "reboot",
-		Short: "reboot system, this action will trigger reboot of the host machine",
+		Short: "Request a host reboot",
 
 		Run: func(*cobra.Command, []string) {
 			options.Action = core.HostRebootAction
