@@ -55,7 +55,7 @@ func appendFile(fileName, data string, count int) error {
 	}()
 
 	for range count {
-		if _, err := f.Write([]byte(fmt.Sprintf("%s\n", data))); err != nil {
+		if _, err := fmt.Fprintf(f, "%s\n", data); err != nil {
 			return errors.WithStack(err)
 		}
 	}

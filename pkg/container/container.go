@@ -22,7 +22,7 @@ import (
 	"syscall"
 
 	"github.com/containerd/containerd"
-	dockertypes "github.com/docker/docker/api/types"
+	dockercontainer "github.com/docker/docker/api/types/container"
 	dockerclient "github.com/moby/moby/client"
 
 	"github.com/chaos-mesh/chaosd/pkg/config"
@@ -78,7 +78,7 @@ func NewCRIClient(conf *config.Config) (CRIClient, error) {
 
 // DockerClientInterface represents the DockerClient, it's used to simply unit test
 type DockerClientInterface interface {
-	ContainerInspect(ctx context.Context, containerID string) (dockertypes.ContainerJSON, error)
+	ContainerInspect(ctx context.Context, containerID string) (dockercontainer.InspectResponse, error)
 	ContainerKill(ctx context.Context, containerID string, signal string) error
 }
 
@@ -169,12 +169,12 @@ type mobyDockerClient struct {
 	client *dockerclient.Client
 }
 
-func (c *mobyDockerClient) ContainerInspect(ctx context.Context, id string) (dockertypes.ContainerJSON, error) {
+func (c *mobyDockerClient) ContainerInspect(ctx context.Context, id string) (dockercontainer.InspectResponse, error) {
 	result, err := c.client.ContainerInspect(ctx, id, dockerclient.ContainerInspectOptions{})
 	if err != nil {
-		return dockertypes.ContainerJSON{}, err
+		return dockercontainer.InspectResponse{}, err
 	}
-	var container dockertypes.ContainerJSON
+	var container dockercontainer.InspectResponse
 	err = json.NewDecoder(bytes.NewReader(result.Raw)).Decode(&container)
 	return container, err
 }

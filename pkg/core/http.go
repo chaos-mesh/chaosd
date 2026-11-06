@@ -94,7 +94,7 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 		return nil, err
 	}
 	logger := zapr.NewLogger(zapLogger).WithName("HTTP Attack")
-	switch o.CommonAttackConfig.Action {
+	switch o.Action {
 	case HTTPAbortAction, HTTPDelayAction:
 		switch o.Target {
 		case string(TargetRequest), string(TargetResponse):
@@ -125,7 +125,7 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 		}
 		abort := o.Action == HTTPAbortAction
 		rule.Actions.Abort = &abort
-		if o.CommonAttackConfig.Action == HTTPDelayAction {
+		if o.Action == HTTPDelayAction {
 			rule.Actions.Abort = nil
 			_, err := time.ParseDuration(o.Delay)
 			if err != nil {
@@ -160,9 +160,9 @@ func (o *HTTPAttackOption) PreProcess() (*HTTPAttackConfig, error) {
 			return nil, errors.New("URL is required")
 		}
 	default:
-		return nil, errors.Errorf("unsupported action: %s", o.CommonAttackConfig.Action)
+		return nil, errors.Errorf("unsupported action: %s", o.Action)
 	}
-	if len(c.ProxyPorts) == 0 && o.CommonAttackConfig.Action != HTTPRequestAction {
+	if len(c.ProxyPorts) == 0 && o.Action != HTTPRequestAction {
 		return nil, errors.New("proxy_ports is not an option, you must offer it")
 	}
 

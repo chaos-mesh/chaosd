@@ -37,7 +37,7 @@ The file helper shares the root module and dependency versions, and is covered b
 
 See [README.md](README.md#contributing) for build and check targets.
 Read `go.mod` and `.github/workflows/ci.yml` before selecting a toolchain.
-SQLite requires cgo and a C compiler. The license checker requires `python3` in `PATH`.
+SQLite requires cgo and a C compiler.
 
 `make check` formats files in place. Inspect the diff afterward, as CI rejects formatting drift.
 Use `make fmt` for formatting. The tidy check reports drift without rewriting files. Use `go mod tidy` to apply module changes.

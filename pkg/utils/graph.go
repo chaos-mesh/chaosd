@@ -57,11 +57,7 @@ func (g *Graph) Flatten(source uint32) []uint32 {
 	current := g.head[source]
 
 	var flatTree []uint32
-	for {
-		if current == nil {
-			break
-		}
-
+	for current != nil {
 		children := g.Flatten(current.Target)
 		flatTree = append(flatTree, current.Target)
 		flatTree = append(flatTree, children...)
