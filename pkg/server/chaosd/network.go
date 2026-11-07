@@ -542,6 +542,11 @@ func (s *Server) recoverPortOccupied(attack *core.NetworkCommand, _ string) erro
 
 	proc, err := process.NewProcess(attack.PortPid)
 	if err != nil {
+		if errors.Is(err, process.ErrorProcessNotRunning) || errors.Is(err, fs.ErrNotExist) {
+			log.Warn("Failed to get PortOccupyTool process", zap.Error(err))
+			return nil
+		}
+
 		return err
 	}
 
