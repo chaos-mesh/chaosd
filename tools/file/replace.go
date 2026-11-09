@@ -45,14 +45,12 @@ func NewFileReplaceCommand() *cobra.Command {
 }
 
 func replaceFile(file, originStr, destStr string, line int) error {
-	var cmdStr string
-	if line == 0 {
-		cmdStr = fmt.Sprintf("sed -i 's/%s/%s/g' %s", originStr, destStr, file)
-	} else {
-		cmdStr = fmt.Sprintf("sed -i '%d s/%s/%s/g' %s", line, originStr, destStr, file)
+	script := fmt.Sprintf("s/%s/%s/g", originStr, destStr)
+	if line != 0 {
+		script = fmt.Sprintf("%d %s", line, script)
 	}
 
-	cmd := exec.Command("bash", "-c", cmdStr)
+	cmd := exec.Command("sed", "-i", script, file)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Error(string(output), zap.Error(err))
