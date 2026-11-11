@@ -17,7 +17,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/pingcap/log"
@@ -148,14 +147,11 @@ func (diskServerAttack) Recover(exp core.Experiment, env Environment) error {
 	if err != nil {
 		return err
 	}
-	config := *attackConfig.(*core.DiskAttackConfig)
-
-	switch config.Action {
-	case core.DiskFillAction, core.DiskWritePayloadAction:
-		err = os.Remove(config.Path)
-		if err != nil {
-			log.Warn(fmt.Sprintf("recover disk: remove %s failed", config.Path), zap.Error(err))
-		}
+	config := attackConfig.(*core.DiskAttackConfig)
+	// Remove the file before closing the command pool. A failed removal keeps the experiment
+	// recoverable, and a later retry must not close the pool a second time.
+	if err := removeDiskPayloadFile(config); err != nil {
+		return err
 	}
 
 	if cmdPool, ok := env.Chaos.CmdPools[exp.Uid]; ok {
