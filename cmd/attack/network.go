@@ -73,6 +73,12 @@ func NewNetworkDelayCommand(dep fx.Option, options *core.NetworkCommand) *cobra.
 	cmd.Flags().StringVarP(&options.Jitter, "jitter", "j", "",
 		"Variation in packet delay, e.g. 10ms")
 	cmd.Flags().StringVarP(&options.Correlation, "correlation", "c", "0", "Delay correlation as a percentage, from 0 to 100")
+	cmd.Flags().StringVar(&options.Reorder, "reorder", "",
+		"Percentage of packets to send without delay to reorder them, from 0 to 100; requires a latency greater than 0")
+	cmd.Flags().StringVar(&options.ReorderCorrelation, "reorder-correlation", "",
+		"Reorder correlation as a percentage, from 0 to 100; requires --reorder (default 0)")
+	cmd.Flags().IntVar(&options.ReorderGap, "reorder-gap", 0,
+		"Delay at least N-1 packets after each reordered packet; requires --reorder")
 	cmd.Flags().StringVarP(&options.Device, "device", "d", "", "Network interface to affect (required)")
 	cmd.Flags().StringVarP(&options.EgressPort, "egress-port", "e", "",
 		"Filter outgoing traffic by destination ports, e.g. 80,8001:8010; "+
