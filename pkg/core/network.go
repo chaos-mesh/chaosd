@@ -43,6 +43,13 @@ type NetworkCommand struct {
 	IPProtocol  string `json:"ip-protocol,omitempty"`
 	Hostname    string `json:"hostname,omitempty"`
 
+	// used for delay
+	// percentage of packets sent immediately instead of being delayed, which reorders them
+	Reorder            string `json:"reorder,omitempty"`
+	ReorderCorrelation string `json:"reorder-correlation,omitempty"`
+	// minimum distance between reordered packets: at least ReorderGap-1 packets are delayed after each reordered packet
+	ReorderGap int `json:"reorder-gap,omitempty"`
+
 	Direction string `json:"direction,omitempty"`
 
 	// used for DNS attack
@@ -130,6 +137,10 @@ func (n *NetworkCommand) validNetworkDelay() error {
 		return errors.Errorf("correlation %s not valid", n.Correlation)
 	}
 
+	if err := n.validNetworkReorder(); err != nil {
+		return err
+	}
+
 	if len(n.Device) == 0 {
 		return errors.New("device is required")
 	}
@@ -143,6 +154,35 @@ func (n *NetworkCommand) validNetworkDelay() error {
 	}
 
 	return checkProtocolAndPorts(n.IPProtocol, n.SourcePort, n.EgressPort)
+}
+
+func (n *NetworkCommand) validNetworkReorder() error {
+	if len(n.Reorder) == 0 {
+		if len(n.ReorderCorrelation) > 0 || n.ReorderGap != 0 {
+			return errors.New("reorder is required when reorder-correlation or reorder-gap is set")
+		}
+		return nil
+	}
+
+	if !utils.CheckPercent(n.Reorder) {
+		return errors.Errorf("reorder %s not valid", n.Reorder)
+	}
+
+	if !utils.CheckPercent(n.ReorderCorrelation) {
+		return errors.Errorf("reorder-correlation %s not valid", n.ReorderCorrelation)
+	}
+
+	if n.ReorderGap < 0 {
+		return errors.Errorf("reorder-gap %d not valid", n.ReorderGap)
+	}
+
+	// netem reorders packets by sending some of them without the delay,
+	// so reordering has no effect unless packets are delayed.
+	if latency, err := time.ParseDuration(n.Latency); err == nil && latency <= 0 {
+		return errors.New("latency must be greater than 0 when reorder is set")
+	}
+
+	return nil
 }
 
 func (n *NetworkCommand) validNetworkBandwidth() error {
@@ -283,6 +323,10 @@ func (n *NetworkCommand) setDefaultForNetworkDelay() {
 	if len(n.Correlation) == 0 {
 		n.Correlation = "0"
 	}
+
+	if len(n.Reorder) > 0 && len(n.ReorderCorrelation) == 0 {
+		n.ReorderCorrelation = "0"
+	}
 }
 
 func (n *NetworkCommand) setDefaultForNetworkLoss() {
@@ -339,29 +383,27 @@ func (n NetworkCommand) RecoverData() string {
 	return string(data)
 }
 
+// ToDelaySpec returns the delay settings, including packet reordering, of a delay attack.
+func (n *NetworkCommand) ToDelaySpec() *DelaySpec {
+	spec := &DelaySpec{
+		Latency:     n.Latency,
+		Correlation: n.Correlation,
+		Jitter:      n.Jitter,
+	}
+
+	if len(n.Reorder) > 0 {
+		spec.Reorder = &ReorderSpec{
+			Reorder:     n.Reorder,
+			Correlation: n.ReorderCorrelation,
+			Gap:         n.ReorderGap,
+		}
+	}
+
+	return spec
+}
+
 func (n *NetworkCommand) ToDelayNetem() (*pb.Netem, error) {
-	delayTime, err := time.ParseDuration(n.Latency)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	jitter, err := time.ParseDuration(n.Jitter)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	corr, err := strconv.ParseFloat(n.Correlation, 32)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	netem := &pb.Netem{
-		Time:      delayTime.String(),
-		DelayCorr: float32(corr),
-		Jitter:    jitter.String(),
-	}
-
-	return netem, nil
+	return n.ToDelaySpec().ToNetem()
 }
 
 func (n *NetworkCommand) ToLossNetem() (*pb.Netem, error) {

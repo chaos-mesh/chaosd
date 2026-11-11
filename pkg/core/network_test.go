@@ -14,6 +14,7 @@
 package core
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/chaos-mesh/chaos-mesh/pkg/chaosdaemon/pb"
@@ -176,4 +177,72 @@ func TestNetworkDurationValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNetworkDelayReorder(t *testing.T) {
+	t.Run("validation", func(t *testing.T) {
+		for _, tc := range []struct {
+			name, latency, reorder, correlation string
+			gap                                 int
+			invalid                             bool
+		}{
+			{"without reorder", "10ms", "", "", 0, false},
+			{"reorder", "10ms", "25", "", 0, false},
+			{"reorder with correlation and gap", "10ms", "25", "50", 5, false},
+			{"invalid reorder", "10ms", "101", "", 0, true},
+			{"invalid correlation", "10ms", "25", "abc", 0, true},
+			{"negative gap", "10ms", "25", "", -1, true},
+			{"zero latency", "0s", "25", "", 0, true},
+			{"correlation without reorder", "10ms", "", "50", 0, true},
+			{"gap without reorder", "10ms", "", "", 5, true},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				cmd := &NetworkCommand{
+					Action:             NetworkDelayAction,
+					Latency:            tc.latency,
+					Device:             "eth0",
+					Reorder:            tc.reorder,
+					ReorderCorrelation: tc.correlation,
+					ReorderGap:         tc.gap,
+				}
+				cmd.CompleteDefaults()
+				if err := cmd.Validate(); (err != nil) != tc.invalid {
+					t.Fatalf("invalid=%v, got error %v", tc.invalid, err)
+				}
+			})
+		}
+	})
+
+	cmd := &NetworkCommand{
+		Action:     NetworkDelayAction,
+		Latency:    "10ms",
+		Device:     "eth0",
+		Reorder:    "25",
+		ReorderGap: 5,
+	}
+	cmd.CompleteDefaults()
+
+	tc, err := cmd.ToTC("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkReorder := func(netem *pb.Netem) {
+		t.Helper()
+		if netem.Time != "10ms" || netem.Reorder != 25 || netem.ReorderCorr != 0 || netem.Gap != 5 {
+			t.Fatalf("netem=%v, want 10ms delay with reorder 25 and gap 5", netem)
+		}
+	}
+	checkReorder(tc.Netem)
+
+	// Rules of other experiments on the same device are restored from their
+	// stored parameters, so they must keep the reorder settings.
+	data, err := json.Marshal(&TcParameter{Device: cmd.Device, Delay: cmd.ToDelaySpec()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	restored, err := (&TCRule{Type: pb.Tc_NETEM.String(), TC: string(data)}).ToTC()
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkReorder(restored.Netem)
 }

@@ -203,11 +203,7 @@ func (s *Server) applyTC(attack *core.NetworkCommand, ipset string, uid string) 
 	}
 	switch attack.Action {
 	case core.NetworkDelayAction:
-		tc.Delay = &core.DelaySpec{
-			Latency:     attack.Latency,
-			Correlation: attack.Correlation,
-			Jitter:      attack.Jitter,
-		}
+		tc.Delay = attack.ToDelaySpec()
 	case core.NetworkLossAction:
 		tc.Loss = &core.LossSpec{
 			Loss:        attack.Percent,
