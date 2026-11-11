@@ -81,3 +81,70 @@ func TestRecoverPortOccupiedWithExitedHelperProcess(t *testing.T) {
 		t.Fatalf("experiment status %q, want %q", store.exp.Status, core.Destroyed)
 	}
 }
+
+type multiRecoveryStore struct {
+	core.ExperimentStore
+	exps  []*core.Experiment
+	conds *core.SearchCommand
+}
+
+func (s *multiRecoveryStore) ListByConditions(_ context.Context, conds *core.SearchCommand) ([]*core.Experiment, error) {
+	s.conds = conds
+	return s.exps, nil
+}
+
+//revive:disable-next-line:var-naming Match the ExperimentStore interface.
+func (s *multiRecoveryStore) FindByUid(_ context.Context, uid string) (*core.Experiment, error) {
+	for _, exp := range s.exps {
+		if exp.Uid == uid {
+			return exp, nil
+		}
+	}
+	return nil, nil
+}
+
+func (s *multiRecoveryStore) Update(_ context.Context, uid, status, _, _ string) error {
+	exp, _ := s.FindByUid(context.Background(), uid)
+	exp.Status = status
+	return nil
+}
+
+func TestRecoverAttacksContinuesAfterFailures(t *testing.T) {
+	portOccupied := core.NetworkCommand{
+		CommonAttackConfig: core.CommonAttackConfig{Kind: core.NetworkAttack, Action: core.NetworkPortOccupiedAction},
+		PortPid:            int32(exitedPID(t)),
+	}
+	store := &multiRecoveryStore{exps: []*core.Experiment{
+		{Uid: "unknown-kind", Kind: "unknown", Status: core.Success},
+		{Uid: "host", Kind: core.HostAttack, Status: core.Success},
+		{Uid: "network", Kind: core.NetworkAttack, Status: core.Success, RecoverCommand: portOccupied.RecoverData()},
+	}}
+	server := &Server{expStore: store}
+
+	results, err := server.RecoverAttacks("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if store.conds.Kind != "" || store.conds.Status != core.Success || store.conds.Asc {
+		t.Fatalf("listed experiments with %+v, want newest experiments of any kind in the success status", store.conds)
+	}
+	if len(results) != len(store.exps) {
+		t.Fatalf("got %d results, want %d", len(results), len(store.exps))
+	}
+
+	if results[0].Err == nil || errorx.IsOfType(results[0].Err, core.ErrNonRecoverableAttack) {
+		t.Errorf("unknown kind: got error %v, want a recovery failure", results[0].Err)
+	}
+	if !errorx.IsOfType(results[1].Err, core.ErrNonRecoverableAttack) {
+		t.Errorf("host: got error %v, want a non-recoverable error", results[1].Err)
+	}
+	if results[2].Err != nil {
+		t.Errorf("network: %v", results[2].Err)
+	}
+
+	for i, want := range []string{core.Success, core.Success, core.Destroyed} {
+		if exp := store.exps[i]; exp.Status != want {
+			t.Errorf("%s status %q, want %q", exp.Uid, exp.Status, want)
+		}
+	}
+}

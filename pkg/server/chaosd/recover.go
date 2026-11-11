@@ -96,3 +96,31 @@ func (s *Server) RecoverAttack(uid string) error {
 	}
 	return nil
 }
+
+// RecoveryResult is the outcome of recovering one experiment with RecoverAttacks.
+type RecoveryResult struct {
+	Experiment *core.Experiment
+	// Err is nil when the experiment was recovered.
+	// It is a core.ErrNonRecoverableAttack error when the fault cannot be recovered.
+	Err error
+}
+
+// RecoverAttacks recovers every injected experiment, or only those of kind when it is not empty.
+// Experiments are recovered from newest to oldest, so faults stacked on the same resource are undone in reverse order.
+// A failed recovery does not stop the remaining ones.
+// Scheduled experiments are excluded because their schedules belong to the service that created them.
+func (s *Server) RecoverAttacks(kind string) ([]RecoveryResult, error) {
+	exps, err := s.expStore.ListByConditions(context.Background(), &core.SearchCommand{
+		Kind:   kind,
+		Status: core.Success,
+	})
+	if err != nil {
+		return nil, perr.WithStack(err)
+	}
+
+	results := make([]RecoveryResult, 0, len(exps))
+	for _, exp := range exps {
+		results = append(results, RecoveryResult{Experiment: exp, Err: s.RecoverAttack(exp.Uid)})
+	}
+	return results, nil
+}

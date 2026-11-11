@@ -96,6 +96,8 @@ wait "$target_pid" 2>/dev/null || true
 
 Successful recovery resumes the process with `SIGCONT` and records `destroyed`.
 Use `search --all` to list experiments and `search --help` for filters.
+To recover every injected experiment at once, run `recover --all`, or `recover --kind network` to recover only one kind.
+Faults that cannot be recovered are skipped, and scheduled experiments are not included.
 
 ## Start the HTTP service
 
