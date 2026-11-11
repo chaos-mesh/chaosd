@@ -15,7 +15,9 @@ package chaosd
 
 import (
 	"context"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/joomcode/errorx"
@@ -79,5 +81,46 @@ func TestRecoverPortOccupiedWithExitedHelperProcess(t *testing.T) {
 	}
 	if store.exp.Status != core.Destroyed {
 		t.Fatalf("experiment status %q, want %q", store.exp.Status, core.Destroyed)
+	}
+}
+
+func TestRecoverDiskPayloadFile(t *testing.T) {
+	for _, kind := range []string{core.DiskAttack, core.DiskServerAttack} {
+		t.Run(kind, func(t *testing.T) {
+			dir := t.TempDir()
+			// os.Remove fails for a non-empty directory, even for root.
+			undeletable := filepath.Join(dir, "undeletable")
+			if err := os.MkdirAll(filepath.Join(undeletable, "child"), 0700); err != nil {
+				t.Fatal(err)
+			}
+
+			for _, tc := range []struct {
+				name, path string
+				fail       bool
+			}{
+				{"removed", filepath.Join(dir, "missing"), false},
+				{"removal failure", undeletable, true},
+			} {
+				t.Run(tc.name, func(t *testing.T) {
+					config := core.DiskAttackConfig{Kind: kind, Action: core.DiskWritePayloadAction, Path: tc.path}
+					store := &recoveryStore{exp: &core.Experiment{
+						Uid: "disk-payload", Kind: kind, Status: core.Success, RecoverCommand: config.RecoverData(),
+					}}
+					server := &Server{expStore: store}
+					err := server.RecoverAttack("disk-payload")
+					if (err != nil) != tc.fail {
+						t.Fatalf("recover error = %v, want failure %v", err, tc.fail)
+					}
+
+					want := core.Destroyed
+					if tc.fail {
+						want = core.Success
+					}
+					if store.exp.Status != want {
+						t.Fatalf("experiment status %q, want %q", store.exp.Status, want)
+					}
+				})
+			}
+		})
 	}
 }

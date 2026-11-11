@@ -21,6 +21,7 @@ import (
 	"io/fs"
 	"net"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -137,8 +138,12 @@ func (attackHTTP) Recover(exp core.Experiment, _ Environment) error {
 	}
 
 	if err := proc.Terminate(); err != nil {
-		attack.Logger.Info("the chaos-tproxy process kill failed with error: %s\n", err.Error())
-		return nil
+		// The proxy exited after it was found, so there is nothing left to stop.
+		if errors.Is(err, os.ErrProcessDone) {
+			return nil
+		}
+
+		return errors.Wrapf(err, "terminate chaos-tproxy process %d", attack.ProxyPID)
 	}
 	return nil
 }

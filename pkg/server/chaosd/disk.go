@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 
 	"github.com/hashicorp/go-multierror"
@@ -96,17 +97,26 @@ func (diskAttack) Recover(exp core.Experiment, env Environment) error {
 	if err != nil {
 		return err
 	}
-	config := *attackConfig.(*core.DiskAttackConfig)
-	switch config.Action {
-	case core.DiskFillAction, core.DiskWritePayloadAction:
-		err = os.Remove(config.Path)
-		if err != nil {
-			log.Warn(fmt.Sprintf("recover disk: remove %s failed", config.Path), zap.Error(err))
-		}
+	config := attackConfig.(*core.DiskAttackConfig)
+	if err := removeDiskPayloadFile(config); err != nil {
+		return err
 	}
 
 	if cmdPool, ok := env.Chaos.CmdPools[exp.Uid]; ok {
 		cmdPool.Close()
+	}
+
+	return nil
+}
+
+// removeDiskPayloadFile removes the file written by a fill or write payload attack.
+// A file that no longer exists needs no cleanup.
+func removeDiskPayloadFile(config *core.DiskAttackConfig) error {
+	switch config.Action {
+	case core.DiskFillAction, core.DiskWritePayloadAction:
+		if err := os.Remove(config.Path); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf("recover disk: remove %s: %w", config.Path, err)
+		}
 	}
 
 	return nil
