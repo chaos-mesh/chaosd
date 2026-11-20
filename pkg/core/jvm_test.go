@@ -102,3 +102,13 @@ func TestJVMCommand(t *testing.T) {
 		}
 	}
 }
+
+func TestJVMCommandString(t *testing.T) {
+	for _, action := range []string{JVMLatencyAction, JVMExceptionAction, JVMReturnAction, JVMStressAction, JVMGCAction, JVMRuleFileAction, JVMRuleDataAction, JVMMySQLAction} {
+		command := NewJVMCommand()
+		command.Action = action
+		if got := command.String(); got != action {
+			t.Errorf("action %q: String() = %q", action, got)
+		}
+	}
+}
