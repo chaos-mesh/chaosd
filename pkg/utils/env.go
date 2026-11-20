@@ -38,6 +38,7 @@ func SetRuntimeEnv() error {
 		if err != nil {
 			return err
 		}
+		bytemanHome = fmt.Sprintf("%s/tools/byteman", wd)
 	}
 
 	path := os.Getenv("PATH")
