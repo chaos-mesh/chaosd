@@ -223,6 +223,12 @@ func (j *JVMCommand) Validate() error {
 	return nil
 }
 
+// String returns the fault action. JVMCommand declares its own Action field, which
+// shadows the embedded CommonAttackConfig.Action that the promoted String would read.
+func (j JVMCommand) String() string {
+	return j.Action
+}
+
 func (j *JVMCommand) RecoverData() string {
 	data, _ := json.Marshal(j)
 
