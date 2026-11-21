@@ -176,6 +176,10 @@ type BytemanTemplateSpec struct {
 }
 
 func (j *JVMCommand) Validate() error {
+	if err := j.CommonAttackConfig.Validate(); err != nil {
+		return err
+	}
+
 	if j.Pid == 0 {
 		return errors.New("pid can't be 0")
 	}

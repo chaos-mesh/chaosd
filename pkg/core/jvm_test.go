@@ -102,3 +102,26 @@ func TestJVMCommand(t *testing.T) {
 		}
 	}
 }
+
+func TestJVMScheduleDurationValidation(t *testing.T) {
+	for _, tc := range []struct {
+		name, schedule, duration string
+		invalid                  bool
+	}{
+		{"unscheduled", "", "", false},
+		{"scheduled with duration", "@every 1h", "10s", false},
+		{"scheduled invalid duration", "@every 1h", "not-a-duration", true},
+		{"scheduled empty duration", "@every 1h", "", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			command := NewJVMCommand()
+			command.Action = JVMGCAction
+			command.Pid = 1234
+			command.Schedule = tc.schedule
+			command.Duration = tc.duration
+			if err := command.Validate(); (err != nil) != tc.invalid {
+				t.Errorf("schedule=%q duration=%q: %v", tc.schedule, tc.duration, err)
+			}
+		})
+	}
+}

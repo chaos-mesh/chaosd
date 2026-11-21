@@ -24,3 +24,30 @@ func TestKafkaCommandString(t *testing.T) {
 		}
 	}
 }
+
+func TestKafkaScheduleDurationValidation(t *testing.T) {
+	for _, tc := range []struct {
+		name, schedule, duration string
+		invalid                  bool
+	}{
+		{"unscheduled", "", "", false},
+		{"scheduled with duration", "@every 1h", "10s", false},
+		{"scheduled invalid duration", "@every 1h", "not-a-duration", true},
+		{"scheduled empty duration", "@every 1h", "", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			command := NewKafkaCommand()
+			command.Action = KafkaFloodAction
+			command.Topic = "orders"
+			command.Host = "broker"
+			command.Port = 9092
+			command.MessageSize = 128
+			command.Threads = 1
+			command.Schedule = tc.schedule
+			command.Duration = tc.duration
+			if err := command.Validate(); (err != nil) != tc.invalid {
+				t.Errorf("schedule=%q duration=%q: %v", tc.schedule, tc.duration, err)
+			}
+		})
+	}
+}
