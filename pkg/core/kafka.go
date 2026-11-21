@@ -75,6 +75,10 @@ type KafkaCommand struct {
 }
 
 func (c *KafkaCommand) Validate() error {
+	if err := c.CommonAttackConfig.Validate(); err != nil {
+		return err
+	}
+
 	if c.Topic == "" {
 		return errors.New("topic is required")
 	}
